@@ -1,0 +1,54 @@
+#pragma once
+
+#include <cstdint>
+
+#include "defines.h"
+
+using namespace std;
+
+class registers {
+public:
+	registers();
+
+	REG AF, AF_;
+	REG BC, BC_;
+	REG DE, DE_;
+	REG HL, HL_;
+
+	REG IX;
+	REG	IY;
+
+	uint16_t PC;
+	uint16_t SP;
+
+	uint8_t I;
+	uint8_t R;
+
+	bool IFF1;
+	bool IFF2;
+
+	void ex(REG* rp1, REG* rp2);
+
+	void A_add(uint8_t d);
+	void A_adc(uint8_t d);
+	void A_sub(uint8_t d);
+	void A_sbc(uint8_t d);
+	void A_and(uint8_t d);
+	void A_xor(uint8_t d);
+	void A_or (uint8_t d);
+	void A_cp (uint8_t d);
+	void A_neg();
+	void A_not();
+	void A_daa();
+
+	bool F_NZ();
+	bool F_Z();
+	bool F_NC();
+	bool F_C();
+	bool F_PO();
+	bool F_PE();
+	bool F_P();
+	bool F_M();
+
+private:
+};
