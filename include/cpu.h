@@ -17,6 +17,8 @@ public:
 	cpu(uint8_t* ram);
 
 	void addBreakpoint(uint16_t a);
+	bool getSingleStep();
+	void setSingleStep(bool value);
 	void interruptRequest(uint8_t i);
 
 	void reset();
@@ -119,6 +121,7 @@ private:
 	uint16_t  index_CB;								// The index (used for DDCB and FDCB instructions)
 	uint8_t	  interrupt;
 	int16_t   callDepth;
+	bool      singleStep;
 
 	void 		execute_CB();						// Execute CB prefixed opcodes
 	void		execute_ED();						// Execute ED prefixed opcodes

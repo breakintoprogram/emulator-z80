@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-// #define TEST
-
 #define RAM_SIZE 0x10000
 
 #define NOP uint16_t __nop = 0

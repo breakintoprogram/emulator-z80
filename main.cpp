@@ -13,11 +13,7 @@
 
 // https://skoolkid.github.io/rom/index.html
 //
-#ifdef TEST
-#define code "/mnt/c/Users/618254819/Downloads/TEST.Z80.bin"
-#else
-#define code "/home/dean_belfield/dev/Personal/emulator/roms/48.rom"
-#endif 
+#define code "roms/48.rom"
 
 uint8_t ram[RAM_SIZE];
 
@@ -108,21 +104,49 @@ int main()
 	initGraphics();
 
 	z80.reset();
-	z80.addBreakpoint(0x1295);
+	z80.addBreakpoint(0x1292);
 
-	uint16_t count = 0;
+	uint16_t   count = 0;
+	bool       quit = false;
+	bool       step = false;
+	SDL_Event  e;
 
-	while (true) {
-		z80.debug();
-		z80.fetch();
-		z80.decode();
-		z80.execute();
-		if(count == 0) {
-			z80.interruptRequest(0x38);
-			renderULA();
-			SDL_RenderPresent(renderer);
+	while (!quit) {
+		while (SDL_PollEvent(&e) != 0) {
+			switch (e.type) {
+				//
+				// User closes window
+				//
+				case SDL_QUIT: {
+					quit = true;
+				} break;
+				//
+				// Keyboard events
+				//
+				case SDL_KEYDOWN: {
+					switch (e.key.keysym.sym) {
+						case SDLK_RETURN: step = true; break;
+						case SDLK_g: z80.setSingleStep(false); break;
+					}
+				} break;
+			}
 		}
-		count= ++count % 4096;
+		//
+		// Process one cycle of the CPU
+		//
+		if(!z80.getSingleStep() || step) {
+			z80.debug();
+			z80.fetch();
+			z80.decode();
+			z80.execute();
+			if(count == 0) {
+				z80.interruptRequest(0x38);
+				renderULA();
+				SDL_RenderPresent(renderer);
+			}
+			count= ++count % 4096;
+		}
+		step = false;
 	}
 
 	destroyGraphics();

@@ -12,7 +12,8 @@ cpu::cpu(uint8_t* ram) :
 	data(0),
 	breakpoints(),
 	callDepth(0),
-	interrupt(0)
+	interrupt(0),
+	singleStep(false)
 {
 }
 
@@ -20,6 +21,14 @@ cpu::cpu(uint8_t* ram) :
 //
 void cpu::addBreakpoint(uint16_t a) {
 	breakpoints.push_back(a);
+}
+
+bool cpu::getSingleStep() {
+	return singleStep;
+}
+
+void cpu::setSingleStep(bool value) {
+	singleStep = value;
 }
 
 // Do the NMI
@@ -43,7 +52,7 @@ void cpu::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
 		cout << setfill('0') << setw(4) << reg.PC << ": ";
 		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
-			NOP;
+			setSingleStep(true);
 		}
 	}
 }
@@ -802,11 +811,7 @@ bool cpu::isROM(uint8_t* p) {
 	if(a >= RAM_SIZE) {	// Check if we've tried to access an invalid location
 		NOP;			// Something has gone horribly wrong, should stop processing here
 	}
-	#ifdef TEST
-		return false;
-	#else 
-		return a < 0x4000;
-	#endif
+	return a < 0x4000;
 }
 
 // Write d to ram
