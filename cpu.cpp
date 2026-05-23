@@ -243,7 +243,7 @@ void cpu::execute_ED() {
 			switch(z) {
 				case 0: { // IN (C)
 					if (y != 6) {
-						reg.AF.A = in(reg.BC.W);
+ 						reg.AF.A = in(reg.BC.W);
 					}
 					setFlagsSZP(reg.AF.A);
 				} break;	
@@ -697,11 +697,13 @@ void cpu::execute_x3z1()
 				reg.ex(&reg.DE, &reg.DE_);
 				reg.ex(&reg.BC, &reg.BC_);
 			} break;
-			case 2: { // JP (HL)
-				reg.PC = reg.HL.W;
+			case 2: { // JP (HL/IX/IY)
+				uint16_t* rp = t_rp1[shift_IXY][2];
+				reg.PC = *rp;
 			} break;
-			case 3: { // LD SP,HL
-				reg.SP = reg.HL.W;
+			case 3: { // LD SP,HL/IX/IY
+				uint16_t* rp = t_rp1[shift_IXY][2];
+				reg.SP = *rp;
 			} break;
 		}
 	}
