@@ -13,7 +13,8 @@ cpu::cpu(uint8_t* ram) :
 	breakpoints(),
 	callDepth(0),
 	interrupt(0),
-	singleStep(false)
+	singleStep(false),
+	cycle(0)
 {
 }
 
@@ -29,6 +30,10 @@ bool cpu::getSingleStep() {
 
 void cpu::setSingleStep(bool value) {
 	singleStep = value;
+}
+
+uint16_t cpu::getCycle() {
+	return cycle;
 }
 
 // Do the NMI
@@ -50,7 +55,23 @@ void cpu::reset()
 //
 void cpu::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
-		cout << setfill('0') << setw(4) << reg.PC << ": ";
+		cout << "F=[";
+		cout << (reg.AF.S  ? 'S' : '-');
+		cout << (reg.AF.Z  ? 'Z' : '-');
+		cout << (reg.AF.F5 ? '5' : '-');
+		cout << (reg.AF.H  ? 'H' : '-');
+		cout << (reg.AF.F3 ? '3' : '-');
+		cout << (reg.AF.P  ? 'P' : '-');
+		cout << (reg.AF.N  ? 'N' : '-');
+		cout << (reg.AF.C  ? 'C' : '-');
+		cout << "] ";
+		cout << "A=" << setfill('0') << setw(2) << (uint16_t)reg.AF.A << " ";
+		cout << "BC=" << setfill('0') << setw(4) << reg.BC.W << " ";
+		cout << "DE=" << setfill('0') << setw(4) << reg.DE.W << " ";
+		cout << "HL=" << setfill('0') << setw(4) << reg.HL.W << " ";
+		cout << "IX=" << setfill('0') << setw(4) << reg.IX.W << " ";
+		cout << "IY=" << setfill('0') << setw(4) << reg.IY.W << " ";
+		cout << "PC=" << setfill('0') << setw(4) << reg.PC << " : ";
 		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 			setSingleStep(true);
 		}
@@ -88,11 +109,13 @@ void cpu::execute()
 			(this->*f)();
 		}
 	}
+	cycle++;
 	//
 	// Might be a bit of a bodge for the moment but only handle interrupts
 	// when the shift registers are both 0, i.e. finished processing last instruction
 	//
 	if(shift_EXT == 0 && shift_IXY == 0) {
+		cycle = 0;
 		reg.R++;
 		if(interrupt > 0) {		// If an interrupt has been requested
 			interrupt = 0;
@@ -197,6 +220,7 @@ void cpu::execute_ED() {
 			switch(z) {
 				case 0: { // IN (C)
 					reg.AF.A = in(reg.BC.W);
+					setFlagsSZP(reg.AF.A);
 				} break;	
 				case 1: { // OUT (C)
 					out(reg.BC.W, reg.AF.A);

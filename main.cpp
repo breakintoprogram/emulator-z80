@@ -20,6 +20,8 @@ uint8_t ram[RAM_SIZE];
 SDL_Window *win = NULL;
 SDL_Renderer *renderer = NULL;
 
+int videoScale = 2;
+
 uint8_t palette[8][3] = {
 	{ 0x00, 0x00, 0x00}, // Black
 	{ 0x00, 0x00, 0xFF}, // Blue
@@ -53,7 +55,7 @@ void setColour(uint8_t colour) {
 void renderPoint(int x, int y, uint8_t colour) {
 	setColour(colour);
 	SDL_Rect p = {
-		x<<2, y<<2, 4, 4
+		x * videoScale, y * videoScale, videoScale, videoScale
 	};
 	SDL_RenderFillRect(renderer, &p);
 }
@@ -76,8 +78,8 @@ void renderULA() {
 }
 
 bool initGraphics() {
-	int width = 256 * 4;
-	int height = 192 * 4;
+	int width = 256 * videoScale;
+	int height = 192 * videoScale;
 
     SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
@@ -104,7 +106,7 @@ int main()
 	initGraphics();
 
 	z80.reset();
-	z80.addBreakpoint(0x1292);
+	z80.addBreakpoint(0x0d90);
 
 	uint16_t   count = 0;
 	bool       quit = false;
@@ -126,6 +128,7 @@ int main()
 				case SDL_KEYDOWN: {
 					switch (e.key.keysym.sym) {
 						case SDLK_RETURN: step = true; break;
+						case SDLK_b: z80.setSingleStep(true); break;
 						case SDLK_g: z80.setSingleStep(false); break;
 					}
 				} break;
@@ -135,18 +138,26 @@ int main()
 		// Process one cycle of the CPU
 		//
 		if(!z80.getSingleStep() || step) {
-			z80.debug();
-			z80.fetch();
-			z80.decode();
-			z80.execute();
-			if(count == 0) {
-				z80.interruptRequest(0x38);
-				renderULA();
-				SDL_RenderPresent(renderer);
-			}
-			count= ++count % 4096;
+			//
+			// Execute one instruction
+			//
+			do {
+				z80.debug();
+				z80.fetch();
+				z80.decode();
+				z80.execute();
+			} while(z80.getCycle() > 0);
 		}
 		step = false;
+		//
+		// Update the screen every so often
+		//
+		if(count == 0) {
+			z80.interruptRequest(0x38);
+			renderULA();
+			SDL_RenderPresent(renderer);
+		}
+		count= ++count % 16384;
 	}
 
 	destroyGraphics();

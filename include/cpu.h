@@ -16,16 +16,17 @@ class cpu {
 public:
 	cpu(uint8_t* ram);
 
-	void addBreakpoint(uint16_t a);
-	bool getSingleStep();
-	void setSingleStep(bool value);
-	void interruptRequest(uint8_t i);
+	void     addBreakpoint(uint16_t a);
+	bool     getSingleStep();
+	void     setSingleStep(bool value);
+	uint16_t getCycle();
+	void     interruptRequest(uint8_t i);
 
-	void reset();
-	void debug();
-	void fetch();
-	void decode();
-	void execute();
+	void     reset();
+	void     debug();
+	void     fetch();
+	void     decode();
+	void     execute();
 
 private:
 	uint8_t* ram;
@@ -121,6 +122,7 @@ private:
 	uint16_t  index_CB;								// The index (used for DDCB and FDCB instructions)
 	uint8_t	  interrupt;
 	int16_t   callDepth;
+	int16_t   cycle;								// The current cycle (0 = ready to execute next instruction)
 	bool      singleStep;
 
 	void 		execute_CB();						// Execute CB prefixed opcodes
