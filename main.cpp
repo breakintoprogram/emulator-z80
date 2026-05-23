@@ -129,8 +129,14 @@ int main()
 						case SDLK_RETURN: step = true; break;
 						case SDLK_b: z80.setSingleStep(true); break;
 						case SDLK_g: z80.setSingleStep(false); break;
+						case SDLK_SPACE: z80.setPort(0x7FFE, 0b00011110); break;
 					}
 				} break;
+				case SDL_KEYUP: {
+					switch (e.key.keysym.sym) {
+						default: z80.setPort(0x0000, 0xFF); break;
+					}
+				}
 			}
 		}
 		//

@@ -20,7 +20,9 @@ public:
 	bool     getSingleStep();
 	void     setSingleStep(bool value);
 	uint16_t getCycle();
+
 	void     interruptRequest(uint8_t i);
+	void	 setPort(uint16_t a, uint8_t v);
 
 	void     reset();
 	void     debug();
@@ -125,6 +127,9 @@ private:
 	int16_t   callDepth;
 	int16_t   cycle;								// The current cycle (0 = ready to execute next instruction)
 	bool      singleStep;
+	bool      trace;
+	uint16_t  portAddress;
+	uint8_t   portValue;
 
 	void 		execute_CB();						// Execute CB prefixed opcodes
 	void		execute_ED();						// Execute ED prefixed opcodes

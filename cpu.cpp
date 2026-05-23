@@ -14,7 +14,10 @@ cpu::cpu(uint8_t* ram) :
 	callDepth(0),
 	interrupt(0),
 	singleStep(false),
-	cycle(0)
+	cycle(0),
+	portAddress(0),
+	portValue(0),
+	trace(false)
 {
 }
 
@@ -44,6 +47,13 @@ void cpu::interruptRequest(uint8_t i) {
 	}
 }
 
+// Set a port
+//
+void cpu::setPort(uint16_t a, uint8_t v) {
+	portAddress = a;
+	portValue = v;
+}
+
 // Reset the CPU
 //
 void cpu::reset()
@@ -55,23 +65,25 @@ void cpu::reset()
 //
 void cpu::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
-		cout << "F=[";
-		cout << (reg.AF.S  ? 'S' : '-');
-		cout << (reg.AF.Z  ? 'Z' : '-');
-		cout << (reg.AF.F5 ? '5' : '-');
-		cout << (reg.AF.H  ? 'H' : '-');
-		cout << (reg.AF.F3 ? '3' : '-');
-		cout << (reg.AF.P  ? 'P' : '-');
-		cout << (reg.AF.N  ? 'N' : '-');
-		cout << (reg.AF.C  ? 'C' : '-');
-		cout << "] ";
-		cout << "A=" << setfill('0') << setw(2) << (uint16_t)reg.AF.A << " ";
-		cout << "BC=" << setfill('0') << setw(4) << reg.BC.W << " ";
-		cout << "DE=" << setfill('0') << setw(4) << reg.DE.W << " ";
-		cout << "HL=" << setfill('0') << setw(4) << reg.HL.W << " ";
-		cout << "IX=" << setfill('0') << setw(4) << reg.IX.W << " ";
-		cout << "IY=" << setfill('0') << setw(4) << reg.IY.W << " ";
-		cout << "PC=" << setfill('0') << setw(4) << reg.PC << " : ";
+		if (trace) {
+			cout << "F=[";
+			cout << (reg.AF.S  ? 'S' : '-');
+			cout << (reg.AF.Z  ? 'Z' : '-');
+			cout << (reg.AF.F5 ? '5' : '-');
+			cout << (reg.AF.H  ? 'H' : '-');
+			cout << (reg.AF.F3 ? '3' : '-');
+			cout << (reg.AF.P  ? 'P' : '-');
+			cout << (reg.AF.N  ? 'N' : '-');
+			cout << (reg.AF.C  ? 'C' : '-');
+			cout << "] ";
+			cout << "A=" << setfill('0') << setw(2) << (uint16_t)reg.AF.A << " ";
+			cout << "BC=" << setfill('0') << setw(4) << reg.BC.W << " ";
+			cout << "DE=" << setfill('0') << setw(4) << reg.DE.W << " ";
+			cout << "HL=" << setfill('0') << setw(4) << reg.HL.W << " ";
+			cout << "IX=" << setfill('0') << setw(4) << reg.IX.W << " ";
+			cout << "IY=" << setfill('0') << setw(4) << reg.IY.W << " ";
+			cout << "PC=" << setfill('0') << setw(4) << reg.PC << " : ";
+		}
 		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 			setSingleStep(true);
 		}
@@ -83,7 +95,9 @@ void cpu::debug() {
 void cpu::fetch()
 {
 	data = readByte(reg.PC++);
-	cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
+	if (trace) {
+		cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
+	}
 }
 
 // Private helper method to fetch a word
@@ -134,7 +148,7 @@ void cpu::execute()
 			reg.PC = 0x0038;	// Set the program counter to the maskable interrupt routine
 			callDepth++;		// Increment the call depth for debugging purposes
 		}
-		cout << endl;
+		if (trace) cout << endl;
 	}
 }
 
@@ -902,6 +916,9 @@ void cpu::out(uint16_t addr, uint8_t v) {
 }
 
 uint8_t cpu::in(uint16_t addr) {
+	if(addr == portAddress) {
+		return portValue;
+	}
 	return 0xFF;
 }
 
