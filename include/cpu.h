@@ -152,6 +152,7 @@ private:
 	void		execute_x3z6();						// Operate on accumulator and immediate operand
 	void		execute_x3z7();						// Restart instructions
 
+	uint16_t	fetchWord();						// Fetch a word from the PC
 	bool		isROM(uint8_t* p);					// Return true if the pointer is in ROM space
 	void		writeByte(uint16_t a, uint8_t d);	// Write a byte to the address space
 	void		writeByte(uint8_t* p, uint8_t d);	// Write a byte to the address space by pointer

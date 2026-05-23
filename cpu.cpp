@@ -86,6 +86,15 @@ void cpu::fetch()
 	cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 }
 
+// Private helper method to fetch a word
+//
+uint16_t cpu::fetchWord() {
+	fetch();
+	uint16_t w = data;		// The LSB
+	fetch();
+	return w | (data << 8);	// The MSB combined with the LSB
+}
+
 // Decode the instruction
 //
 void cpu::decode()
@@ -247,9 +256,7 @@ void cpu::execute_ED() {
 				} break;
 				case 3: { // Load register pair from/to immediate address
 					uint16_t* rp = t_rp1[shift_IXY][p];
-					uint16_t dd;
-					fetch(); dd = data;
-					fetch(); dd |= data << 8;
+					uint16_t  dd = fetchWord();
 					if (q ==0) {
 						writeWord(dd, *rp);	
 					}
@@ -464,9 +471,7 @@ void cpu::execute_x0z0()
 void cpu::execute_x0z1() {
 	if (q == 0) {	// LD rr,n
 		uint16_t* rp = t_rp1[shift_IXY][p];
-		uint16_t dd;
-		fetch(); dd = data;
-		fetch(); dd |= data << 8;
+		uint16_t  dd = fetchWord();				
 		*rp = dd;
 	}
 	else {			// ADD HL,rr
@@ -484,8 +489,6 @@ void cpu::execute_x0z1() {
 // X=0, Z=2: Indirect load
 //
 void cpu::execute_x0z2() {
-	uint16_t dd;
-
 	if (q == 0) {
 		switch(p) {
 			case 0: { // LD (BC),A
@@ -496,13 +499,11 @@ void cpu::execute_x0z2() {
 			} break;
 			case 2: { // LD (nn),HL/IX/IY 
 				uint16_t* rp = t_rp1[shift_IXY][2];
-				fetch(); dd = data;					// Get nn
-				fetch(); dd |= data << 8;
+				uint16_t  dd = fetchWord();
 				writeWord(dd, *rp);
 			} break;
 			case 3: { // LD (nn),A
-				fetch(); dd = data;					// Get nn
-				fetch(); dd |= data << 8;
+				uint16_t  dd = fetchWord();				
 				writeByte(dd, reg.AF.A);				// Write the accumulator to memory
 			} break;
 		}
@@ -517,13 +518,11 @@ void cpu::execute_x0z2() {
 			} break;
 			case 2: { // LD HL/IX/IY,(nn)
 				uint16_t* rp = t_rp1[shift_IXY][2];
-				fetch(); dd = data;					// Get nn
-				fetch(); dd |= data << 8;
+				uint16_t  dd = fetchWord();				
 				*rp = readWord(dd);
 			} break;
 			case 3: { // LD A,(nn)
-				fetch(); dd = data;					// Get nn
-				fetch(); dd |= data << 8;
+				uint16_t  dd = fetchWord();				
 				reg.AF.A = readByte(dd);				// Read the accumulator from memory
 			} break;
 		}
@@ -555,7 +554,7 @@ void cpu::execute_x0z4() {
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		writeByte(p, (*p) + 1);			// Increment it
+		writeByte(p, (*p) + 1);		// Increment it
 	}
 	setFlagsSZP(*p);
 	shift_IXY = 0;
@@ -571,7 +570,7 @@ void cpu::execute_x0z5() {
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		writeByte(p, (*p) - 1);			// Decrement it
+		writeByte(p, (*p) - 1);		// Decrement it
 	}
 	setFlagsSZP(*p);
 	shift_IXY = 0;
@@ -589,7 +588,7 @@ void cpu::execute_x0z6() {
 	else {
 		p = getIndPtr(shift_IXY);	// Otherwise next byte is the index
 		fetch();					// Followed by the immediate value
-		writeByte(p, data);				// And store
+		writeByte(p, data);			// And store
 	}
 	shift_IXY = 0;
 }
@@ -632,7 +631,7 @@ void cpu::execute_x1__()
 		}
 		else {			
 			py = getIndPtr(shift_IXY);			// Otherwise
-			writeByte(py, *pz);						// Write to the memory location
+			writeByte(py, *pz);					// Write to the memory location
 		}
 	}
 	shift_IXY = 0;
@@ -701,9 +700,7 @@ void cpu::execute_x3z1()
 void cpu::execute_x3z2() {
 	auto f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
-	uint16_t dd;				// And the address
-	fetch(); dd = data;
-	fetch(); dd |= data << 8;
+	uint16_t dd = fetchWord();	// And the address
 	if(c) {
 		reg.PC = dd;
 	}
@@ -716,10 +713,7 @@ void cpu::execute_x3z2() {
 void cpu::execute_x3z3() {
 	switch(y) {
 		case 0: { // JP
-			uint16_t dd;
-			fetch(); dd = data;
-			fetch(); dd |= data << 8;
-			reg.PC = dd;
+			reg.PC = fetchWord();
 		} break;
 		case 1: { // CB prefix
 			shift_EXT = 0xCB;
@@ -763,9 +757,7 @@ void cpu::execute_x3z3() {
 void cpu::execute_x3z4() {
 	auto f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
-	uint16_t dd;				// And the address
-	fetch(); dd = data;
-	fetch(); dd |= data << 8;
+	uint16_t dd = fetchWord();	// And the address
 	if(c) {
 		push(reg.PC);
 		reg.PC = dd;
@@ -788,9 +780,7 @@ void cpu::execute_x3z5()
 		shift_IXY = 0;
 		switch (p) {
 			case 0: { // CALL nn
-				uint16_t dd;
-				fetch(); dd = data;
-				fetch(); dd |= data << 8;
+				uint16_t dd = fetchWord();
 				push(reg.PC);
 				reg.PC = dd;
 				callDepth++;
