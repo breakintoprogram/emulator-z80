@@ -620,12 +620,12 @@ void cpu::execute_x1__()
 		}
 	}
 	else {					// LD ry,rz
-		uint8_t* pz = t_r[shift_IXY][z];		// The source
+		uint8_t* pz = t_r[0][z];				// The source (cannot be IXL/H)
 		if (pz == NULL) {						// If it is not a register then
 			pz = getIndPtr(shift_IXY);			// Point to a memory location
 		}
 
-		uint8_t* py = t_r[shift_IXY][y];		// The destination
+		uint8_t* py = t_r[0][y];				// The destination (cannot be IXL/H)
 		if (py) {								// If it is a register then
 			*py = *pz;							// Just copy it to the register
 		}
