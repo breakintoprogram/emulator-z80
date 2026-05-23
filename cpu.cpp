@@ -82,7 +82,7 @@ void cpu::debug() {
 //
 void cpu::fetch()
 {
-	data = read(reg.PC++);
+	data = readByte(reg.PC++);
 	cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 }
 
@@ -219,39 +219,42 @@ void cpu::execute_ED() {
 		case 1: {
 			switch(z) {
 				case 0: { // IN (C)
-					reg.AF.A = in(reg.BC.W);
+					if (y != 6) {
+						reg.AF.A = in(reg.BC.W);
+					}
 					setFlagsSZP(reg.AF.A);
 				} break;	
 				case 1: { // OUT (C)
-					out(reg.BC.W, reg.AF.A);
+					if (y != 6) {
+						out(reg.BC.W, reg.AF.A);
+					}
 				} break;
 				case 2: { // ADC/SBC
-					uint16_t* rp = t_rp[0][p];
+					uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL, IX or IY
+					uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
 					uint32_t  l;
 					if (q == 0) {
-						l = (reg.HL.W - (*rp) - reg.AF.C);
+						l = ((*rp1) - (*rp2) - reg.AF.C);
 					}
 					else {
-						l = (reg.HL.W + (*rp) + reg.AF.C);
+						l = ((*rp1) + (*rp2) + reg.AF.C);
 					}
 					uint16_t w = (l & 0xFFFF);
 					reg.AF.Z = (w == 0);
 					reg.AF.C = (l > 0xFFFF);
 					reg.AF.S = (w > 0x7FFF);
-					reg.HL.W = w;
+					*rp1 = w;
 				} break;
 				case 3: { // Load register pair from/to immediate address
-					uint16_t* rp = t_rp[shift_IXY][p];
+					uint16_t* rp = t_rp1[shift_IXY][p];
 					uint16_t dd;
 					fetch(); dd = data;
 					fetch(); dd |= data << 8;
 					if (q ==0) {
-						write(dd++, *(rp++));
-						write(dd, *rp);
+						writeWord(dd, *rp);	
 					}
 					else {
-						*(rp++) = read(dd++);
-						*rp = read(dd);
+						*rp = readWord(dd);	
 					}
 				} break;
 				case 4: { // NEG
@@ -460,15 +463,15 @@ void cpu::execute_x0z0()
 //
 void cpu::execute_x0z1() {
 	if (q == 0) {	// LD rr,n
-		uint16_t* rp = t_rp[3 + shift_IXY][p];
+		uint16_t* rp = t_rp1[shift_IXY][p];
 		uint16_t dd;
 		fetch(); dd = data;
 		fetch(); dd |= data << 8;
 		*rp = dd;
 	}
 	else {			// ADD HL,rr
-		uint16_t* rp1 = t_rp[shift_IXY][2];	// HL/IX/IY
-		uint16_t* rp2 = t_rp[0][p];
+		uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL/IX/IY
+		uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
 		uint32_t  l = *rp1 + *rp2;
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
@@ -486,42 +489,42 @@ void cpu::execute_x0z2() {
 	if (q == 0) {
 		switch(p) {
 			case 0: { // LD (BC),A
-				write(reg.BC.W, reg.AF.A);
+				writeByte(reg.BC.W, reg.AF.A);
 			} break;
 			case 1: { // LD (DE),A
-				write(reg.DE.W, reg.AF.A);
+				writeByte(reg.DE.W, reg.AF.A);
 			} break;
-			case 2: { // LD (nn),HL 
-				fetch(); dd = data;
+			case 2: { // LD (nn),HL/IX/IY 
+				uint16_t* rp = t_rp1[shift_IXY][2];
+				fetch(); dd = data;					// Get nn
 				fetch(); dd |= data << 8;
-				write(dd, reg.HL.L);
-				write(dd+1, reg.HL.H);
+				writeWord(dd, *rp);
 			} break;
 			case 3: { // LD (nn),A
-				fetch(); dd = data;
+				fetch(); dd = data;					// Get nn
 				fetch(); dd |= data << 8;
-				write(dd, reg.AF.A);
+				writeByte(dd, reg.AF.A);				// Write the accumulator to memory
 			} break;
 		}
 	}
 	else {
 		switch(p) {
 			case 0: { // LD A,(BC)
-				reg.AF.A = read(reg.BC.W);
+				reg.AF.A = readByte(reg.BC.W);
 			} break;
 			case 1: { // LD A,(DE)
-				reg.AF.A = read(reg.DE.W);
+				reg.AF.A = readByte(reg.DE.W);
 			} break;
-			case 2: { // LD HL,(nn)
-				fetch(); dd = data;
+			case 2: { // LD HL/IX/IY,(nn)
+				uint16_t* rp = t_rp1[shift_IXY][2];
+				fetch(); dd = data;					// Get nn
 				fetch(); dd |= data << 8;
-				reg.HL.L = read(dd);
-				reg.HL.H = read(dd+1);
+				*rp = readWord(dd);
 			} break;
 			case 3: { // LD A,(nn)
-				fetch(); dd = data;
+				fetch(); dd = data;					// Get nn
 				fetch(); dd |= data << 8;
-				reg.AF.A = read(dd);
+				reg.AF.A = readByte(dd);				// Read the accumulator from memory
 			} break;
 		}
 	}
@@ -532,7 +535,7 @@ void cpu::execute_x0z2() {
 // X=0, Z=3: 16-bit increment/decrement
 //
 void cpu::execute_x0z3() {
-	uint16_t* rp = t_rp[shift_IXY + 3][p];
+	uint16_t* rp = t_rp1[shift_IXY][p];
 	if (q == 0) {	// INC
 		(*rp)++;
 	}
@@ -552,7 +555,7 @@ void cpu::execute_x0z4() {
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		write(p, (*p) + 1);			// Increment it
+		writeByte(p, (*p) + 1);			// Increment it
 	}
 	setFlagsSZP(*p);
 	shift_IXY = 0;
@@ -568,7 +571,7 @@ void cpu::execute_x0z5() {
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		write(p, (*p) - 1);			// Decrement it
+		writeByte(p, (*p) - 1);			// Decrement it
 	}
 	setFlagsSZP(*p);
 	shift_IXY = 0;
@@ -586,7 +589,7 @@ void cpu::execute_x0z6() {
 	else {
 		p = getIndPtr(shift_IXY);	// Otherwise next byte is the index
 		fetch();					// Followed by the immediate value
-		write(p, data);				// And store
+		writeByte(p, data);				// And store
 	}
 	shift_IXY = 0;
 }
@@ -629,7 +632,7 @@ void cpu::execute_x1__()
 		}
 		else {			
 			py = getIndPtr(shift_IXY);			// Otherwise
-			write(py, *pz);						// Write to the memory location
+			writeByte(py, *pz);						// Write to the memory location
 		}
 	}
 	shift_IXY = 0;
@@ -667,7 +670,7 @@ void cpu::execute_x3z0() {
 void cpu::execute_x3z1()
 {
 	if (q == 0) {	// POP
-		uint16_t* rp = t_rp[shift_IXY + 3][p];
+		uint16_t* rp = t_rp2[shift_IXY][p];
 		*rp = pop();
 	}
 	else {
@@ -733,11 +736,11 @@ void cpu::execute_x3z3() {
 			fetch();
 			reg.AF.A=in(data);
 		} break;
-		case 4: { // EX (SP),rr
-			uint16_t* rr = t_rp[shift_IXY][2];
-			uint8_t   t;
-			t = read(reg.SP+0); write(reg.SP+0, *(rr+0)); write(*(rr+0), t);
-			t = read(reg.SP+1); write(reg.SP+1, *(rr+1)); write(*(rr+1), t);
+		case 4: { // EX (SP),rp
+			uint16_t* rp = t_rp1[shift_IXY][2];
+			uint16_t  dd = readWord(reg.SP); 	// Read the value from the stack
+			writeWord(reg.SP, *rp);				// Write the register to the stack
+			*rp = dd;							// Set the register to the new value
 		} break;
 		case 5: { // EX DE,HL
 			reg.ex(&reg.DE, &reg.HL);
@@ -777,7 +780,7 @@ void cpu::execute_x3z4() {
 void cpu::execute_x3z5()
 {
 	if (q == 0) {	// PUSH
-		uint16_t* rp = t_rp[shift_IXY + 3][p];
+		uint16_t* rp = t_rp2[shift_IXY][p];
 		push(*rp);
 		shift_IXY = 0;
 	}
@@ -838,34 +841,49 @@ bool cpu::isROM(uint8_t* p) {
 	return a < 0x4000;
 }
 
-// Write d to ram
+// Write byte to ram
 //
-void cpu::write(uint16_t a, uint8_t d) { // Into ram[a]
-	write(&ram[a], d);
+void cpu::writeByte(uint16_t a, uint8_t d) { // Into ram[a]
+	writeByte(&ram[a], d);
 }
-void cpu::write(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere in ram buffer
+void cpu::writeByte(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere in ram buffer
 	if(!isROM(p)) {
 		*p = d;
 	}
 }
 
-uint8_t cpu::read(uint16_t a) {
+// Read a byte from ram
+//
+uint8_t cpu::readByte(uint16_t a) {
 	return ram[a];
+}
+
+// Write a word to ram
+//
+void cpu::writeWord(uint16_t a, uint16_t d) {
+	writeByte(a, d & 0xFF);		// Write the lsb byte out
+	writeByte(a + 1, d >> 8);	// Write the msb byte out
+}
+
+// Read a word from ram
+//
+uint16_t cpu::readWord(uint16_t a) {
+	return readByte(a) | (readByte(a + 1) << 8);
 }
 
 // Push v on the stack
 //
 void cpu::push(uint16_t v)
 {
-	write(--reg.SP, v >> 8);	// Push MSB
-	write(--reg.SP, v & 0xFF);	// Push LSB
+	writeByte(--reg.SP, v >> 8);	// Push MSB
+	writeByte(--reg.SP, v & 0xFF);	// Push LSB
 }
 
 // Pop off the stack
 //
 uint16_t cpu::pop()
 {
-	return read(reg.SP++) | read(reg.SP++) << 8;	// Pop LSB then MSB
+	return readByte(reg.SP++) | readByte(reg.SP++) << 8;	// Pop LSB then MSB
 }
 
 // Get an indirect pointer from (HL), (IX + d) or (IY + d)
@@ -898,7 +916,7 @@ uint8_t cpu::in(uint16_t addr) {
 }
 
 void cpu::ldi() {	
-	write(reg.DE.W++, read(reg.HL.W++));
+	writeByte(reg.DE.W++, readByte(reg.HL.W++));
 	reg.BC.W--;
 }
 
@@ -912,7 +930,7 @@ void cpu::outi() {
 }
 
 void cpu::ldd() {	
-	write(reg.DE.W--, read(reg.HL.W--));
+	writeByte(reg.DE.W--, readByte(reg.HL.W--));
 	reg.BC.W--;
 }
 

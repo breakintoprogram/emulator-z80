@@ -92,22 +92,23 @@ private:
 	// 8-bit register lookup
 	//
 	uint8_t* t_r[3][8] = {
-		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.HL.H, &reg.HL.L, NULL, &reg.AF.H },	// NULL is (HL)
-		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IX.H, &reg.IX.L, NULL, &reg.AF.H },	// NULL is (IX)
-		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IY.H, &reg.IY.L, NULL, &reg.AF.H }	// NULL is (IY)
+		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.HL.H, &reg.HL.L, NULL, &reg.AF.A },	// NULL is (HL)
+		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IX.H, &reg.IX.L, NULL, &reg.AF.A },	// NULL is (IX)
+		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IY.H, &reg.IY.L, NULL, &reg.AF.A }	// NULL is (IY)
 	};
 
-	// 16-bit register lookup
+	// 16-bit register lookups
 	//
-	uint16_t * t_rp[8][4] = {
+	uint16_t * t_rp1[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.SP   },
-		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   },
+		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   }
+	};
+
+	uint16_t * t_rp2[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.AF.W },
-		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W },
-		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.IX.W },
-		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.IY.W }
+		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
 	};
 
 	registers reg;									// The registers
@@ -152,9 +153,11 @@ private:
 	void		execute_x3z7();						// Restart instructions
 
 	bool		isROM(uint8_t* p);					// Return true if the pointer is in ROM space
-	void		write(uint16_t a, uint8_t d);		// Write a byte to the address space
-	void		write(uint8_t* p, uint8_t d);		// Write a byte to the address space by pointer
-	uint8_t		read(uint16_t a);					// Read a byte from the address space
+	void		writeByte(uint16_t a, uint8_t d);	// Write a byte to the address space
+	void		writeByte(uint8_t* p, uint8_t d);	// Write a byte to the address space by pointer
+	uint8_t		readByte(uint16_t a);				// Read a byte from the address space
+	void		writeWord(uint16_t a, uint16_t d);	// Write a word to the address space
+	uint16_t	readWord(uint16_t a);				// Read a word from the address space
 	void		push(uint16_t v);					// PUSH a value onto the stack
 	uint16_t	pop();								// POP a value off the stack
 	uint8_t*	getIndPtr(uint8_t s);				// Get indirect address pointer from HL, IX or IY
