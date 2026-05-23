@@ -70,7 +70,7 @@ void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t by
 void renderULA() {
 	for(int y = 0; y <= 191; y++) {
 		for(int x = 0; x <= 31; x++) {
-			uint16_t p = 0x4000 | ((y & 0xC0) << 11) | ((y & 0x07) << 8) | ((y & 0x38) << 5) | x;
+			uint16_t p = 0x4000 | ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | x;
 			uint16_t a = 0x5800 | (y & 0xF8) | x;
 			renderByte(x<<3, y, ram[a] & 0x07, (ram[a] & 0x38) >> 3, ram[p]);
 		}
@@ -106,7 +106,6 @@ int main()
 	initGraphics();
 
 	z80.reset();
-	z80.addBreakpoint(0x0d90);
 
 	uint16_t   count = 0;
 	bool       quit = false;
