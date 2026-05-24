@@ -67,12 +67,18 @@ void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t by
 	}
 }
 
-void renderULA() {
+void renderULA(bool flash) {
 	for(int y = 0; y <= 191; y++) {
 		for(int x = 0; x <= 31; x++) {
 			uint16_t p = 0x4000 | ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | x;
-			uint16_t a = 0x5800 | (y & 0xF8) | x;
-			renderByte(x<<3, y, ram[a] & 0x07, (ram[a] & 0x38) >> 3, ram[p]);
+			uint16_t a = 0x5800 | ((y & 0xF8) << 2) | x;
+			uint8_t  c = ram[a];
+			if(c < 0x80 || !flash) {
+				renderByte(x<<3, y, c & 0x07, (c & 0x38) >> 3, ram[p]);
+			}
+			else {
+				renderByte(x<<3, y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
+			}
 		}
 	}
 }
@@ -108,6 +114,7 @@ int main()
 	z80.reset();
 
 	uint16_t   count = 0;
+	bool       flash = false;
 	bool       quit = false;
 	bool       step = false;
 	SDL_Event  e;
@@ -125,11 +132,18 @@ int main()
 				// Keyboard events
 				//
 				case SDL_KEYDOWN: {
-					switch (e.key.keysym.sym) {
-						case SDLK_RETURN: step = true; break;
-						case SDLK_b: z80.setSingleStep(true); break;
-						case SDLK_g: z80.setSingleStep(false); break;
-						case SDLK_SPACE: z80.setPort(0x7FFE, 0b00011110); break;
+					if(z80.getSingleStep()) {
+						switch (e.key.keysym.sym) {
+							case SDLK_RETURN: step = true; break;
+							case SDLK_b: z80.setSingleStep(true); break;
+							case SDLK_g: z80.setSingleStep(false); break;
+						}
+					}
+					else {
+						switch (e.key.keysym.sym) {
+							case SDLK_SPACE: z80.setPort(0x7FFE, 0b00011110); break;
+							case SDLK_RETURN: z80.setPort(0xBFFE, 0b00011110); break;
+						}
 					}
 				} break;
 				case SDL_KEYUP: {
@@ -159,8 +173,9 @@ int main()
 		//
 		if(count == 0) {
 			z80.interruptRequest(0x38);
-			renderULA();
+			renderULA(flash);
 			SDL_RenderPresent(renderer);
+			flash = !flash;
 		}
 		count= ++count % 16384;
 	}
