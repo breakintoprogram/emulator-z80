@@ -40,6 +40,11 @@ int main()
 		cout << "Error loading '" << code << "'." << endl;
 		return false;
 	}; 
+
+    for(int i=0; i<255; i++) {
+        ports[i] = 0xFF;
+    }
+	
 	keyboard keyboard(ports);
 	video video(ram + 0x4000);
 	cpu z80(ram, ports);

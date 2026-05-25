@@ -2,9 +2,6 @@
 
 keyboard::keyboard(uint8_t *ports) : ports(ports)
 {
-    for(int i=0; i<255; i++) {
-        ports[i] = 0xFF;
-    }
 }
 
 keyboard::~keyboard() {
