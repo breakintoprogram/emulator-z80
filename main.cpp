@@ -6,9 +6,9 @@
 #include <vector>
 #include <fstream> 
 #include <filesystem>
-#include <SDL2/SDL.h>
 
 #include "defines.h"
+#include "video.h"
 #include "cpu.h"
 
 // https://skoolkid.github.io/rom/index.html
@@ -16,22 +16,6 @@
 #define code "roms/48.rom"
 
 uint8_t ram[RAM_SIZE];
-
-SDL_Window *win = NULL;
-SDL_Renderer *renderer = NULL;
-
-int videoScale = 2;
-
-uint8_t palette[8][3] = {
-	{ 0x00, 0x00, 0x00}, // Black
-	{ 0x00, 0x00, 0xFF}, // Blue
-	{ 0xFF, 0x00, 0x00}, // Red
-	{ 0xFF, 0x00, 0xFF}, // Magenta
-	{ 0x00, 0xFF, 0x00}, // Green
-	{ 0x00, 0xFF, 0xFF}, // Cyan
-	{ 0xFF, 0xFF, 0x00}, // Yellow
-	{ 0xFF, 0xFF, 0xFF}, // White
-};
 
 bool load(uint8_t* buffer, string filename) {
 	if (!filesystem::exists(filename)) {
@@ -48,59 +32,6 @@ bool load(uint8_t* buffer, string filename) {
 	return false;
 }
 
-void setColour(uint8_t colour) {
-	SDL_SetRenderDrawColor(renderer, palette[colour][0], palette[colour][1], palette[colour][2], 0x00);
-}
-
-void renderPoint(int x, int y, uint8_t colour) {
-	setColour(colour);
-	SDL_Rect p = {
-		x * videoScale, y * videoScale, videoScale, videoScale
-	};
-	SDL_RenderFillRect(renderer, &p);
-}
-
-void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
-	for(int i = 0; i <= 7; i++) {
-		renderPoint(x++, y, ((byte & 0x80) == 0x80) ? inkColour : paperColour);
-		byte <<= 1;
-	}
-}
-
-void renderULA(bool flash) {
-	for(int y = 0; y <= 191; y++) {
-		for(int x = 0; x <= 31; x++) {
-			uint16_t p = 0x4000 | ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | x;
-			uint16_t a = 0x5800 | ((y & 0xF8) << 2) | x;
-			uint8_t  c = ram[a];
-			if(c < 0x80 || !flash) {
-				renderByte(x<<3, y, c & 0x07, (c & 0x38) >> 3, ram[p]);
-			}
-			else {
-				renderByte(x<<3, y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
-			}
-		}
-	}
-}
-
-bool initGraphics() {
-	int width = 256 * videoScale;
-	int height = 192 * videoScale;
-
-    SDL_Init(SDL_INIT_VIDEO);
-	win = SDL_CreateWindow("emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(win, -1, 0);
-	setColour(7);
-	SDL_RenderClear(renderer);
-	return true;
-}
-
-void destroyGraphics() {
-	SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(win);
-    SDL_Quit();		
-}
-
 int main()
 {
 	if (!load(ram, code)) {
@@ -108,8 +39,7 @@ int main()
 		return false;
 	}; 
 	cpu z80(ram);
-
-	initGraphics();
+	video video(ram + 0x4000);
 
 	z80.reset();
 
@@ -173,12 +103,9 @@ int main()
 		//
 		if(count == 0) {
 			z80.interruptRequest(0x38);
-			renderULA(flash);
-			SDL_RenderPresent(renderer);
+			video.render(flash);
 			flash = !flash;
 		}
 		count= ++count % 16384;
 	}
-
-	destroyGraphics();
 }
