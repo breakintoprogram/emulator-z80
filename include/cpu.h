@@ -92,6 +92,8 @@ private:
 		&registers::F_M,
 	};
 
+	registers reg;									// The registers
+
 	// 8-bit register lookup
 	//
 	uint8_t* t_r[3][8] = {
@@ -114,7 +116,6 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
 	};
 
-	registers reg;									// The registers
 	uint8_t   data;									// Last fetched byte
 	uint8_t   x;									// Decoded opcode
 	uint8_t   y;
