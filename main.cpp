@@ -9,6 +9,7 @@
 
 #include "defines.h"
 #include "video.h"
+#include "keyboard.h"
 #include "cpu.h"
 
 // https://skoolkid.github.io/rom/index.html
@@ -16,6 +17,7 @@
 #define code "roms/48.rom"
 
 uint8_t ram[RAM_SIZE];
+uint8_t ports[256];
 
 bool load(uint8_t* buffer, string filename) {
 	if (!filesystem::exists(filename)) {
@@ -38,8 +40,9 @@ int main()
 		cout << "Error loading '" << code << "'." << endl;
 		return false;
 	}; 
-	cpu z80(ram);
+	keyboard keyboard(ports);
 	video video(ram + 0x4000);
+	cpu z80(ram, ports);
 
 	z80.reset();
 
@@ -70,17 +73,12 @@ int main()
 						}
 					}
 					else {
-						switch (e.key.keysym.sym) {
-							case SDLK_SPACE: z80.setPort(0x7FFE, 0b00011110); break;
-							case SDLK_RETURN: z80.setPort(0xBFFE, 0b00011110); break;
-						}
+						keyboard.press(e.key.keysym.sym, true);
 					}
 				} break;
 				case SDL_KEYUP: {
-					switch (e.key.keysym.sym) {
-						default: z80.setPort(0x0000, 0xFF); break;
-					}
-				}
+					keyboard.press(e.key.keysym.sym, false);
+				} break;
 			}
 		}
 		//

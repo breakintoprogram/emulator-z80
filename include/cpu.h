@@ -14,7 +14,7 @@ using namespace std;
 
 class cpu {
 public:
-	cpu(uint8_t* ram);
+	cpu(uint8_t* ram, uint8_t* ports);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -22,7 +22,6 @@ public:
 	uint16_t getCycle();
 
 	void     interruptRequest(uint8_t i);
-	void	 setPort(uint16_t a, uint8_t v);
 
 	void     reset();
 	void     debug();
@@ -32,6 +31,8 @@ public:
 
 private:
 	uint8_t* ram;
+	uint8_t *ports;
+
 	vector<uint16_t> breakpoints;
 
 	// Look-up tables for the x and z decode stage
@@ -128,8 +129,6 @@ private:
 	int16_t   cycle;								// The current cycle (0 = ready to execute next instruction)
 	bool      singleStep;
 	bool      trace;
-	uint16_t  portAddress;
-	uint8_t   portValue;
 
 	void 		execute_CB();						// Execute CB prefixed opcodes
 	void		execute_ED();						// Execute ED prefixed opcodes

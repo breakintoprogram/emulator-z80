@@ -1,7 +1,8 @@
 #include "cpu.h"
 
-cpu::cpu(uint8_t* ram) :
+cpu::cpu(uint8_t* ram, uint8_t* ports) :
 	ram(ram),
+	ports(ports),
 	p(0),
 	q(0),
 	x(0),
@@ -15,8 +16,6 @@ cpu::cpu(uint8_t* ram) :
 	interrupt(0),
 	singleStep(false),
 	cycle(0),
-	portAddress(0),
-	portValue(0),
 	trace(false)
 {
 }
@@ -45,13 +44,6 @@ void cpu::interruptRequest(uint8_t i) {
 	if(reg.IFF1 && reg.IFF2) {	// If the interrupts are enabled
 		interrupt = i;
 	}
-}
-
-// Set a port
-//
-void cpu::setPort(uint16_t a, uint8_t v) {
-	portAddress = a;
-	portValue = v;
 }
 
 // Reset the CPU
@@ -918,10 +910,7 @@ void cpu::out(uint16_t addr, uint8_t v) {
 }
 
 uint8_t cpu::in(uint16_t addr) {
-	if(addr == portAddress) {
-		return portValue;
-	}
-	return 0xFF;
+	return ports[addr >> 8];
 }
 
 void cpu::ldi() {	
