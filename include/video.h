@@ -12,7 +12,9 @@ public:
     video(uint8_t* ram, uint8_t* port);
     ~video();
 
-    void render(bool flash);
+    void render();
+    bool getvBlank();
+    void setvBlank(bool b);
 private:
     SDL_Window* win = NULL;
     SDL_Renderer* renderer = NULL;
@@ -20,7 +22,14 @@ private:
     uint8_t* ram = NULL;
     uint8_t* ulaPort = NULL;
 
-    int videoScale = 2;
+    int  videoScale;
+    int  state;
+    int  scanX;
+    int  scanY;
+    int  width;
+    int  height;
+    bool vBlank;
+    bool flash;
 
     uint8_t palette[8][3] = {
         { 0x00, 0x00, 0x00}, // Black
@@ -35,7 +44,6 @@ private:
 
     void setColour(uint8_t colour);
     void renderPoint(int x, int y, uint8_t colour);
+    void renderByte(int x, int y, uint8_t borderColour);
     void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte);
-    void renderBorderH(int x, int y, uint8_t colour);
-    void renderBorderV(int y, uint8_t colour);
 };

@@ -55,8 +55,6 @@ int main()
 
 	z80.reset();
 
-	uint16_t   count = 0;
-	bool       flash = false;
 	bool       quit = false;
 	bool       step = false;
 	SDL_Event  e;
@@ -109,14 +107,13 @@ int main()
 		}
 		step = false;
 		//
-		// Update the screen every so often
+		// Update the screen 
 		//
-		if(count == 0) {
+		video.render();
+		if(video.getvBlank()) {
+			video.setvBlank(false);
 			z80.interruptRequest(0x38);
-			video.render(flash);
-			flash = !flash;
 		}
-		count= ++count % 16384;
 	}
 
 	delete[] ram;

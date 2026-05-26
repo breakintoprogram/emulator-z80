@@ -8,14 +8,26 @@
 
 video::video(uint8_t* ram, uint8_t* port) :
 	ram(ram),
-	ulaPort(port)
+	ulaPort(port),
+	state(0),
+	scanX(0),
+	scanY(0),
+	videoScale(2),
+	width(HRES + (HBORDER * 2)),
+	height(VRES + (VBORDER * 2)),
+	vBlank(false),
+	flash(false)
 {
-	int width = (HRES + (HBORDER * 2)) * videoScale;
-	int height = (VRES + (VBORDER * 2)) * videoScale;
-
     SDL_Init(SDL_INIT_VIDEO);
-	win = SDL_CreateWindow("emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(win, -1, 0);
+	win = SDL_CreateWindow(
+		"emulator",
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		width * videoScale,
+		height * videoScale,
+		SDL_WINDOW_SHOWN
+	);
+	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 	setColour(7);
 	SDL_RenderClear(renderer);
 }
@@ -26,41 +38,97 @@ video::~video() {
     SDL_Quit();		
 }
 
-void video::render(bool flash) {
+bool video::getvBlank() {
+	return vBlank;
+}
+
+void video::setvBlank(bool b) {
+	vBlank = b;
+}
+
+void video::render() {
 	uint8_t borderColour = (*ulaPort) & 0x07;
-	renderBorderV(0, borderColour);
-	for(int y = 0; y < VRES; y++) {
-		renderBorderH(0, VBORDER + y, borderColour);
-		for(int x = 0; x < CRES; x++) {
-			uint16_t p = ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | x;
-			uint16_t a = ((y & 0xF8) << 2) | x | 0x1800;
+	switch(state) {
+		//
+		// Top border
+		//
+		case 0: { 
+			renderByte(scanX, scanY, borderColour);
+			scanX+=8;
+			if(scanX == width) {
+				scanX = 0;
+				scanY++;
+				if(scanY == VBORDER) {
+					state = 1;		
+				}
+			}
+		} break;
+		//
+		// Left border
+		//
+		case 1: {
+			renderByte(scanX, scanY, borderColour);
+			scanX+=8;
+			if(scanX == HBORDER) {
+				state = 2;
+			}
+		} break;
+		//
+		// Scanline
+		//
+		case 2: {
+			uint16_t x = scanX - HBORDER;
+			uint16_t y = scanY - VBORDER;
+			uint16_t p = ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | (x >> 3);
+			uint16_t a = ((y & 0xF8) << 2) | (x >> 3) | 0x1800;
 			uint8_t  c = ram[a];
 			if(c < 0x80 || !flash) {
-				renderByte(HBORDER + (x << 3), VBORDER + y, c & 0x07, (c & 0x38) >> 3, ram[p]);
+				renderByte(HBORDER + x, VBORDER + y, c & 0x07, (c & 0x38) >> 3, ram[p]);
 			}
 			else {
-				renderByte(HBORDER + (x << 3), VBORDER + y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
+				renderByte(HBORDER + x, VBORDER + y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
 			}
-		}
-		renderBorderH(HRES + HBORDER, VBORDER + y, borderColour);
-	}
-	renderBorderV(VRES + VBORDER, borderColour);
-	SDL_RenderPresent(renderer);
-}
-
-void video::renderBorderH(int x, int y, uint8_t colour) {
-	for(int i = 0; i < HBORDER; i++) {
-		renderPoint(x++, y, colour);
-	}
-}
-
-void video::renderBorderV(int y, uint8_t colour) {
-	int width = (HRES + (HBORDER * 2));
-	for(int i = 0; i < VBORDER; i++) {
-		for(int x = 0; x < width; x++) {
-			renderPoint(x, y, colour);
-		}
-		y++;
+			scanX+=8;
+			if(scanX == HBORDER + HRES) {
+				state = 3;
+			}
+		} break;
+		//
+		// Right border
+		//
+		case 3: {
+			renderByte(scanX, scanY, borderColour);
+			scanX+=8;
+			if(scanX == width) {
+				scanX = 0;
+				scanY++;
+				if(scanY < (VBORDER + VRES)) {
+					state = 1;
+				}
+				else {
+					state = 4;
+				}
+			}
+		} break;
+		//
+		// Bottom border
+		//
+		case 4: {
+			renderByte(scanX, scanY, borderColour);
+			scanX+=8;
+			if(scanX == width) {
+				scanX = 0;
+				scanY++;
+				if(scanY == height) {
+					scanY = 0;
+					state = 0;
+					SDL_RenderPresent(renderer);
+					SDL_RenderClear(renderer);
+					vBlank = true;
+					flash = !flash;
+				}
+			}
+		} break;
 	}
 }
 
@@ -74,6 +142,12 @@ void video::renderPoint(int x, int y, uint8_t colour) {
 		x * videoScale, y * videoScale, videoScale, videoScale
 	};
 	SDL_RenderFillRect(renderer, &p);
+}
+
+void video::renderByte(int x, int y, uint8_t borderColour) {
+	for(int i = 0; i <= 7; i++) {
+		renderPoint(x++, y, borderColour);
+	}	
 }
 
 void video::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
