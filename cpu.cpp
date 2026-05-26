@@ -312,7 +312,7 @@ void cpu::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | (d & 0x0F);
 							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
 							writeByte(reg.HL.W, d);
-							setFlagsSZP(d);
+							setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
@@ -322,7 +322,7 @@ void cpu::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | ((d & 0xF0) >> 4);
 							d = ((d & 0x0F) << 4) | (a & 0x0F);
 							writeByte(reg.HL.W, d);
-							setFlagsSZP(d);
+							setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
