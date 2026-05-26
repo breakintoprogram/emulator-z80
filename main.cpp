@@ -16,7 +16,7 @@
 //
 #define code "roms/48.rom"
 
-uint8_t* ram;;
+uint8_t* ram;
 uint8_t* ports;
 
 bool load(uint8_t* buffer, string filename) {
@@ -50,7 +50,7 @@ int main()
         ports[i] = 0xFF;
     }
 	keyboard keyboard(ports);
-	video video(ram + 0x4000);
+	video video(ram + 0x4000, ports); // TODO: The ports are wrong on this; see out function in cpu.cpp
 	cpu z80(ram, ports);
 
 	z80.reset();

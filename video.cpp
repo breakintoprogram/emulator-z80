@@ -1,9 +1,17 @@
 #include "video.h"
 
-video::video(uint8_t* ram) : ram(ram)
+#define HRES 256
+#define VRES 192
+#define CRES  32
+#define HBORDER 48
+#define VBORDER 56
+
+video::video(uint8_t* ram, uint8_t* port) :
+	ram(ram),
+	ulaPort(port)
 {
-	int width = 256 * videoScale;
-	int height = 192 * videoScale;
+	int width = (HRES + (HBORDER * 2)) * videoScale;
+	int height = (VRES + (VBORDER * 2)) * videoScale;
 
     SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
@@ -19,20 +27,41 @@ video::~video() {
 }
 
 void video::render(bool flash) {
-	for(int y = 0; y <= 191; y++) {
-		for(int x = 0; x <= 31; x++) {
+	uint8_t borderColour = (*ulaPort) & 0x07;
+	renderBorderV(0, borderColour);
+	for(int y = 0; y < VRES; y++) {
+		renderBorderH(0, VBORDER + y, borderColour);
+		for(int x = 0; x < CRES; x++) {
 			uint16_t p = ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | x;
 			uint16_t a = ((y & 0xF8) << 2) | x | 0x1800;
 			uint8_t  c = ram[a];
 			if(c < 0x80 || !flash) {
-				renderByte(x<<3, y, c & 0x07, (c & 0x38) >> 3, ram[p]);
+				renderByte(HBORDER + (x << 3), VBORDER + y, c & 0x07, (c & 0x38) >> 3, ram[p]);
 			}
 			else {
-				renderByte(x<<3, y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
+				renderByte(HBORDER + (x << 3), VBORDER + y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
 			}
 		}
+		renderBorderH(HRES + HBORDER, VBORDER + y, borderColour);
 	}
+	renderBorderV(VRES + VBORDER, borderColour);
 	SDL_RenderPresent(renderer);
+}
+
+void video::renderBorderH(int x, int y, uint8_t colour) {
+	for(int i = 0; i < HBORDER; i++) {
+		renderPoint(x++, y, colour);
+	}
+}
+
+void video::renderBorderV(int y, uint8_t colour) {
+	int width = (HRES + (HBORDER * 2));
+	for(int i = 0; i < VBORDER; i++) {
+		for(int x = 0; x < width; x++) {
+			renderPoint(x, y, colour);
+		}
+		y++;
+	}
 }
 
 void video::setColour(uint8_t colour) {

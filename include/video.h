@@ -9,7 +9,7 @@ using namespace std;
 
 class video {
 public:
-    video(uint8_t* ram);
+    video(uint8_t* ram, uint8_t* port);
     ~video();
 
     void render(bool flash);
@@ -18,6 +18,7 @@ private:
     SDL_Renderer* renderer = NULL;
     
     uint8_t* ram = NULL;
+    uint8_t* ulaPort = NULL;
 
     int videoScale = 2;
 
@@ -35,5 +36,6 @@ private:
     void setColour(uint8_t colour);
     void renderPoint(int x, int y, uint8_t colour);
     void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte);
-
+    void renderBorderH(int x, int y, uint8_t colour);
+    void renderBorderV(int y, uint8_t colour);
 };
