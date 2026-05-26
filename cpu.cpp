@@ -776,7 +776,7 @@ void cpu::execute_x3z3() {
 		} break;
 		case 3: { // IN A,(n)
 			fetch();
-			reg.AF.A=in(data);
+			reg.AF.A=in(reg.AF.A << 8 | data);
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = t_rp1[shift_IXY][2];
