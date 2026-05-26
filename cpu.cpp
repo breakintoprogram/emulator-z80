@@ -772,11 +772,11 @@ void cpu::execute_x3z3() {
 		} break;
 		case 2: { // OUT (n),A
 			fetch();
-			out(data, reg.AF.A);
+			out((reg.AF.A << 8) | data, reg.AF.A);
 		} break;
 		case 3: { // IN A,(n)
 			fetch();
-			reg.AF.A=in(reg.AF.A << 8 | data);
+			reg.AF.A=in((reg.AF.A << 8) | data);
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = t_rp1[shift_IXY][2];
@@ -946,7 +946,7 @@ uint8_t* cpu::getIXYPtr(uint8_t s, uint8_t d) {
 }
 
 void cpu::out(uint16_t addr, uint8_t v) {
-
+	ports[0] = v;	// TODO: This is just a bodge for the border colour
 }
 
 uint8_t cpu::in(uint16_t addr) {
