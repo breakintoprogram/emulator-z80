@@ -307,8 +307,24 @@ void cpu::execute_ED() {
 							reg.AF.A = reg.R;
 						} break;
 						case 4: { // RRD
+							uint16_t d = readByte(reg.HL.W);
+							uint8_t a = reg.AF.A;
+							reg.AF.A = (reg.AF.A & 0xF0) | (d & 0x0F);
+							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
+							writeByte(reg.HL.W, d);
+							setFlagsSZP(d);
+							reg.AF.B = 0;
+							reg.AF.N = 0;
 						} break;
 						case 5: { // RLD
+							uint16_t d = readByte(reg.HL.W);
+							uint8_t a = reg.AF.A;
+							reg.AF.A = (reg.AF.A & 0xF0) | ((d & 0xF0) >> 4);
+							d = ((d & 0x0F) << 4) | (a & 0x0F);
+							writeByte(reg.HL.W, d);
+							setFlagsSZP(d);
+							reg.AF.B = 0;
+							reg.AF.N = 0;
 						} break;
 					}
 				} break;
