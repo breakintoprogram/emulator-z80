@@ -50,6 +50,7 @@ int main()
 	cpu z80(ram, ports);
 
 	z80.reset();
+	z80.addBreakpoint(0x1295);
 
 	uint16_t   count = 0;
 	bool       flash = false;
@@ -70,10 +71,13 @@ int main()
 				// Keyboard events
 				//
 				case SDL_KEYDOWN: {
+					if (e.key.keysym.sym == SDLK_F12) {
+						z80.setSingleStep(true);
+					}
 					if(z80.getSingleStep()) {
 						switch (e.key.keysym.sym) {
 							case SDLK_RETURN: step = true; break;
-							case SDLK_b: z80.setSingleStep(true); break;
+							case SDLK_t: z80.setTrace(true); break;
 							case SDLK_g: z80.setSingleStep(false); break;
 						}
 					}

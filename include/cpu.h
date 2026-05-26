@@ -19,6 +19,7 @@ public:
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
 	void     setSingleStep(bool value);
+	void     setTrace(bool value);
 	uint16_t getCycle();
 
 	void     interruptRequest(uint8_t i);

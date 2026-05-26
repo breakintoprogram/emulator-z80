@@ -34,6 +34,10 @@ void cpu::setSingleStep(bool value) {
 	singleStep = value;
 }
 
+void cpu::setTrace(bool value) {
+	trace = value;
+}
+
 uint16_t cpu::getCycle() {
 	return cycle;
 }
