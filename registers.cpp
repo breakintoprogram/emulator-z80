@@ -22,6 +22,7 @@ void registers::A_add(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) + (d & 0x0F)) & 0x10) != 0;
+	AF.N = 0;
 	AF.A = b;
 
 }
@@ -35,6 +36,7 @@ void registers::A_adc(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) + (d & 0x0F) + c) & 0x10) != 0;
+	AF.N = 0;
 	AF.A = b;
 }
 
@@ -46,6 +48,7 @@ void registers::A_sub(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	AF.N = 1;
 	AF.A = b;
 }
 
@@ -58,6 +61,7 @@ void registers::A_sbc(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F) - c) & 0x10) != 0;
+	AF.N = 1;
 	AF.A = b;
 }
 
@@ -89,18 +93,19 @@ void registers::A_cp(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	AF.N = 1;
 }
 
 void registers::A_neg() {
-	AF.C = (AF.A != 0x00);
-	AF.A=-AF.A;
-	AF.S = (AF.A > 0x7F);
-	AF.Z = (AF.A == 0x00);
+	uint8_t a = AF.A;
+	AF.A = 0;
+	A_sub(a);
 }
 
 void registers::A_not() {
 	AF.A=~AF.A;
 	AF.B = 1;
+	AF.N = 1;
 }
 
 void registers::A_daa() {

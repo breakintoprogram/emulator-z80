@@ -162,6 +162,8 @@ void cpu::execute_CB() {
 				if(!isROM(p)) {
 					auto f = lut_rot[y];
 					(this->*f)(p);
+					reg.AF.B = 0;
+					reg.AF.N = 0;
 				}		 
 			} break;
 			case 1: { // BIT
@@ -256,11 +258,13 @@ void cpu::execute_ED() {
 					if (q == 0) {
 						l = ((*rp1) - (*rp2) - c);
 						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
+						reg.AF.N = 1;
 
 					}
 					else {
 						l = ((*rp1) + (*rp2) + c);
 						reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF) + c) & 0x1000) != 0;
+						reg.AF.N = 0;
 					}
 					uint16_t w = (l & 0xFFFF);
 					reg.AF.Z = (w == 0);
@@ -495,6 +499,7 @@ void cpu::execute_x0z1() {
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
+		reg.AF.N = 1;
 		*rp1 = w;
 	}
 	shift_IXY = 0;
@@ -564,14 +569,19 @@ void cpu::execute_x0z3() {
 //
 void cpu::execute_x0z4() {
 	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t  a;
 	if (p) {						// If it is a register then
+		a = *p;						// The current value
 		(*p)++;						// Just increment it
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
+		a = *p;						// The current value
 		writeByte(p, (*p) + 1);		// Increment it
 	}
 	setFlagsSZP(*p);
+	reg.AF.B = (((a & 0x0F) + 1) & 0x10) != 0;
+	reg.AF.N = 0;
 	shift_IXY = 0;
 }
 
@@ -580,14 +590,19 @@ void cpu::execute_x0z4() {
 //
 void cpu::execute_x0z5() {
 	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t  a;						// The current value
 	if (p) {						// If it is a register then
+		a = *p;						// The current value
 		(*p)--;						// Just decrement it
 	}
 	else {
 		p = getIndPtr(shift_IXY);	// Get the address to be affected
+		a = *p;						// The current value
 		writeByte(p, (*p) - 1);		// Decrement it
 	}
 	setFlagsSZP(*p);
+	reg.AF.B = (((a & 0x0F) - 1) & 0x10) != 0;
+	reg.AF.N = 1;
 	shift_IXY = 0;
 }
 
