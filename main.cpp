@@ -16,8 +16,8 @@
 //
 #define code "roms/48.rom"
 
-uint8_t ram[RAM_SIZE];
-uint8_t ports[256];
+uint8_t* ram;;
+uint8_t* ports;
 
 bool load(uint8_t* buffer, string filename) {
 	if (!filesystem::exists(filename)) {
@@ -28,7 +28,7 @@ bool load(uint8_t* buffer, string filename) {
 		return false;
 	}
 	ifstream file(filename, ios::binary);
-	if (file.read((char *)&ram[0], filesize)) {
+	if (file.read((char *)ram, filesize)) {
 		return true;
 	}
 	return false;
@@ -36,21 +36,24 @@ bool load(uint8_t* buffer, string filename) {
 
 int main()
 {
+	ram = new uint8_t[RAM_SIZE];
+	ports = new uint8_t[256];
+
 	if (!load(ram, code)) {
 		cout << "Error loading '" << code << "'." << endl;
+		delete[] ram;
+		delete[] ports;
 		return false;
 	}; 
 
     for(int i=0; i<255; i++) {
         ports[i] = 0xFF;
     }
-	
 	keyboard keyboard(ports);
 	video video(ram + 0x4000);
 	cpu z80(ram, ports);
 
 	z80.reset();
-	z80.addBreakpoint(0x1295);
 
 	uint16_t   count = 0;
 	bool       flash = false;
@@ -115,4 +118,9 @@ int main()
 		}
 		count= ++count % 16384;
 	}
+
+	delete[] ram;
+	delete[] ports;
+	
+	return 0;
 }
