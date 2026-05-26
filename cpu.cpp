@@ -249,14 +249,18 @@ void cpu::execute_ED() {
 					}
 				} break;
 				case 2: { // ADC/SBC
+					uint8_t c = reg.AF.C;
 					uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL, IX or IY
 					uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
 					uint32_t  l;
 					if (q == 0) {
-						l = ((*rp1) - (*rp2) - reg.AF.C);
+						l = ((*rp1) - (*rp2) - c);
+						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
+
 					}
 					else {
-						l = ((*rp1) + (*rp2) + reg.AF.C);
+						l = ((*rp1) + (*rp2) + c);
+						reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF) + c) & 0x1000) != 0;
 					}
 					uint16_t w = (l & 0xFFFF);
 					reg.AF.Z = (w == 0);
@@ -490,6 +494,7 @@ void cpu::execute_x0z1() {
 		uint32_t  l = *rp1 + *rp2;
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
+		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
 		*rp1 = w;
 	}
 	shift_IXY = 0;

@@ -15,39 +15,49 @@ void registers::ex(REG* rp1, REG* rp2)
 }
 
 void registers::A_add(uint8_t d) {
-	uint16_t w = AF.A + d;
+	uint8_t  a = AF.A;
+	uint16_t w = a + d;
 	uint8_t  b = w & 0xFF;
 	AF.C = (w > 0xFF);
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
+	AF.B = (((a & 0x0F) + (d & 0x0F)) & 0x10) != 0;
 	AF.A = b;
 
 }
 
 void registers::A_adc(uint8_t d) {
-	uint16_t w = AF.A + d + AF.C;
+	uint8_t  a = AF.A;
+	uint16_t w = a + d + AF.C;
 	uint8_t  b = w & 0xFF;
+	uint8_t  c = AF.C;
 	AF.C = (w > 0xFF);
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
+	AF.B = (((a & 0x0F) + (d & 0x0F) + c) & 0x10) != 0;
 	AF.A = b;
 }
 
 void registers::A_sub(uint8_t d) {
-	uint16_t w = AF.A - d;
+	uint8_t  a = AF.A;
+	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
 	AF.C = (w > 0xFF);
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
+	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
 	AF.A = b;
 }
 
 void registers::A_sbc(uint8_t d) {
-	uint16_t w = AF.A - d - AF.C;
+	uint8_t  a = AF.A;
+	uint16_t w = a - d - AF.C;
 	uint8_t  b = w & 0xFF;
+	uint8_t  c = AF.C;
 	AF.C = (w > 0xFF);
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
+	AF.B = (((a & 0x0F) - (d & 0x0F) - c) & 0x10) != 0;
 	AF.A = b;
 }
 
@@ -72,11 +82,13 @@ void registers::A_or(uint8_t d) {
 }
 
 void registers::A_cp(uint8_t d) {
-	uint16_t w = AF.A - d;
+	uint8_t  a = AF.A;
+	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
 	AF.C = (w > 0xFF);
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
+	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
 }
 
 void registers::A_neg() {
@@ -88,6 +100,7 @@ void registers::A_neg() {
 
 void registers::A_not() {
 	AF.A=~AF.A;
+	AF.B = 1;
 }
 
 void registers::A_daa() {
