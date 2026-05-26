@@ -109,6 +109,28 @@ void registers::A_not() {
 }
 
 void registers::A_daa() {
+	uint8_t a = AF.A;
+	uint8_t b = AF.B;
+	uint8_t c = AF.C;
+	uint8_t i = 0;
+
+	if (b || ((a & 0x0F) > 0x09)) {
+		i |= 0x06;
+	};
+
+	if (c || (a > 0x9F) || ((a > 0x8F) && ((a & 0x0F) > 0x09))) {
+		i |= 0x60;
+	};
+	
+	if( a > 0x99) c = 1;
+	
+	if (AF.N) {
+		A_sub(i);
+	} else {
+		A_add(i);		
+	};
+
+	AF.C = c;
 }
 
 bool registers::F_NZ() { return AF.Z == 0; }
