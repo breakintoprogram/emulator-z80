@@ -8,7 +8,7 @@
             "args": [
             ],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "logging": { "engineLogging": false },
             "externalConsole": false,

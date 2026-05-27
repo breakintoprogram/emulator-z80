@@ -16,9 +16,6 @@
                 "${workspaceFolder}/bin/${workspaceFolderBasename}",
                 "-lSDL2"
             ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
             "problemMatcher": [
                 "$gcc"
             ],
