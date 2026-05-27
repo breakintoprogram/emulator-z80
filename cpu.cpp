@@ -959,12 +959,18 @@ void cpu::ldi() {
 }
 
 void cpu::cpi() {	
+	reg.A_cp(readByte(reg.HL.W++));
+	reg.BC.W--;
 }
 
 void cpu::ini() {	
+	writeByte(reg.HL.W++, in(reg.BC.W));
+	reg.BC.L--;
 }
 
 void cpu::outi() {	
+	out(reg.BC.W, readByte(reg.HL.W++));
+	reg.BC.L--;
 }
 
 void cpu::ldd() {	
@@ -973,12 +979,18 @@ void cpu::ldd() {
 }
 
 void cpu::cpd() {	
+	reg.A_cp(readByte(reg.HL.W++));
+	reg.BC.W--;
 }
 
 void cpu::ind() {	
+	writeByte(reg.HL.W--, in(reg.BC.W));
+	reg.BC.L--;
 }
 
 void cpu::outd() {	
+	out(reg.BC.W, readByte(reg.HL.W--));
+	reg.BC.L--;
 }
 
 void cpu::ldir() {	
@@ -988,12 +1000,21 @@ void cpu::ldir() {
 }
 
 void cpu::cpir() {	
+	do {
+		cpi();
+	} while (reg.BC.W != 0 && reg.AF.Z == 0);
 }
 
 void cpu::inir() {	
+	do {
+		ini();
+	} while (reg.BC.L != 0);
 }
 
 void cpu::otir() {	
+	do {
+		outi();
+	} while (reg.BC.L != 0);
 }
 
 void cpu::lddr() {	
@@ -1003,11 +1024,20 @@ void cpu::lddr() {
 }
 
 void cpu::cpdr() {	
+	do {
+		cpd();
+	} while (reg.BC.W != 0 && reg.AF.Z == 0);
 }
 
 void cpu::indr() {	
+	do {
+		ind();
+	} while (reg.BC.L != 0);
 }
 
 void cpu::otdr() {	
+	do {
+		outd();
+	} while (reg.BC.L != 0);
 }
 
