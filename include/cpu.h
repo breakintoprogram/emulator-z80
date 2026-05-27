@@ -12,9 +12,12 @@
 
 using namespace std;
 
+typedef	void    (*out_t)(uint16_t, uint8_t);
+typedef	uint8_t (*in_t)(uint16_t);
+
 class cpu {
 public:
-	cpu(uint8_t* ram, uint8_t* ports);
+	cpu(uint8_t* ram, out_t pout, in_t pin);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -30,9 +33,11 @@ public:
 	void     decode();
 	void     execute();
 
+	out_t    pout;
+	in_t  	 pin;
+
 private:
 	uint8_t* ram;
-	uint8_t *ports;
 
 	vector<uint16_t> breakpoints;
 

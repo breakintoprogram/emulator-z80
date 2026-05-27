@@ -1,8 +1,9 @@
 #include "cpu.h"
 
-cpu::cpu(uint8_t* ram, uint8_t* ports) :
+cpu::cpu(uint8_t* ram, out_t pout, in_t pin) :
 	ram(ram),
-	ports(ports),
+	pout(pout),
+	pin(pin),
 	p(0),
 	q(0),
 	x(0),
@@ -946,11 +947,16 @@ uint8_t* cpu::getIXYPtr(uint8_t s, uint8_t d) {
 }
 
 void cpu::out(uint16_t addr, uint8_t v) {
-	ports[0] = v;	// TODO: This is just a bodge for the border colour
+	if(pout) {
+		pout(addr, v);
+	}
 }
 
 uint8_t cpu::in(uint16_t addr) {
-	return ports[addr >> 8];
+	if(pin) {
+		return pin(addr);
+	}
+	return 0;
 }
 
 void cpu::ldi() {	

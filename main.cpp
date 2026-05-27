@@ -34,6 +34,14 @@ bool load(uint8_t* buffer, string filename) {
 	return false;
 }
 
+void decodeOut(uint16_t addr, uint8_t v) {
+	ports[0] = v;
+}
+
+uint8_t decodeIn(uint16_t addr) {
+	return ports[addr >> 8];
+}
+
 int main()
 {
 	ram = new uint8_t[RAM_SIZE];
@@ -50,8 +58,8 @@ int main()
         ports[i] = 0xFF;
     }
 	keyboard keyboard(ports);
-	video video(ram + 0x4000, ports); // TODO: The ports are wrong on this; see out function in cpu.cpp
-	cpu z80(ram, ports);
+	video video(ram + 0x4000, ports);
+	cpu z80(ram, &decodeOut, &decodeIn);
 
 	z80.reset();
 
