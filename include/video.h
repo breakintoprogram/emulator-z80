@@ -31,7 +31,21 @@ private:
     bool vBlank;
     bool flash;
 
-    uint8_t palette[8][3] = {
+    uint8_t palette[16][3] = {
+        //
+        // The normal colours
+        //
+        { 0x00, 0x00, 0x00}, // Black
+        { 0x00, 0x00, 0xC0}, // Blue
+        { 0xC0, 0x00, 0x00}, // Red
+        { 0xC0, 0x00, 0xC0}, // Magenta
+        { 0x00, 0xC0, 0x00}, // Green
+        { 0x00, 0xC0, 0xC0}, // Cyan
+        { 0xC0, 0xC0, 0x00}, // Yellow
+        { 0xC0, 0xC0, 0xC0}, // White
+        //
+        // The bright colours
+        //
         { 0x00, 0x00, 0x00}, // Black
         { 0x00, 0x00, 0xFF}, // Blue
         { 0xFF, 0x00, 0x00}, // Red

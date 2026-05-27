@@ -82,11 +82,13 @@ void video::render() {
 			uint16_t p = ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | (x >> 3);
 			uint16_t a = ((y & 0xF8) << 2) | (x >> 3) | 0x1800;
 			uint8_t  c = ram[a];
+			uint8_t  ink = (c & 0x07) | ((c & 0x40) >> 3);
+			uint8_t  paper = ((c & 0x78) >> 3);
 			if(c < 0x80 || !flash) {
-				renderByte(HBORDER + x, VBORDER + y, c & 0x07, (c & 0x38) >> 3, ram[p]);
+				renderByte(HBORDER + x, VBORDER + y, ink, paper, ram[p]);
 			}
 			else {
-				renderByte(HBORDER + x, VBORDER + y, (c & 0x38) >> 3,  c & 0x07,ram[p]);
+				renderByte(HBORDER + x, VBORDER + y, paper, ink ,ram[p]);
 			}
 			scanX+=8;
 			if(scanX == HBORDER + HRES) {
