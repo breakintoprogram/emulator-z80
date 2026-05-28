@@ -57,7 +57,7 @@ int main()
     for(int i=0; i<255; i++) {
         ports[i] = 0xFF;
     }
-	keyboard keyboard(ports);
+	Keyboard keyboard(ports);
 	ula ula(ram + 0x4000, ports);
 	cpu z80(ram, &decodeOut, &decodeIn);
 

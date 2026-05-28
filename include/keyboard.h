@@ -7,10 +7,10 @@
 
 using namespace std;
 
-class keyboard {
+class Keyboard {
 public:
-    keyboard(uint8_t* ports);
-    ~keyboard();
+    Keyboard(uint8_t* ports);
+    ~Keyboard();
 
     void press(SDL_Keycode sym, bool pressed);
 private:

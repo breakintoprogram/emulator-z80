@@ -1,13 +1,13 @@
 #include "keyboard.h"
 
-keyboard::keyboard(uint8_t *ports) : ports(ports)
+Keyboard::Keyboard(uint8_t *ports) : ports(ports)
 {
 }
 
-keyboard::~keyboard() {
+Keyboard::~Keyboard() {
 }
 
-void keyboard::press(SDL_Keycode sym, bool pressed) {
+void Keyboard::press(SDL_Keycode sym, bool pressed) {
     switch(sym) {
         case SDLK_LSHIFT: port(0xFE, 0, pressed); break;
         case SDLK_z: port(0xFE, 1, pressed); break;
@@ -59,7 +59,7 @@ void keyboard::press(SDL_Keycode sym, bool pressed) {
     }
 }
 
-void keyboard::port(uint8_t p, uint8_t bit, bool pressed) {
+void Keyboard::port(uint8_t p, uint8_t bit, bool pressed) {
     uint8_t b = 1 << bit;
     if(pressed) {
         ports[p] &= ~b;
