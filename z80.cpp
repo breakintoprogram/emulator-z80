@@ -1,6 +1,6 @@
-#include "cpu.h"
+#include "z80.h"
 
-cpu::cpu(uint8_t* ram, out_t pout, in_t pin) :
+Z80::Z80(uint8_t* ram, out_t pout, in_t pin) :
 	ram(ram),
 	pout(pout),
 	pin(pin),
@@ -23,29 +23,29 @@ cpu::cpu(uint8_t* ram, out_t pout, in_t pin) :
 
 // Add a breakpoint
 //
-void cpu::addBreakpoint(uint16_t a) {
+void Z80::addBreakpoint(uint16_t a) {
 	breakpoints.push_back(a);
 }
 
-bool cpu::getSingleStep() {
+bool Z80::getSingleStep() {
 	return singleStep;
 }
 
-void cpu::setSingleStep(bool value) {
+void Z80::setSingleStep(bool value) {
 	singleStep = value;
 }
 
-void cpu::setTrace(bool value) {
+void Z80::setTrace(bool value) {
 	trace = value;
 }
 
-uint16_t cpu::getCycle() {
+uint16_t Z80::getCycle() {
 	return cycle;
 }
 
 // Do the NMI
 //
-void cpu::interruptRequest(uint8_t i) {
+void Z80::interruptRequest(uint8_t i) {
 	if(reg.IFF1 && reg.IFF2) {	// If the interrupts are enabled
 		interrupt = i;
 	}
@@ -53,14 +53,14 @@ void cpu::interruptRequest(uint8_t i) {
 
 // Reset the CPU
 //
-void cpu::reset()
+void Z80::reset()
 {
 	reg.PC = 0;
 }
 
 // Output some debugging preamble
 //
-void cpu::debug() {
+void Z80::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
 		if (trace) {
 			cout << "F=[";
@@ -89,7 +89,7 @@ void cpu::debug() {
 
 // Fetch an opcode
 //
-void cpu::fetch()
+void Z80::fetch()
 {
 	data = readByte(reg.PC++);
 	if (trace) {
@@ -99,7 +99,7 @@ void cpu::fetch()
 
 // Private helper method to fetch a word
 //
-uint16_t cpu::fetchWord() {
+uint16_t Z80::fetchWord() {
 	fetch();
 	uint16_t w = data;		// The LSB
 	fetch();
@@ -108,7 +108,7 @@ uint16_t cpu::fetchWord() {
 
 // Decode the instruction
 //
-void cpu::decode()
+void Z80::decode()
 {
 	x = (data & 0xC0) >> 6;	// 0b11000000
 	y = (data & 0x38) >> 3;	// 0b00111000
@@ -119,7 +119,7 @@ void cpu::decode()
 
 // Execute the instruction
 //
-void cpu::execute()
+void Z80::execute()
 {
 	switch(shift_EXT) {
 		case 0xCB: execute_CB(); break;
@@ -149,7 +149,7 @@ void cpu::execute()
 	}
 }
 
-void cpu::execute_CB() {
+void Z80::execute_CB() {
 	//
 	// Special case for DD/FD prefixes
 	// The index has been stored in index_CB
@@ -235,7 +235,7 @@ void cpu::execute_CB() {
 	shift_EXT = 0;
 }
 
-void cpu::execute_ED() {
+void Z80::execute_ED() {
 	switch(x) {
 
 		case 1: {
@@ -347,7 +347,7 @@ void cpu::execute_ED() {
 	shift_IXY = 0;
 }
 
-void cpu::setFlagsSZP(uint8_t d) {
+void Z80::setFlagsSZP(uint8_t d) {
 	reg.AF.S = (d >= 0x80);
 	reg.AF.Z = (d == 0x00);
 	reg.AF.P = ((d % 2) == 0);
@@ -355,11 +355,11 @@ void cpu::setFlagsSZP(uint8_t d) {
 
 // Note that RLC A affects SZC, RLCA only affects carry
 //
-void cpu::rlc(uint8_t * r) {
+void Z80::rlc(uint8_t * r) {
 	rlca(r);
 	setFlagsSZP(*r);
 }
-void cpu::rlca(uint8_t * r) {
+void Z80::rlca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | c;				// Shift left, and copy the bit shifted out into bit 0
@@ -369,11 +369,11 @@ void cpu::rlca(uint8_t * r) {
 
 // Note that RRC A affects SZC, RRCA only affects carry
 //
-void cpu::rrc(uint8_t * r) {
+void Z80::rrc(uint8_t * r) {
 	rrca(r);
 	setFlagsSZP(*r);
 }
-void cpu::rrca(uint8_t * r) {
+void Z80::rrca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1 | c<<7;			// Shift right, and copy the bit shifted out into bit 7
@@ -383,11 +383,11 @@ void cpu::rrca(uint8_t * r) {
 
 // Note that RL A affects SZC, RLA only affects carry
 //
-void cpu::rl(uint8_t * r) {
+void Z80::rl(uint8_t * r) {
 	rla(r);
 	setFlagsSZP(*r);
 }
-void cpu::rla(uint8_t * r) {
+void Z80::rla(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | reg.AF.C;		// Shift left, and copy carry into bit 0
@@ -397,11 +397,11 @@ void cpu::rla(uint8_t * r) {
 
 // Note that RR A affects SZC, RRA only affects carry
 //
-void cpu::rr(uint8_t * r) {
+void Z80::rr(uint8_t * r) {
 	rra(r);
 	setFlagsSZP(*r);	
 }
-void cpu::rra(uint8_t * r) {
+void Z80::rra(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1 | reg.AF.C<<7; 	// Shift right, and copy carry into bit 7
@@ -409,7 +409,7 @@ void cpu::rra(uint8_t * r) {
 	*r = d;						// Store result back
 }
 
-void cpu::sla(uint8_t * r) {
+void Z80::sla(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1;					// Shift the data left; 0 is shifted in
@@ -418,7 +418,7 @@ void cpu::sla(uint8_t * r) {
 	*r = d;						// Store result back
 }
 
-void cpu::sra(uint8_t * r) {
+void Z80::sra(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t s = d&0x80;			// The sign bit we want to preserve
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
@@ -428,7 +428,7 @@ void cpu::sra(uint8_t * r) {
 	*r = d;						// Store result back
 }
 
-void cpu::sll(uint8_t * r) {
+void Z80::sll(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | 1;				// Shift the data left, setting bit 0 to 1
@@ -437,7 +437,7 @@ void cpu::sll(uint8_t * r) {
 	*r = d;						// Store the result back
 }
 
-void cpu::srl(uint8_t * r) {
+void Z80::srl(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1;					// Shift the data right, setting bit 7 to 0
@@ -446,7 +446,7 @@ void cpu::srl(uint8_t * r) {
 	*r = d;						// Store the result back
 }
 
-void cpu::execute_trap()
+void Z80::execute_trap()
 {
 	cout << "unimplemented opcode" << endl;
 }
@@ -454,7 +454,7 @@ void cpu::execute_trap()
 //
 // X=0, Z=0: Relative jumps and assorted ops
 //
-void cpu::execute_x0z0()
+void Z80::execute_x0z0()
 {
 	switch (y) {
 		//
@@ -503,7 +503,7 @@ void cpu::execute_x0z0()
 //
 // X=0, Z=1: 16-bit load immediate/add
 //
-void cpu::execute_x0z1() {
+void Z80::execute_x0z1() {
 	if (q == 0) {	// LD rr,n
 		uint16_t* rp = t_rp1[shift_IXY][p];
 		uint16_t  dd = fetchWord();				
@@ -525,7 +525,7 @@ void cpu::execute_x0z1() {
 //
 // X=0, Z=2: Indirect load
 //
-void cpu::execute_x0z2() {
+void Z80::execute_x0z2() {
 	if (q == 0) {
 		switch(p) {
 			case 0: { // LD (BC),A
@@ -570,7 +570,7 @@ void cpu::execute_x0z2() {
 //
 // X=0, Z=3: 16-bit increment/decrement
 //
-void cpu::execute_x0z3() {
+void Z80::execute_x0z3() {
 	uint16_t* rp = t_rp1[shift_IXY][p];
 	if (q == 0) {	// INC
 		(*rp)++;
@@ -584,7 +584,7 @@ void cpu::execute_x0z3() {
 //
 // X=0, Z=4: 8-bit increment
 //
-void cpu::execute_x0z4() {
+void Z80::execute_x0z4() {
 	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
 	uint8_t  a;
 	if (p) {						// If it is a register then
@@ -605,7 +605,7 @@ void cpu::execute_x0z4() {
 //
 // X=0, Z=5: 8-bit decrement
 //
-void cpu::execute_x0z5() {
+void Z80::execute_x0z5() {
 	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
 	uint8_t  a;						// The current value
 	if (p) {						// If it is a register then
@@ -626,7 +626,7 @@ void cpu::execute_x0z5() {
 //
 // X=0, Z=6: 8-bit load immediate
 //
-void cpu::execute_x0z6() {
+void Z80::execute_x0z6() {
 	uint8_t* p = t_r[shift_IXY][y];
 	if (p) {						// If it is a register
 		fetch();					// Fetch the immediate value
@@ -643,7 +643,7 @@ void cpu::execute_x0z6() {
 //
 // X=0, Z=7: Assorted operations on accumulator flags
 //
-void cpu::execute_x0z7() {
+void Z80::execute_x0z7() {
 	switch(y) {
 		case 0: rlca(&reg.AF.A); break;			// RLCA
 		case 1: rrca(&reg.AF.A); break;			// RRCA
@@ -659,7 +659,7 @@ void cpu::execute_x0z7() {
 
 // 8 bit loading
 //
-void cpu::execute_x1__()
+void Z80::execute_x1__()
 {
 	if (y == 6 && z == 6) {	// HALT
 		if(!reg.IFF1) {
@@ -686,7 +686,7 @@ void cpu::execute_x1__()
 
 // Operations on accumulator and register/memory location
 //
-void cpu::execute_x2__()
+void Z80::execute_x2__()
 {
 	uint8_t* p = t_r[shift_IXY][z];				// Pointer to the register or HL
 	if (p == NULL) {
@@ -700,7 +700,7 @@ void cpu::execute_x2__()
 //
 // X=3, Z=0: Conditional return
 //
-void cpu::execute_x3z0() {
+void Z80::execute_x3z0() {
 	auto f = lut_cc[y];		// Look up the cc function
 	bool c = (reg.*f)();	// Get the condition
 	if(c) {
@@ -713,7 +713,7 @@ void cpu::execute_x3z0() {
 //
 // X=3, Z=1: POP and various operations
 //
-void cpu::execute_x3z1()
+void Z80::execute_x3z1()
 {
 	if (q == 0) {	// POP
 		uint16_t* rp = t_rp2[shift_IXY][p];
@@ -746,7 +746,7 @@ void cpu::execute_x3z1()
 //
 // X=3, Z=2: Conditional jump
 //
-void cpu::execute_x3z2() {
+void Z80::execute_x3z2() {
 	auto f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
 	uint16_t dd = fetchWord();	// And the address
@@ -759,7 +759,7 @@ void cpu::execute_x3z2() {
 //
 // X=3, Z=3: Assorted operations
 //
-void cpu::execute_x3z3() {
+void Z80::execute_x3z3() {
 	switch(y) {
 		case 0: { // JP
 			reg.PC = fetchWord();
@@ -803,7 +803,7 @@ void cpu::execute_x3z3() {
 //
 // X=3, Z=4: Conditional call
 //
-void cpu::execute_x3z4() {
+void Z80::execute_x3z4() {
 	auto f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
 	uint16_t dd = fetchWord();	// And the address
@@ -818,7 +818,7 @@ void cpu::execute_x3z4() {
 //
 // X=3, Z=5: PUSH and various operations
 //
-void cpu::execute_x3z5()
+void Z80::execute_x3z5()
 {
 	if (q == 0) {	// PUSH
 		uint16_t* rp = t_rp2[shift_IXY][p];
@@ -850,7 +850,7 @@ void cpu::execute_x3z5()
 //
 // X=3, Z=6: Operate on accumulator and immediate operand
 //
-void cpu::execute_x3z6() {
+void Z80::execute_x3z6() {
 	uint8_t* r = &reg.AF.H;		// Pointer to the accumulator
 	fetch();					// Fetch the immediate operand
 	auto f = lut_alu[y];		// Look up the ALU function
@@ -863,7 +863,7 @@ void cpu::execute_x3z6() {
 //
 // X=3, Z=7: Restart instructions
 //
-void cpu::execute_x3z7() {
+void Z80::execute_x3z7() {
 	push(reg.PC);
 	reg.PC = y * 8;
 	callDepth++;
@@ -872,7 +872,7 @@ void cpu::execute_x3z7() {
 
 // Return true if the memory is in ROM - assumes p is somewhere in ram buffer
 //
-bool cpu::isROM(uint8_t* p) {
+bool Z80::isROM(uint8_t* p) {
 	uint64_t a = p - ram;
 	if(a >= RAM_SIZE) {	// Check if we've tried to access an invalid location
 		NOP;			// Something has gone horribly wrong, should stop processing here
@@ -882,10 +882,10 @@ bool cpu::isROM(uint8_t* p) {
 
 // Write byte to ram
 //
-void cpu::writeByte(uint16_t a, uint8_t d) { // Into ram[a]
+void Z80::writeByte(uint16_t a, uint8_t d) { // Into ram[a]
 	writeByte(&ram[a], d);
 }
-void cpu::writeByte(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere in ram buffer
+void Z80::writeByte(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere in ram buffer
 	if(!isROM(p)) {
 		*p = d;
 	}
@@ -893,26 +893,26 @@ void cpu::writeByte(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere 
 
 // Read a byte from ram
 //
-uint8_t cpu::readByte(uint16_t a) {
+uint8_t Z80::readByte(uint16_t a) {
 	return ram[a];
 }
 
 // Write a word to ram
 //
-void cpu::writeWord(uint16_t a, uint16_t d) {
+void Z80::writeWord(uint16_t a, uint16_t d) {
 	writeByte(a, d & 0xFF);		// Write the lsb byte out
 	writeByte(a + 1, d >> 8);	// Write the msb byte out
 }
 
 // Read a word from ram
 //
-uint16_t cpu::readWord(uint16_t a) {
+uint16_t Z80::readWord(uint16_t a) {
 	return readByte(a) | (readByte(a + 1) << 8);
 }
 
 // Push v on the stack
 //
-void cpu::push(uint16_t v)
+void Z80::push(uint16_t v)
 {
 	writeByte(--reg.SP, v >> 8);	// Push MSB
 	writeByte(--reg.SP, v & 0xFF);	// Push LSB
@@ -920,14 +920,14 @@ void cpu::push(uint16_t v)
 
 // Pop off the stack
 //
-uint16_t cpu::pop()
+uint16_t Z80::pop()
 {
 	return readByte(reg.SP++) | readByte(reg.SP++) << 8;	// Pop LSB then MSB
 }
 
 // Get an indirect pointer from (HL), (IX + d) or (IY + d)
 //
-uint8_t* cpu::getIndPtr(uint8_t s) {
+uint8_t* Z80::getIndPtr(uint8_t s) {
 	if(s == 0) {					// shift_IXY is 0, so 
 		return &ram[reg.HL.W];		// just get RAM pointer to (HL)
 	}
@@ -937,7 +937,7 @@ uint8_t* cpu::getIndPtr(uint8_t s) {
 
 // Get an indirect pointer from IX+d or IY+d
 //
-uint8_t* cpu::getIXYPtr(uint8_t s, uint8_t d) {
+uint8_t* Z80::getIXYPtr(uint8_t s, uint8_t d) {
 	int8_t disp = int8_t(d);
 	switch(s) {
 		case 1: return &ram[reg.IX.W + disp]; // (IX + d)
@@ -946,102 +946,102 @@ uint8_t* cpu::getIXYPtr(uint8_t s, uint8_t d) {
 	return NULL;
 }
 
-void cpu::out(uint16_t addr, uint8_t v) {
+void Z80::out(uint16_t addr, uint8_t v) {
 	if(pout) {
 		pout(addr, v);
 	}
 }
 
-uint8_t cpu::in(uint16_t addr) {
+uint8_t Z80::in(uint16_t addr) {
 	if(pin) {
 		return pin(addr);
 	}
 	return 0;
 }
 
-void cpu::ldi() {	
+void Z80::ldi() {	
 	writeByte(reg.DE.W++, readByte(reg.HL.W++));
 	reg.BC.W--;
 }
 
-void cpu::cpi() {	
+void Z80::cpi() {	
 	reg.A_cp(readByte(reg.HL.W++));
 	reg.BC.W--;
 }
 
-void cpu::ini() {	
+void Z80::ini() {	
 	writeByte(reg.HL.W++, in(reg.BC.W));
 	reg.BC.L--;
 }
 
-void cpu::outi() {	
+void Z80::outi() {	
 	out(reg.BC.W, readByte(reg.HL.W++));
 	reg.BC.L--;
 }
 
-void cpu::ldd() {	
+void Z80::ldd() {	
 	writeByte(reg.DE.W--, readByte(reg.HL.W--));
 	reg.BC.W--;
 }
 
-void cpu::cpd() {	
+void Z80::cpd() {	
 	reg.A_cp(readByte(reg.HL.W++));
 	reg.BC.W--;
 }
 
-void cpu::ind() {	
+void Z80::ind() {	
 	writeByte(reg.HL.W--, in(reg.BC.W));
 	reg.BC.L--;
 }
 
-void cpu::outd() {	
+void Z80::outd() {	
 	out(reg.BC.W, readByte(reg.HL.W--));
 	reg.BC.L--;
 }
 
-void cpu::ldir() {	
+void Z80::ldir() {	
 	do {
 		ldi();
 	} while (reg.BC.W != 0);
 }
 
-void cpu::cpir() {	
+void Z80::cpir() {	
 	do {
 		cpi();
 	} while (reg.BC.W != 0 && reg.AF.Z == 0);
 }
 
-void cpu::inir() {	
+void Z80::inir() {	
 	do {
 		ini();
 	} while (reg.BC.L != 0);
 }
 
-void cpu::otir() {	
+void Z80::otir() {	
 	do {
 		outi();
 	} while (reg.BC.L != 0);
 }
 
-void cpu::lddr() {	
+void Z80::lddr() {	
 	do {
 		ldd();
 	} while (reg.BC.W != 0);
 }
 
-void cpu::cpdr() {	
+void Z80::cpdr() {	
 	do {
 		cpd();
 	} while (reg.BC.W != 0 && reg.AF.Z == 0);
 }
 
-void cpu::indr() {	
+void Z80::indr() {	
 	do {
 		ind();
 	} while (reg.BC.L != 0);
 }
 
-void cpu::otdr() {	
+void Z80::otdr() {	
 	do {
 		outd();
 	} while (reg.BC.L != 0);

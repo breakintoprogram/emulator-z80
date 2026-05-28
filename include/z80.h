@@ -15,9 +15,9 @@ using namespace std;
 typedef	void    (*out_t)(uint16_t, uint8_t);
 typedef	uint8_t (*in_t)(uint16_t);
 
-class cpu {
+class Z80 {
 public:
-	cpu(uint8_t* ram, out_t pout, in_t pin);
+	Z80(uint8_t* ram, out_t pout, in_t pin);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -43,11 +43,11 @@ private:
 
 	// Look-up tables for the x and z decode stage
 	//
-	vector<vector<void (cpu::*)()>> lut_xz = {
-		{ &cpu::execute_x0z0, &cpu::execute_x0z1, &cpu::execute_x0z2, &cpu::execute_x0z3, &cpu::execute_x0z4, &cpu::execute_x0z5, &cpu::execute_x0z6, &cpu::execute_x0z7 },
-		{ &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__, &cpu::execute_x1__ },
-		{ &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__, &cpu::execute_x2__ },
-		{ &cpu::execute_x3z0, &cpu::execute_x3z1, &cpu::execute_x3z2, &cpu::execute_x3z3, &cpu::execute_x3z4, &cpu::execute_x3z5, &cpu::execute_x3z6, &cpu::execute_x3z7 }
+	vector<vector<void (Z80::*)()>> lut_xz = {
+		{ &Z80::execute_x0z0, &Z80::execute_x0z1, &Z80::execute_x0z2, &Z80::execute_x0z3, &Z80::execute_x0z4, &Z80::execute_x0z5, &Z80::execute_x0z6, &Z80::execute_x0z7 },
+		{ &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__ },
+		{ &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__ },
+		{ &Z80::execute_x3z0, &Z80::execute_x3z1, &Z80::execute_x3z2, &Z80::execute_x3z3, &Z80::execute_x3z4, &Z80::execute_x3z5, &Z80::execute_x3z6, &Z80::execute_x3z7 }
 	};
 
 	// Look-up table for ALU operations
@@ -65,24 +65,24 @@ private:
 
 	// Look-up table for ROT operations
 	//
-	vector<void (cpu::*)(uint8_t *)> lut_rot = {
-		&cpu::rlc,
-		&cpu::rrc,
-		&cpu::rl,
-		&cpu::rr,
-		&cpu::sla,
-		&cpu::sra,
-		&cpu::sll,
-		&cpu::srl
+	vector<void (Z80::*)(uint8_t *)> lut_rot = {
+		&Z80::rlc,
+		&Z80::rrc,
+		&Z80::rl,
+		&Z80::rr,
+		&Z80::sla,
+		&Z80::sra,
+		&Z80::sll,
+		&Z80::srl
 	};
 
 	// Look-up table for block operations
 	//
-	vector<vector<void (cpu::*)()>> lut_bli = {
-		{ &cpu::ldi,  &cpu::cpi,  &cpu::ini,  &cpu::outi },
-		{ &cpu::ldd,  &cpu::cpd,  &cpu::ind,  &cpu::outd },
-		{ &cpu::ldir, &cpu::cpir, &cpu::inir, &cpu::otir },
-		{ &cpu::lddr, &cpu::cpdr, &cpu::indr, &cpu::otdr }
+	vector<vector<void (Z80::*)()>> lut_bli = {
+		{ &Z80::ldi,  &Z80::cpi,  &Z80::ini,  &Z80::outi },
+		{ &Z80::ldd,  &Z80::cpd,  &Z80::ind,  &Z80::outd },
+		{ &Z80::ldir, &Z80::cpir, &Z80::inir, &Z80::otir },
+		{ &Z80::lddr, &Z80::cpdr, &Z80::indr, &Z80::otdr }
 	};
 
 	// Look-up table for conditions

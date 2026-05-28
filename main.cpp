@@ -10,7 +10,7 @@
 #include "defines.h"
 #include "ula.h"
 #include "keyboard.h"
-#include "cpu.h"
+#include "z80.h"
 
 // https://skoolkid.github.io/rom/index.html
 //
@@ -59,7 +59,7 @@ int main()
     }
 	Keyboard keyboard(ports);
 	Ula ula(ram + 0x4000, ports);
-	cpu z80(ram, &decodeOut, &decodeIn);
+	Z80 z80(ram, &decodeOut, &decodeIn);
 
 	z80.reset();
 
