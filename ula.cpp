@@ -6,7 +6,7 @@
 #define HBORDER 48
 #define VBORDER 56
 
-ula::ula(uint8_t* ram, uint8_t* port) :
+Ula::Ula(uint8_t* ram, uint8_t* port) :
 	ram(ram),
 	ulaPort(port),
 	state(0),
@@ -32,21 +32,21 @@ ula::ula(uint8_t* ram, uint8_t* port) :
 	SDL_RenderClear(renderer);
 }
 
-ula::~ula() {
+Ula::~Ula() {
 	SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();		
 }
 
-bool ula::getvBlank() {
+bool Ula::getvBlank() {
 	return vBlank;
 }
 
-void ula::setvBlank(bool b) {
+void Ula::setvBlank(bool b) {
 	vBlank = b;
 }
 
-void ula::render() {
+void Ula::render() {
 	uint8_t borderColour = (*ulaPort) & 0x07;
 	switch(state) {
 		//
@@ -134,11 +134,11 @@ void ula::render() {
 	}
 }
 
-void ula::setColour(uint8_t colour) {
+void Ula::setColour(uint8_t colour) {
 	SDL_SetRenderDrawColor(renderer, palette[colour][0], palette[colour][1], palette[colour][2], 0x00);
 }
 
-void ula::renderPoint(int x, int y, uint8_t colour) {
+void Ula::renderPoint(int x, int y, uint8_t colour) {
 	setColour(colour);
 	SDL_Rect p = {
 		x * videoScale, y * videoScale, videoScale, videoScale
@@ -146,13 +146,13 @@ void ula::renderPoint(int x, int y, uint8_t colour) {
 	SDL_RenderFillRect(renderer, &p);
 }
 
-void ula::renderByte(int x, int y, uint8_t borderColour) {
+void Ula::renderByte(int x, int y, uint8_t borderColour) {
 	for(int i = 0; i <= 7; i++) {
 		renderPoint(x++, y, borderColour);
 	}	
 }
 
-void ula::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
+void Ula::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
 	for(int i = 0; i <= 7; i++) {
 		renderPoint(x++, y, ((byte & 0x80) == 0x80) ? inkColour : paperColour);
 		byte <<= 1;

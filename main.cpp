@@ -58,7 +58,7 @@ int main()
         ports[i] = 0xFF;
     }
 	Keyboard keyboard(ports);
-	ula ula(ram + 0x4000, ports);
+	Ula ula(ram + 0x4000, ports);
 	cpu z80(ram, &decodeOut, &decodeIn);
 
 	z80.reset();

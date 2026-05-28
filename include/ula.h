@@ -7,10 +7,10 @@
 
 using namespace std;
 
-class ula {
+class Ula {
 public:
-    ula(uint8_t* ram, uint8_t* port);
-    ~ula();
+    Ula(uint8_t* ram, uint8_t* port);
+    ~Ula();
 
     void render();
     bool getvBlank();
