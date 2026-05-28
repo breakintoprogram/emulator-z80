@@ -1,3 +1,12 @@
+//
+// Title:	        Z80 registers
+// Description:		Z80 registers and ALU emulation
+// Author:	        Dean Belfield
+// Created:	        22/05/2026
+// Last Updated:	28/05/2026
+//
+// Modinfo:
+
 #pragma once
 
 #include <cstdint>

@@ -1,3 +1,12 @@
+//
+// Title:	        Spectrum 48K keyboard
+// Description:		Spectrum 48K keyboard scanning routines
+// Author:	        Dean Belfield
+// Created:	        25/05/2026
+// Last Updated:	28/05/2026
+//
+// Modinfo:
+
 #include "keyboard.h"
 
 Keyboard::Keyboard(uint8_t *ports) : ports(ports)

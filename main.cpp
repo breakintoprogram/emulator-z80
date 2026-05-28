@@ -1,5 +1,14 @@
-// https://www.asm80.com/
-// NB: Debug only works with the C/C++ extension version 1.29.3 - do not upgrade it!
+//
+// Title:	        ZX Spectrum 48K emulator
+// Description:		ZX Spectrum 48K emulator
+// Author:	        Dean Belfield
+// Created:	        22/05/2026
+// Last Updated:	28/05/2026
+//
+// NB:
+// Interactive ZX Spectrum ROM disassembly: https://skoolkid.github.io/rom/index.html
+//
+// Modinfo:
 
 #include <iostream>
 #include <memory>
@@ -12,8 +21,6 @@
 #include "keyboard.h"
 #include "z80.h"
 
-// https://skoolkid.github.io/rom/index.html
-//
 #define code "roms/48.rom"
 
 Keyboard* keyboard;

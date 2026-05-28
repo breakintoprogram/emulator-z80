@@ -1,3 +1,12 @@
+//
+// Title:	        Z80 CPU
+// Description:		Z80 CPU emulation
+// Author:	        Dean Belfield
+// Created:	        22/05/2026
+// Last Updated:	28/05/2026
+//
+// Modinfo:
+
 #pragma once
 
 #include <iostream>
