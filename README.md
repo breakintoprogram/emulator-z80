@@ -41,10 +41,11 @@ I use the VSCode IDE with the following extensions installed:
 
 ## Useful links
 
-The following sites helped me develop and test my disassemblers and emulators:
+The following sites helped me develop and test this:
 
 - [Decoding Z80 Opcodes](http://www.z80.info/decoding.htm)
 - [Z80 Information](https://jnz.dk/z80/)
+- [The Complete Spectrum ROM Disassembly](https://skoolkid.github.io/rom/index.html)
 
 ## Additional Credits
 
