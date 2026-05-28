@@ -6,9 +6,9 @@
 
 using namespace std;
 
-class registers {
+class Registers {
 public:
-	registers();
+	Registers();
 
 	REG AF, AF_;
 	REG BC, BC_;

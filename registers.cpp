@@ -1,20 +1,20 @@
 #include "registers.h"
 
-registers::registers() :
+Registers::Registers() :
 	PC(0),
 	IFF1(false),
 	IFF2(false)
 {
 }
 
-void registers::ex(REG* rp1, REG* rp2)
+void Registers::ex(REG* rp1, REG* rp2)
 {
 	uint16_t d = (*rp1).W;
 	(*rp1).W = (*rp2).W;
 	(*rp2).W = d;
 }
 
-void registers::A_add(uint8_t d) {
+void Registers::A_add(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a + d;
 	uint8_t  b = w & 0xFF;
@@ -27,7 +27,7 @@ void registers::A_add(uint8_t d) {
 
 }
 
-void registers::A_adc(uint8_t d) {
+void Registers::A_adc(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a + d + AF.C;
 	uint8_t  b = w & 0xFF;
@@ -40,7 +40,7 @@ void registers::A_adc(uint8_t d) {
 	AF.A = b;
 }
 
-void registers::A_sub(uint8_t d) {
+void Registers::A_sub(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
@@ -52,7 +52,7 @@ void registers::A_sub(uint8_t d) {
 	AF.A = b;
 }
 
-void registers::A_sbc(uint8_t d) {
+void Registers::A_sbc(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d - AF.C;
 	uint8_t  b = w & 0xFF;
@@ -65,27 +65,27 @@ void registers::A_sbc(uint8_t d) {
 	AF.A = b;
 }
 
-void registers::A_and(uint8_t d) {
+void Registers::A_and(uint8_t d) {
 	AF.L = 0;
 	AF.A &= d;
 	AF.S = (AF.A > 0x7F);
 	AF.Z = (AF.A == 0x00);
 }
 
-void registers::A_xor(uint8_t d) {
+void Registers::A_xor(uint8_t d) {
 	AF.L = 0;
 	AF.A ^= d;
 	AF.S = (AF.A > 0x7F);
 	AF.Z = (AF.A == 0x00);
 }
-void registers::A_or(uint8_t d) {
+void Registers::A_or(uint8_t d) {
 	AF.L = 0;
 	AF.A |= d;
 	AF.S = (AF.A > 0x7F);
 	AF.Z = (AF.A == 0x00);
 }
 
-void registers::A_cp(uint8_t d) {
+void Registers::A_cp(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
@@ -96,19 +96,19 @@ void registers::A_cp(uint8_t d) {
 	AF.N = 1;
 }
 
-void registers::A_neg() {
+void Registers::A_neg() {
 	uint8_t a = AF.A;
 	AF.A = 0;
 	A_sub(a);
 }
 
-void registers::A_not() {
+void Registers::A_not() {
 	AF.A=~AF.A;
 	AF.B = 1;
 	AF.N = 1;
 }
 
-void registers::A_daa() {
+void Registers::A_daa() {
 	uint8_t a = AF.A;
 	uint8_t b = AF.B;
 	uint8_t c = AF.C;
@@ -133,11 +133,11 @@ void registers::A_daa() {
 	AF.C = c;
 }
 
-bool registers::F_NZ() { return AF.Z == 0; }
-bool registers::F_Z()  { return AF.Z == 1; }
-bool registers::F_NC() { return AF.C == 0; }
-bool registers::F_C()  { return AF.C == 1; }
-bool registers::F_PO() { return AF.P == 0; }
-bool registers::F_PE() { return AF.P == 1; }
-bool registers::F_P()  { return AF.S == 0; }
-bool registers::F_M()  { return AF.S == 1; }
+bool Registers::F_NZ() { return AF.Z == 0; }
+bool Registers::F_Z()  { return AF.Z == 1; }
+bool Registers::F_NC() { return AF.C == 0; }
+bool Registers::F_C()  { return AF.C == 1; }
+bool Registers::F_PO() { return AF.P == 0; }
+bool Registers::F_PE() { return AF.P == 1; }
+bool Registers::F_P()  { return AF.S == 0; }
+bool Registers::F_M()  { return AF.S == 1; }

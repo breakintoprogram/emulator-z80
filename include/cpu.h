@@ -52,15 +52,15 @@ private:
 
 	// Look-up table for ALU operations
 	//
-	vector<void (registers::*)(uint8_t)> lut_alu = {
-		&registers::A_add,
-		&registers::A_adc,
-		&registers::A_sub,
-		&registers::A_sbc,
-		&registers::A_and,
-		&registers::A_xor,
-		&registers::A_or,
-		&registers::A_cp
+	vector<void (Registers::*)(uint8_t)> lut_alu = {
+		&Registers::A_add,
+		&Registers::A_adc,
+		&Registers::A_sub,
+		&Registers::A_sbc,
+		&Registers::A_and,
+		&Registers::A_xor,
+		&Registers::A_or,
+		&Registers::A_cp
 	};
 
 	// Look-up table for ROT operations
@@ -87,18 +87,18 @@ private:
 
 	// Look-up table for conditions
 	//
-	vector<bool (registers::*)()> lut_cc = {
-		&registers::F_NZ,
-		&registers::F_Z,
-		&registers::F_NC,
-		&registers::F_C,
-		&registers::F_PO,
-		&registers::F_PE,
-		&registers::F_P,
-		&registers::F_M,
+	vector<bool (Registers::*)()> lut_cc = {
+		&Registers::F_NZ,
+		&Registers::F_Z,
+		&Registers::F_NC,
+		&Registers::F_C,
+		&Registers::F_PO,
+		&Registers::F_PE,
+		&Registers::F_P,
+		&Registers::F_M,
 	};
 
-	registers reg;									// The registers
+	Registers reg;									// The registers
 
 	// 8-bit register lookup
 	//
