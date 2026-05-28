@@ -72,6 +72,7 @@ void Z80::reset()
 void Z80::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
 		if (trace) {
+			cout << setfill('0') << hex;
 			cout << "F=[";
 			cout << (reg.AF.S  ? 'S' : '-');
 			cout << (reg.AF.Z  ? 'Z' : '-');
@@ -82,13 +83,13 @@ void Z80::debug() {
 			cout << (reg.AF.N  ? 'N' : '-');
 			cout << (reg.AF.C  ? 'C' : '-');
 			cout << "] ";
-			cout << "A=" << setfill('0') << setw(2) << (uint16_t)reg.AF.A << " ";
-			cout << "BC=" << setfill('0') << setw(4) << reg.BC.W << " ";
-			cout << "DE=" << setfill('0') << setw(4) << reg.DE.W << " ";
-			cout << "HL=" << setfill('0') << setw(4) << reg.HL.W << " ";
-			cout << "IX=" << setfill('0') << setw(4) << reg.IX.W << " ";
-			cout << "IY=" << setfill('0') << setw(4) << reg.IY.W << " ";
-			cout << "PC=" << setfill('0') << setw(4) << reg.PC << " : ";
+			cout << "A=" << setw(2) <<(uint16_t)reg.AF.A << " ";
+			cout << "BC=" << setw(4) << reg.BC.W << " ";
+			cout << "DE=" << setw(4) << reg.DE.W << " ";
+			cout << "HL=" << setw(4) << reg.HL.W << " ";
+			cout << "IX=" << setw(4) << reg.IX.W << " ";
+			cout << "IY=" << setw(4) << reg.IY.W << " ";
+			cout << "PC=" << setw(4) << reg.PC << " : ";
 		}
 		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 			setSingleStep(true);
