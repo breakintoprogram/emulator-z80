@@ -16,8 +16,11 @@
 //
 #define code "roms/48.rom"
 
-uint8_t* ram;
-uint8_t* ports;
+Keyboard* keyboard;
+Ula*      ula;
+Z80*      z80;
+uint8_t*  ram;
+uint8_t*  ports;
 
 bool load(uint8_t* buffer, string filename) {
 	if (!filesystem::exists(filename)) {
@@ -44,28 +47,28 @@ uint8_t decodeIn(uint16_t addr) {
 
 int main()
 {
+	bool       quit = false;
+	bool       step = false;
+	SDL_Event  e;
+
 	ram = new uint8_t[RAM_SIZE];
-	ports = new uint8_t[256];
 
 	if (!load(ram, code)) {
 		cout << "Error loading '" << code << "'." << endl;
 		delete[] ram;
-		delete[] ports;
-		return false;
+		return 1;
 	}; 
+
+	ports = new uint8_t[256];
+	keyboard = new Keyboard(ports);
+	ula = new Ula(ram + 0x4000, ports);
+	z80 = new Z80(ram, &decodeOut, &decodeIn);
 
     for(int i=0; i<255; i++) {
         ports[i] = 0xFF;
     }
-	Keyboard keyboard(ports);
-	Ula ula(ram + 0x4000, ports);
-	Z80 z80(ram, &decodeOut, &decodeIn);
 
-	z80.reset();
-
-	bool       quit = false;
-	bool       step = false;
-	SDL_Event  e;
+	z80->reset();
 
 	while (!quit) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -81,51 +84,54 @@ int main()
 				//
 				case SDL_KEYDOWN: {
 					if (e.key.keysym.sym == SDLK_F12) {
-						z80.setSingleStep(true);
+						z80->setSingleStep(true);
 					}
-					if(z80.getSingleStep()) {
+					if(z80->getSingleStep()) {
 						switch (e.key.keysym.sym) {
 							case SDLK_RETURN: step = true; break;
-							case SDLK_t: z80.setTrace(true); break;
-							case SDLK_g: z80.setSingleStep(false); break;
+							case SDLK_t: z80->setTrace(true); break;
+							case SDLK_g: z80->setSingleStep(false); break;
 						}
 					}
 					else {
-						keyboard.press(e.key.keysym.sym, true);
+						keyboard->press(e.key.keysym.sym, true);
 					}
 				} break;
 				case SDL_KEYUP: {
-					keyboard.press(e.key.keysym.sym, false);
+					keyboard->press(e.key.keysym.sym, false);
 				} break;
 			}
 		}
 		//
 		// Process one cycle of the CPU
 		//
-		if(!z80.getSingleStep() || step) {
+		if(!z80->getSingleStep() || step) {
 			//
 			// Execute one instruction
 			//
 			do {
-				z80.debug();
-				z80.fetch();
-				z80.decode();
-				z80.execute();
-			} while(z80.getCycle() > 0);
+				z80->debug();
+				z80->fetch();
+				z80->decode();
+				z80->execute();
+			} while(z80->getCycle() > 0);
 		}
 		step = false;
 		//
 		// Update the screen 
 		//
-		ula.render();
-		if(ula.getvBlank()) {
-			ula.setvBlank(false);
-			z80.interruptRequest(0x38);
+		ula->render();
+		if(ula->getvBlank()) {
+			ula->setvBlank(false);
+			z80->interruptRequest(0x38);
 		}
 	}
 
 	delete[] ram;
 	delete[] ports;
+	delete   keyboard;
+	delete   ula;
+	delete   z80;
 	
 	return 0;
 }
