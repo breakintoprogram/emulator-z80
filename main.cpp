@@ -72,12 +72,11 @@ int main()
 	ula = new Ula(ram + 0x4000, ports);
 	z80 = new Z80(ram, &decodeOut, &decodeIn);
 
-    for(int i=0; i<255; i++) {
+    for(int i=0; i<=255; i++) {
         ports[i] = 0xFF;
     }
 
 	z80->reset();
-	z80->addBreakpoint(0x335E);
 
 	while (!quit) {
 		while (SDL_PollEvent(&e) != 0) {
