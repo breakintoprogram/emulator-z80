@@ -56,6 +56,7 @@ int main()
 {
 	bool       quit = false;
 	bool       step = false;
+	bool       interrupts = true;
 	SDL_Event  e;
 
 	ram = new uint8_t[RAM_SIZE];
@@ -76,6 +77,7 @@ int main()
     }
 
 	z80->reset();
+	z80->addBreakpoint(0x335E);
 
 	while (!quit) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -96,6 +98,8 @@ int main()
 					if(z80->getSingleStep()) {
 						switch (e.key.keysym.sym) {
 							case SDLK_RETURN: step = true; break;
+							case SDLK_d: interrupts = false; break;
+							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(true); break;
 							case SDLK_g: z80->setSingleStep(false); break;
 						}
@@ -130,7 +134,9 @@ int main()
 		ula->render();
 		if(ula->getvBlank()) {
 			ula->setvBlank(false);
-			z80->interruptRequest(0x38);
+			if(!z80->getSingleStep() || interrupts) {
+				z80->interruptRequest(0x38);
+			}
 		}
 	}
 
