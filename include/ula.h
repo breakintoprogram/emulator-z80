@@ -7,10 +7,10 @@
 
 using namespace std;
 
-class video {
+class ula {
 public:
-    video(uint8_t* ram, uint8_t* port);
-    ~video();
+    ula(uint8_t* ram, uint8_t* port);
+    ~ula();
 
     void render();
     bool getvBlank();

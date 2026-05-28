@@ -8,7 +8,7 @@
 #include <filesystem>
 
 #include "defines.h"
-#include "video.h"
+#include "ula.h"
 #include "keyboard.h"
 #include "cpu.h"
 
@@ -58,7 +58,7 @@ int main()
         ports[i] = 0xFF;
     }
 	keyboard keyboard(ports);
-	video video(ram + 0x4000, ports);
+	ula ula(ram + 0x4000, ports);
 	cpu z80(ram, &decodeOut, &decodeIn);
 
 	z80.reset();
@@ -117,9 +117,9 @@ int main()
 		//
 		// Update the screen 
 		//
-		video.render();
-		if(video.getvBlank()) {
-			video.setvBlank(false);
+		ula.render();
+		if(ula.getvBlank()) {
+			ula.setvBlank(false);
 			z80.interruptRequest(0x38);
 		}
 	}
