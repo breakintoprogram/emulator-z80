@@ -22,6 +22,7 @@
 #include "z80.h"
 
 #define code "roms/48.rom"
+#define test "tests/z80doc.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -38,7 +39,7 @@ bool load(uint8_t* buffer, string filename) {
 		return false;
 	}
 	ifstream file(filename, ios::binary);
-	if (file.read((char *)ram, filesize)) {
+	if (file.read((char *)buffer, filesize)) {
 		return true;
 	}
 	return false;
@@ -101,6 +102,7 @@ int main()
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(true); break;
 							case SDLK_g: z80->setSingleStep(false); break;
+							case SDLK_l: load(ram + 0x8000, test); break;
 						}
 					}
 					else {
