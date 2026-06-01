@@ -58,6 +58,7 @@ int main()
 	bool       quit = false;
 	bool       step = false;
 	bool       interrupts = true;
+	int        turbo = 1;
 	SDL_Event  e;
 
 	ram = new uint8_t[RAM_SIZE];
@@ -92,8 +93,13 @@ int main()
 				// Keyboard events
 				//
 				case SDL_KEYDOWN: {
-					if (e.key.keysym.sym == SDLK_F12) {
-						z80->setSingleStep(true);
+					switch (e.key.keysym.sym) {
+						case SDLK_F1: turbo = 1; break;
+						case SDLK_F2: turbo = 2; break;
+						case SDLK_F3: turbo = 4; break;
+						case SDLK_F4: turbo = 8; break;
+						case SDLK_F5: turbo = 16; break;
+						case SDLK_F12: z80->setSingleStep(true); break;
 					}
 					if(z80->getSingleStep()) {
 						switch (e.key.keysym.sym) {
@@ -114,21 +120,23 @@ int main()
 				} break;
 			}
 		}
-		//
-		// Process one cycle of the CPU
-		//
-		if(!z80->getSingleStep() || step) {
+		for(int i = 0; i < turbo; i++) {
 			//
-			// Execute one instruction
+			// Process one cycle of the CPU
 			//
-			do {
-				z80->debug();
-				z80->fetch();
-				z80->decode();
-				z80->execute();
-			} while(z80->getCycle() > 0);
+			if(!z80->getSingleStep() || step) {
+				//
+				// Execute one instruction
+				//
+				do {
+					z80->debug();
+					z80->fetch();
+					z80->decode();
+					z80->execute();
+				} while(z80->getCycle() > 0);
+			}
+			step = false;
 		}
-		step = false;
 		//
 		// Update the screen 
 		//
