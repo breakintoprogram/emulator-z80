@@ -618,6 +618,7 @@ void Z80::execute_x0z4() {
 	}
 	reg.setFlagsSZ(*p);
 	reg.AF.B = (((a & 0x0F) + 1) & 0x10) != 0;
+	reg.AF.P = (a == 0x7F);
 	reg.AF.N = 0;
 	shift_IXY = 0;
 }
@@ -639,6 +640,7 @@ void Z80::execute_x0z5() {
 	}
 	reg.setFlagsSZ(*p);
 	reg.AF.B = (((a & 0x0F) - 1) & 0x10) != 0;
+	reg.AF.P = (a == 0x80);
 	reg.AF.N = 1;
 	shift_IXY = 0;
 }
