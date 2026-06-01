@@ -179,6 +179,8 @@ void Z80::execute_CB() {
 			} break;
 			case 1: { // BIT
 				reg.AF.Z = (((*p) & s) == 0);
+				reg.AF.B = 0;
+				reg.AF.N = 0;
 			} break;
 			case 2: { // RES
 				if(!isROM(p)) {
@@ -272,7 +274,7 @@ void Z80::execute_ED() {
 						l = ((*rp1) - (*rp2) - c);
 						w = l & 0xFFFF;
 						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
-						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
+						reg.AF.P = ((*rp1 ^ ~*rp2) & (*rp1 ^ w) & 0x8000) != 0;
 						reg.AF.N = 1;
 
 					}
@@ -376,6 +378,8 @@ void Z80::rlca(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | c;				// Shift left, and copy the bit shifted out into bit 0
 	reg.AF.C = c;				// Carry is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	*r = d;						// Store result back
 }
 
@@ -391,6 +395,8 @@ void Z80::rrca(uint8_t * r) {
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1 | c<<7;			// Shift right, and copy the bit shifted out into bit 7
 	reg.AF.C = c;				// Carry is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	*r = d;						// Store result back
 }
 
@@ -406,6 +412,8 @@ void Z80::rla(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | reg.AF.C;		// Shift left, and copy carry into bit 0
 	reg.AF.C = c;				// Carry is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	*r = d;						// Store result back
 }
 
@@ -421,6 +429,8 @@ void Z80::rra(uint8_t * r) {
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1 | reg.AF.C<<7; 	// Shift right, and copy carry into bit 7
 	reg.AF.C = c;				// Carry is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	*r = d;						// Store result back
 }
 
@@ -429,6 +439,8 @@ void Z80::sla(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1;					// Shift the data left; 0 is shifted in
 	reg.AF.C = c;				// Carry is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	reg.setFlagsSZ(d);
 	reg.setFlagsP(d);
 	*r = d;						// Store result back
@@ -438,8 +450,10 @@ void Z80::sra(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
 	uint8_t s = d&0x80;			// The sign bit we want to preserve
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
-	d = d >> 1 & s;				// Shift the data right, preserving bit 7
+	d = d >> 1 | s;				// Shift the data right, preserving bit 7
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	reg.setFlagsSZ(d);
 	reg.setFlagsP(d);
 	*r = d;						// Store result back
@@ -450,6 +464,8 @@ void Z80::sll(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | 1;				// Shift the data left, setting bit 0 to 1
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 	reg.setFlagsSZ(d);
 	reg.setFlagsP(d);
 	*r = d;						// Store the result back
@@ -460,6 +476,8 @@ void Z80::srl(uint8_t * r) {
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1;					// Shift the data right, setting bit 7 to 0
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
+	reg.AF.B= 0;
+	reg.AF.N = 0;
 	reg.setFlagsSZ(d);
 	reg.setFlagsP(d);
 	*r = d;						// Store the result back
@@ -535,7 +553,6 @@ void Z80::execute_x0z1() {
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
-		reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
 		reg.AF.N = 1;
 		*rp1 = w;
 	}
@@ -673,8 +690,16 @@ void Z80::execute_x0z7() {
 		case 3: rra (&reg.AF.A); break;			// RRA
 		case 4: reg.A_daa(); break;				// DAA
 		case 5: reg.A_not(); break;				// CPL
-		case 6: reg.AF.C = 1; break;			// SCF
-		case 7: reg.AF.C = !reg.AF.C; break;	// CCF
+		case 6: {								// SCF
+			reg.AF.B = 0;
+			reg.AF.N = 0;
+			reg.AF.C = 1;
+		} break;			
+		case 7: {								// CCF
+			reg.AF.B = reg.AF.C;
+			reg.AF.N = 0;
+			reg.AF.C = !reg.AF.C;
+		} break;	
 	}
 	shift_IXY = 0;
 }

@@ -59,7 +59,7 @@ void Registers::A_sub(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
-	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
+	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
 }
@@ -73,26 +73,26 @@ void Registers::A_sbc(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F) - c) & 0x10) != 0;
-	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
+	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
 }
 
 void Registers::A_and(uint8_t d) {
-	AF.L = 0;
+	AF.L = 0x10;	// Flags reset; Borrow flag set
 	AF.A &= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
 }
 
 void Registers::A_xor(uint8_t d) {
-	AF.L = 0;
+	AF.L = 0x00;	// Flags reset
 	AF.A ^= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
 }
 void Registers::A_or(uint8_t d) {
-	AF.L = 0;
+	AF.L = 0x00;	// Flags reset
 	AF.A |= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
@@ -106,7 +106,7 @@ void Registers::A_cp(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
-	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
+	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 }
 
