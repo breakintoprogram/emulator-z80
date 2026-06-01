@@ -31,6 +31,7 @@ void Registers::A_add(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) + (d & 0x0F)) & 0x10) != 0;
+	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 0;
 	AF.A = b;
 
@@ -45,6 +46,7 @@ void Registers::A_adc(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) + (d & 0x0F) + c) & 0x10) != 0;
+	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 0;
 	AF.A = b;
 }
@@ -57,6 +59,7 @@ void Registers::A_sub(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
 }
@@ -70,6 +73,7 @@ void Registers::A_sbc(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F) - c) & 0x10) != 0;
+	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
 }
@@ -77,21 +81,21 @@ void Registers::A_sbc(uint8_t d) {
 void Registers::A_and(uint8_t d) {
 	AF.L = 0;
 	AF.A &= d;
-	AF.S = (AF.A > 0x7F);
-	AF.Z = (AF.A == 0x00);
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
 }
 
 void Registers::A_xor(uint8_t d) {
 	AF.L = 0;
 	AF.A ^= d;
-	AF.S = (AF.A > 0x7F);
-	AF.Z = (AF.A == 0x00);
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
 }
 void Registers::A_or(uint8_t d) {
 	AF.L = 0;
 	AF.A |= d;
-	AF.S = (AF.A > 0x7F);
-	AF.Z = (AF.A == 0x00);
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
 }
 
 void Registers::A_cp(uint8_t d) {
@@ -102,6 +106,7 @@ void Registers::A_cp(uint8_t d) {
 	AF.S = (b > 0x7F);
 	AF.Z = (b == 0x00);
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 }
 
@@ -141,6 +146,21 @@ void Registers::A_daa() {
 
 	AF.C = c;
 }
+
+void Registers::setFlagsSZ(uint8_t d) {
+	AF.S = (d >= 0x80);
+	AF.Z = (d == 0x00);
+}	
+
+void Registers::setFlagsP(uint8_t d) {
+	bool p = true;
+	for(int i = 0; i < 8; i++) {
+		if(d & 1<<i) {
+			p = !p;
+		}
+	}
+	AF.P = p;
+}	
 
 bool Registers::F_NZ() { return AF.Z == 0; }
 bool Registers::F_Z()  { return AF.Z == 1; }

@@ -50,6 +50,9 @@ public:
 	void A_not();
 	void A_daa();
 
+	void setFlagsSZ(uint8_t d);				// Set flags SZ based upon D
+	void setFlagsP(uint8_t d);				// Set flags P based upon D
+
 	bool F_NZ();
 	bool F_Z();
 	bool F_NC();

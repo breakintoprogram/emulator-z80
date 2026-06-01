@@ -183,7 +183,6 @@ private:
 	uint16_t	pop();								// POP a value off the stack
 	uint8_t*	getIndPtr(uint8_t s);				// Get indirect address pointer from HL, IX or IY
 	uint8_t* 	getIXYPtr(uint8_t s, uint8_t d);	// Get indirect address pointer from IX+d or IY+d
-	void		setFlagsSZP(uint8_t d);				// Set flags SZP based upon D
 
 	void		out(uint16_t addr, uint8_t v);
 	uint8_t		in(uint16_t addr);

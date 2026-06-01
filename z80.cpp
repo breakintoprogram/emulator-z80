@@ -254,7 +254,8 @@ void Z80::execute_ED() {
 					if (y != 6) {
  						reg.AF.A = in(reg.BC.W);
 					}
-					setFlagsSZP(reg.AF.A);
+					reg.setFlagsSZ(reg.AF.A);
+					reg.setFlagsP(reg.AF.A);
 				} break;	
 				case 1: { // OUT (C)
 					if (y != 6) {
@@ -266,18 +267,22 @@ void Z80::execute_ED() {
 					uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL, IX or IY
 					uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
 					uint32_t  l;
+					uint16_t  w;
 					if (q == 0) {
 						l = ((*rp1) - (*rp2) - c);
+						w = l & 0xFFFF;
 						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
+						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
 						reg.AF.N = 1;
 
 					}
 					else {
 						l = ((*rp1) + (*rp2) + c);
+						w = l & 0xFFFF;
 						reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF) + c) & 0x1000) != 0;
+						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
 						reg.AF.N = 0;
 					}
-					uint16_t w = (l & 0xFFFF);
 					reg.AF.Z = (w == 0);
 					reg.AF.C = (l > 0xFFFF);
 					reg.AF.S = (w > 0x7FFF);
@@ -323,7 +328,8 @@ void Z80::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | (d & 0x0F);
 							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
 							writeByte(reg.HL.W, d);
-							setFlagsSZP(reg.AF.A);
+							reg.setFlagsSZ(reg.AF.A);
+							reg.setFlagsP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
@@ -333,7 +339,8 @@ void Z80::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | ((d & 0xF0) >> 4);
 							d = ((d & 0x0F) << 4) | (a & 0x0F);
 							writeByte(reg.HL.W, d);
-							setFlagsSZP(reg.AF.A);
+							reg.setFlagsSZ(reg.AF.A);
+							reg.setFlagsP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
@@ -357,17 +364,12 @@ void Z80::execute_ED() {
 	shift_IXY = 0;
 }
 
-void Z80::setFlagsSZP(uint8_t d) {
-	reg.AF.S = (d >= 0x80);
-	reg.AF.Z = (d == 0x00);
-	reg.AF.P = ((d % 2) == 0);
-}	
-
 // Note that RLC A affects SZC, RLCA only affects carry
 //
 void Z80::rlc(uint8_t * r) {
 	rlca(r);
-	setFlagsSZP(*r);
+	reg.setFlagsSZ(*r);
+	reg.setFlagsP(*r);
 }
 void Z80::rlca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -381,7 +383,8 @@ void Z80::rlca(uint8_t * r) {
 //
 void Z80::rrc(uint8_t * r) {
 	rrca(r);
-	setFlagsSZP(*r);
+	reg.setFlagsSZ(*r);
+	reg.setFlagsP(*r);
 }
 void Z80::rrca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -395,7 +398,8 @@ void Z80::rrca(uint8_t * r) {
 //
 void Z80::rl(uint8_t * r) {
 	rla(r);
-	setFlagsSZP(*r);
+	reg.setFlagsSZ(*r);
+	reg.setFlagsP(*r);
 }
 void Z80::rla(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -409,7 +413,8 @@ void Z80::rla(uint8_t * r) {
 //
 void Z80::rr(uint8_t * r) {
 	rra(r);
-	setFlagsSZP(*r);	
+	reg.setFlagsSZ(*r);
+	reg.setFlagsP(*r);
 }
 void Z80::rra(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -424,7 +429,8 @@ void Z80::sla(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1;					// Shift the data left; 0 is shifted in
 	reg.AF.C = c;				// Carry is set to the bit shifted out
-	setFlagsSZP(d);
+	reg.setFlagsSZ(d);
+	reg.setFlagsP(d);
 	*r = d;						// Store result back
 }
 
@@ -434,7 +440,8 @@ void Z80::sra(uint8_t * r) {
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >> 1 & s;				// Shift the data right, preserving bit 7
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	setFlagsSZP(d);
+	reg.setFlagsSZ(d);
+	reg.setFlagsP(d);
 	*r = d;						// Store result back
 }
 
@@ -443,7 +450,8 @@ void Z80::sll(uint8_t * r) {
 	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
 	d = d << 1 | 1;				// Shift the data left, setting bit 0 to 1
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	setFlagsSZP(d);
+	reg.setFlagsSZ(d);
+	reg.setFlagsP(d);
 	*r = d;						// Store the result back
 }
 
@@ -452,7 +460,8 @@ void Z80::srl(uint8_t * r) {
 	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
 	d = d >>1;					// Shift the data right, setting bit 7 to 0
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	setFlagsSZP(d);
+	reg.setFlagsSZ(d);
+	reg.setFlagsP(d);
 	*r = d;						// Store the result back
 }
 
@@ -526,6 +535,7 @@ void Z80::execute_x0z1() {
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
+		reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
 		reg.AF.N = 1;
 		*rp1 = w;
 	}
@@ -606,7 +616,7 @@ void Z80::execute_x0z4() {
 		a = *p;						// The current value
 		writeByte(p, (*p) + 1);		// Increment it
 	}
-	setFlagsSZP(*p);
+	reg.setFlagsSZ(*p);
 	reg.AF.B = (((a & 0x0F) + 1) & 0x10) != 0;
 	reg.AF.N = 0;
 	shift_IXY = 0;
@@ -627,7 +637,7 @@ void Z80::execute_x0z5() {
 		a = *p;						// The current value
 		writeByte(p, (*p) - 1);		// Decrement it
 	}
-	setFlagsSZP(*p);
+	reg.setFlagsSZ(*p);
 	reg.AF.B = (((a & 0x0F) - 1) & 0x10) != 0;
 	reg.AF.N = 1;
 	shift_IXY = 0;
