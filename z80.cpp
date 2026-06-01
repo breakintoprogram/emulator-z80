@@ -166,31 +166,38 @@ void Z80::execute_CB() {
 	// This will have immediately followed the DDCB or FDCB shift pair
 	//
 	if (shift_IXY != 0 ) {		
-		uint8_t* p = getIXYPtr(shift_IXY, index_CB);		
+		uint8_t* p = getIXYPtr(shift_IXY, index_CB);	
+		uint8_t* r = t_r[0][z];	
 		uint8_t  s = 1<<y;	
 		switch(x) {
 			case 0: { // ROT
-				if(!isROM(p)) {
+				if (!isROM(p)) {
 					auto f = lut_rot[y];
 					(this->*f)(p);
 					reg.AF.B = 0;
 					reg.AF.N = 0;
-				}		 
+				}		
+				if (r) *r = *p;
 			} break;
 			case 1: { // BIT
-				reg.AF.Z = (((*p) & s) == 0);
-				reg.AF.B = 0;
-				reg.AF.N = 0;
+				uint8_t b = (*p) & s;
+				reg.AF.Z = (b == 0);
+				reg.AF.S = (y == 7 && b != 0);
+				reg.AF.P = reg.AF.Z;
+				reg.AF.B = 1;
+				reg.AF.N = 0;					
 			} break;
 			case 2: { // RES
-				if(!isROM(p)) {
+				if (!isROM(p)) {
 					(*p)&=~s;
 				}
+				if (r) *r = *p;
 			} break;
 			case 3: { // SET
-				if(!isROM(p)) {
+				if (!isROM(p)) {
 					(*p)|=s;
-				}				 
+				}		
+				if (r) *r = *p;		 
 			} break;
 		}
 		shift_IXY = 0;
@@ -215,30 +222,35 @@ void Z80::execute_CB() {
 				}
 			} break;
 			case 1: { // BIT y,r[z]			// This is a read only operation so no need for ROM check
-				if (!p) {					// If it is not a register then
+				if (p == NULL) {			// If it is not a register then
 					p = getIndPtr(0);		// Get the memory address
 				}
-				reg.AF.Z = (((*p) & s) == 0);
+				uint8_t b = (*p) & s;
+				reg.AF.Z = (b == 0);
+				reg.AF.S = (y == 7 && b != 0);
+				reg.AF.P = reg.AF.Z;
+				reg.AF.B = 1;
+				reg.AF.N = 0;				
 			} break;
 			case 2: { // RES y,r[z]
 				if (p) {
-					(*p)&=~s;				// p is a register pointer
+					(*p) &= ~s;				// p is a register pointer
 				}
 				else {
 					p = getIndPtr(0);		// p should now be a memory pointer
 					if(!isROM(p)) {			// If it is not in ROM then
-						(*p)&=~s;			// Execute the function on the memory location						
+						(*p) &= ~s;			// Execute the function on the memory location						
 					}					
 				}
 			} break;
 			case 3: { // SET y,r[z]
 				if (p) {
-					(*p)|=s;				// p is a register pointer
+					(*p) |= s;				// p is a register pointer
 				}
 				else {
 					p = getIndPtr(0);		// p should now be a memory pointer
 					if(!isROM(p)) {			// If it is not in ROM then
-						(*p)|=s;			// Execute the function on the memory location						
+						(*p) |= s;			// Execute the function on the memory location						
 					}					
 				}		
 			} break;
@@ -274,7 +286,7 @@ void Z80::execute_ED() {
 						l = ((*rp1) - (*rp2) - c);
 						w = l & 0xFFFF;
 						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
-						reg.AF.P = ((*rp1 ^ ~*rp2) & (*rp1 ^ w) & 0x8000) != 0;
+						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
 						reg.AF.N = 1;
 
 					}
@@ -282,7 +294,7 @@ void Z80::execute_ED() {
 						l = ((*rp1) + (*rp2) + c);
 						w = l & 0xFFFF;
 						reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF) + c) & 0x1000) != 0;
-						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
+						reg.AF.P = ((*rp1 ^ ~*rp2) & (*rp1 ^ w) & 0x8000) != 0;
 						reg.AF.N = 0;
 					}
 					reg.AF.Z = (w == 0);
@@ -553,7 +565,7 @@ void Z80::execute_x0z1() {
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
-		reg.AF.N = 1;
+		reg.AF.N = 0;
 		*rp1 = w;
 	}
 	shift_IXY = 0;

@@ -139,7 +139,7 @@ private:
 	uint8_t   q;
 	uint8_t	  shift_EXT;							// Shift into extended opcodes (CB,ED)
 	uint8_t	  shift_IXY;							// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
-	uint16_t  index_CB;								// The index (used for DDCB and FDCB instructions)
+	uint8_t   index_CB;								// The index (used for DDCB and FDCB instructions)
 	uint8_t	  interrupt;
 	int16_t   callDepth;
 	int16_t   cycle;								// The current cycle (0 = ready to execute next instruction)
