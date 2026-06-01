@@ -145,6 +145,7 @@ void Registers::A_daa() {
 	};
 
 	AF.C = c;
+	setFlagsP(AF.A);
 }
 
 void Registers::setFlagsSZ(uint8_t d) {
