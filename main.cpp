@@ -70,7 +70,7 @@ int main()
 
 	ports = new uint8_t[256];
 	keyboard = new Keyboard(ports);
-	ula = new Ula(ram + 0x4000, ports);
+	ula = new Ula(ram + 0x4000, ports, 1);
 	z80 = new Z80(ram, &decodeOut, &decodeIn);
 
     for(int i=0; i<=255; i++) {

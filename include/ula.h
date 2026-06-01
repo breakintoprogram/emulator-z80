@@ -18,7 +18,7 @@ using namespace std;
 
 class Ula {
 public:
-    Ula(uint8_t* ram, uint8_t* port);
+    Ula(uint8_t* ram, uint8_t* port, int scale);
     ~Ula();
 
     void render();

@@ -15,13 +15,13 @@
 #define HBORDER 48
 #define VBORDER 56
 
-Ula::Ula(uint8_t* ram, uint8_t* port) :
+Ula::Ula(uint8_t* ram, uint8_t* port, int scale) :
 	ram(ram),
 	ulaPort(port),
 	state(0),
 	scanX(0),
 	scanY(0),
-	videoScale(2),
+	videoScale(scale),
 	width(HRES + (HBORDER * 2)),
 	height(VRES + (VBORDER * 2)),
 	vBlank(false),
