@@ -984,11 +984,13 @@ uint8_t Z80::in(uint16_t addr) {
 void Z80::ldi() {	
 	writeByte(reg.DE.W++, readByte(reg.HL.W++));
 	reg.BC.W--;
+	reg.AF.P = reg.BC.W != 0;
 }
 
 void Z80::cpi() {	
 	reg.A_cp(readByte(reg.HL.W++));
 	reg.BC.W--;
+	reg.AF.P = reg.BC.W != 0;
 }
 
 void Z80::ini() {	
@@ -1004,11 +1006,13 @@ void Z80::outi() {
 void Z80::ldd() {	
 	writeByte(reg.DE.W--, readByte(reg.HL.W--));
 	reg.BC.W--;
+	reg.AF.P = reg.BC.W != 0;
 }
 
 void Z80::cpd() {	
 	reg.A_cp(readByte(reg.HL.W++));
 	reg.BC.W--;
+	reg.AF.P = reg.BC.W != 0;
 }
 
 void Z80::ind() {	
