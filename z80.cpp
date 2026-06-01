@@ -1021,13 +1021,21 @@ uint8_t Z80::in(uint16_t addr) {
 void Z80::ldi() {	
 	writeByte(reg.DE.W++, readByte(reg.HL.W++));
 	reg.BC.W--;
-	reg.AF.P = reg.BC.W != 0;
+	reg.AF.P = (reg.BC.W != 0);
+	reg.AF.B = 0;
+	reg.AF.N = 0;
 }
 
 void Z80::cpi() {	
-	reg.A_cp(readByte(reg.HL.W++));
-	reg.BC.W--;
-	reg.AF.P = reg.BC.W != 0;
+	uint8_t d = readByte(reg.HL.W++);
+	uint8_t a = reg.AF.A;
+	uint8_t b = a - d;
+	reg.BC.W--;	
+	reg.AF.S = (b > 0x7F);
+	reg.AF.Z = (b == 0x00);
+	reg.AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	reg.AF.P = (reg.BC.W != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::ini() {	
@@ -1043,13 +1051,21 @@ void Z80::outi() {
 void Z80::ldd() {	
 	writeByte(reg.DE.W--, readByte(reg.HL.W--));
 	reg.BC.W--;
-	reg.AF.P = reg.BC.W != 0;
+	reg.AF.P = (reg.BC.W != 0);
+	reg.AF.B = 0;
+	reg.AF.N = 0;	
 }
 
 void Z80::cpd() {	
-	reg.A_cp(readByte(reg.HL.W++));
-	reg.BC.W--;
-	reg.AF.P = reg.BC.W != 0;
+	uint8_t d = readByte(reg.HL.W--);
+	uint8_t a = reg.AF.A;
+	uint8_t b = a - d;
+	reg.BC.W--;	
+	reg.AF.S = (b > 0x7F);
+	reg.AF.Z = (b == 0x00);
+	reg.AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
+	reg.AF.P = (reg.BC.W != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::ind() {	
