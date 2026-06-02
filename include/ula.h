@@ -12,13 +12,14 @@
 #include <cstdint>
 #include <SDL2/SDL.h>
 
+#include "mem.h"
 #include "defines.h"
 
 using namespace std;
 
 class Ula {
 public:
-    Ula(uint8_t* ram, uint8_t* port, int scale);
+    Ula(Mem* mem, uint8_t* port, int scale);
     ~Ula();
 
     void render();

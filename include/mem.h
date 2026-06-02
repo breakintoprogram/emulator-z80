@@ -10,6 +10,9 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
+#include <fstream> 
+#include <filesystem>
 
 #include "defines.h"
 
