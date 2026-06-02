@@ -166,21 +166,24 @@ void Z80::execute_CB() {
 	// This will have immediately followed the DDCB or FDCB shift pair
 	//
 	if (shift_IXY != 0 ) {		
-		uint8_t* p = getIXYPtr(shift_IXY, index_CB);	
+		uint16_t a = getIXY(shift_IXY, index_CB);	
 		uint8_t* r = t_r[0][z];	
 		uint8_t  s = 1<<y;	
+		uint8_t  b;
 		switch(x) {
 			case 0: { // ROT
-				if (!isROM(p)) {
+				if (!isROM(a)) {
 					auto f = lut_rot[y];
-					(this->*f)(p);
+					b = readByte(a);
+					(this->*f)(&b);
+					writeByte(a, b);
 					reg.AF.B = 0;
 					reg.AF.N = 0;
 				}		
-				if (r) *r = *p;
+				if (r) *r = b;
 			} break;
 			case 1: { // BIT
-				uint8_t b = (*p) & s;
+				b = readByte(a) & s;
 				reg.AF.Z = (b == 0);
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
@@ -188,16 +191,14 @@ void Z80::execute_CB() {
 				reg.AF.N = 0;					
 			} break;
 			case 2: { // RES
-				if (!isROM(p)) {
-					(*p)&=~s;
-				}
-				if (r) *r = *p;
+				b = readByte(a) & ~s;
+				writeByte(a, b);
+				if (r) *r = b;
 			} break;
 			case 3: { // SET
-				if (!isROM(p)) {
-					(*p)|=s;
-				}		
-				if (r) *r = *p;		 
+				b = readByte(a) | s;
+				writeByte(a, b);
+				if (r) *r = b;		 
 			} break;
 		}
 		shift_IXY = 0;
@@ -206,26 +207,27 @@ void Z80::execute_CB() {
 	// Normal CB operations
 	//
 	else {
-	 	uint8_t* p = t_r[0][z];				// Look up the register; NULL if (HL)
-		uint8_t  s = 1<<y;		
+	 	uint8_t*  r = t_r[0][z];				// Look up the register; NULL if (HL)
+		uint8_t   s = 1<<y;
+		uint8_t   b;
 		switch(x) {
 			case 0: { // ROT
-				auto f = lut_rot[y];		// Look up the ROT operation
-				if (p) {					// If it is a register then
-					(this->*f)(p);			// Execute the function on the register
+				auto f = lut_rot[y];			// Look up the ROT operation
+				if (r) {						// If it is a register then
+					(this->*f)(r);				// Execute the function on the register
 				}
 				else {
-					p = getIndPtr(0);		// p should now be a memory pointer
-					if(!isROM(p)) {			// If it is not in ROM then
-						(this->*f)(p);		// Execute the function on the register						
+					uint16_t a = getInd(0);		// Get the memory address
+					b = readByte(a);			// Get the byte
+					if(!isROM(a)) {				// If it is not in ROM then
+						(this->*f)(&b);			// Execute the function on the memory location				
 					}
+					writeByte(a, b);
 				}
 			} break;
-			case 1: { // BIT y,r[z]			// This is a read only operation so no need for ROM check
-				if (p == NULL) {			// If it is not a register then
-					p = getIndPtr(0);		// Get the memory address
-				}
-				uint8_t b = (*p) & s;
+			case 1: { // BIT y,r[z]				// This is a read only operation so no need for ROM check
+				b = r ? *r : readByte(getInd(0));
+				b &= s;							// Mask it out
 				reg.AF.Z = (b == 0);
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
@@ -233,25 +235,21 @@ void Z80::execute_CB() {
 				reg.AF.N = 0;				
 			} break;
 			case 2: { // RES y,r[z]
-				if (p) {
-					(*p) &= ~s;				// p is a register pointer
+				if (r) {
+					*r &= ~s;					// r is a register pointer
 				}
 				else {
-					p = getIndPtr(0);		// p should now be a memory pointer
-					if(!isROM(p)) {			// If it is not in ROM then
-						(*p) &= ~s;			// Execute the function on the memory location						
-					}					
+					uint16_t a = getInd(0);		// do the operation in memory
+					writeByte(a, readByte(a) & ~s);				
 				}
 			} break;
 			case 3: { // SET y,r[z]
-				if (p) {
-					(*p) |= s;				// p is a register pointer
+				if (r) {
+					*r |= s;					// r is a register pointer
 				}
 				else {
-					p = getIndPtr(0);		// p should now be a memory pointer
-					if(!isROM(p)) {			// If it is not in ROM then
-						(*p) |= s;			// Execute the function on the memory location						
-					}					
+					uint16_t a = getInd(0);		// do the operation in memory
+					writeByte(a, readByte(a) | s);					
 				}		
 			} break;
 		}
@@ -637,20 +635,25 @@ void Z80::execute_x0z3() {
 // X=0, Z=4: 8-bit increment
 //
 void Z80::execute_x0z4() {
-	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
-	uint8_t  a;
-	if (p) {						// If it is a register then
-		a = *p;						// The current value
-		(*p)++;						// Just increment it
+	uint8_t* r = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t  c;
+	uint8_t  b;
+	if (r) {
+		b = *r;
+		c = b;
+		b++;
+		*r = b;
 	}
 	else {
-		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		a = *p;						// The current value
-		writeByte(p, (*p) + 1);		// Increment it
+		uint16_t a = getInd(shift_IXY);
+		b = readByte(a);
+		c = b ;
+		b++;
+		writeByte(a, b);
 	}
-	reg.setFlagsSZ(*p);
-	reg.AF.B = (((a & 0x0F) + 1) & 0x10) != 0;
-	reg.AF.P = (a == 0x7F);
+	reg.setFlagsSZ(b);
+	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
+	reg.AF.P = (c == 0x7F);
 	reg.AF.N = 0;
 	shift_IXY = 0;
 }
@@ -659,20 +662,25 @@ void Z80::execute_x0z4() {
 // X=0, Z=5: 8-bit decrement
 //
 void Z80::execute_x0z5() {
-	uint8_t* p = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
-	uint8_t  a;						// The current value
-	if (p) {						// If it is a register then
-		a = *p;						// The current value
-		(*p)--;						// Just decrement it
+	uint8_t* r = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t  c;
+	uint8_t  b;
+	if (r) {
+		b = *r;
+		c = b;
+		b--;
+		*r = b;
 	}
 	else {
-		p = getIndPtr(shift_IXY);	// Get the address to be affected
-		a = *p;						// The current value
-		writeByte(p, (*p) - 1);		// Decrement it
+		uint16_t a = getInd(shift_IXY);
+		b = readByte(a);
+		c = b ;
+		b--;
+		writeByte(a, b);
 	}
-	reg.setFlagsSZ(*p);
-	reg.AF.B = (((a & 0x0F) - 1) & 0x10) != 0;
-	reg.AF.P = (a == 0x80);
+	reg.setFlagsSZ(b);
+	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
+	reg.AF.P = (c == 0x80);
 	reg.AF.N = 1;
 	shift_IXY = 0;
 }
@@ -681,15 +689,15 @@ void Z80::execute_x0z5() {
 // X=0, Z=6: 8-bit load immediate
 //
 void Z80::execute_x0z6() {
-	uint8_t* p = t_r[shift_IXY][y];
-	if (p) {						// If it is a register
-		fetch();					// Fetch the immediate value
-		*p = data;					// And store
+	uint8_t* r = t_r[shift_IXY][y];
+	if (r) {							// If it is a register
+		fetch();						// Fetch the immediate value
+		*r = data;						// And store
 	}
 	else {
-		p = getIndPtr(shift_IXY);	// Otherwise next byte is the index
-		fetch();					// Followed by the immediate value
-		writeByte(p, data);			// And store
+		uint16_t a = getInd(shift_IXY);	// Otherwise next byte is the index
+		fetch();						// Followed by the immediate value
+		writeByte(a, data);				// And store
 	}
 	shift_IXY = 0;
 }
@@ -729,18 +737,23 @@ void Z80::execute_x1__()
 		}
 	}
 	else {					// LD ry,rz
-		uint8_t* pz = t_r[0][z];				// The source (cannot be IXL/H)
-		if (pz == NULL) {						// If it is not a register then
-			pz = getIndPtr(shift_IXY);			// Point to a memory location
+		uint8_t* rs = t_r[0][z];					// The source (cannot be IXL/H)
+		uint8_t* rd = t_r[0][y];					// The destination (cannot be IXL/H)
+		if (rd) {									// Destination is a register
+			if (rs) {								// Source is a register
+				*rd = *rs;							// Copy the value to the desin
+			}
+			else {									// Source is memory
+				*rd = readByte(getInd(shift_IXY));	// Copy the memory to the register
+			}
 		}
-
-		uint8_t* py = t_r[0][y];				// The destination (cannot be IXL/H)
-		if (py) {								// If it is a register then
-			*py = *pz;							// Just copy it to the register
-		}
-		else {			
-			py = getIndPtr(shift_IXY);			// Otherwise
-			writeByte(py, *pz);					// Write to the memory location
+		else {										// Destination is memory
+			if (rs) {								// Source is register
+				writeByte(getInd(shift_IXY), *rs);	// Copy the register to the memory
+			}
+			else {
+				NOP;								// If we get here, something has gone horribly wrong
+			}
 		}
 	}
 	shift_IXY = 0;
@@ -750,12 +763,14 @@ void Z80::execute_x1__()
 //
 void Z80::execute_x2__()
 {
-	uint8_t* p = t_r[shift_IXY][z];				// Pointer to the register or HL
-	if (p == NULL) {
-		p = getIndPtr(shift_IXY);
-	}
+	uint8_t* r = t_r[shift_IXY][z];				// Pointer to the register or HL
 	auto f = lut_alu[y];						// Look up the ALU function
-	(reg.*f)(*p);								// And execute it
+	if (r) {									// If it's a register then
+		(reg.*f)(*r);							// Use the registry contents
+	}
+	else {										// Otherwise do it on a memory location
+		(reg.*f)(readByte(getInd(shift_IXY)));
+	}
 	shift_IXY = 0;
 }
 
@@ -934,22 +949,15 @@ void Z80::execute_x3z7() {
 
 // Return true if the memory is in ROM - assumes p is somewhere in ram buffer
 //
-bool Z80::isROM(uint8_t* p) {
-	uint64_t a = p - ram;
-	if(a >= RAM_SIZE) {	// Check if we've tried to access an invalid location
-		NOP;			// Something has gone horribly wrong, should stop processing here
-	}
+bool Z80::isROM(uint16_t a) {
 	return a < 0x4000;
 }
 
 // Write byte to ram
 //
 void Z80::writeByte(uint16_t a, uint8_t d) { // Into ram[a]
-	writeByte(&ram[a], d);
-}
-void Z80::writeByte(uint8_t* p, uint8_t d) { // Into *p; assumes p is somewhere in ram buffer
-	if(!isROM(p)) {
-		*p = d;
+	if(!isROM(a)) {
+		ram[a] = d;
 	}
 }
 
@@ -989,23 +997,23 @@ uint16_t Z80::pop()
 
 // Get an indirect pointer from (HL), (IX + d) or (IY + d)
 //
-uint8_t* Z80::getIndPtr(uint8_t s) {
+uint16_t Z80::getInd(uint8_t s) {
 	if(s == 0) {					// shift_IXY is 0, so 
-		return &ram[reg.HL.W];		// just get RAM pointer to (HL)
+		return reg.HL.W;			// just get RAM pointer to (HL)
 	}
 	fetch();						// Otherwise get the index
-	return getIXYPtr(s, data);		// And get the RAM pointer to (IX/Y + d)
+	return getIXY(s, data);			// And get the RAM pointer to (IX/Y + d)
 }
 
 // Get an indirect pointer from IX+d or IY+d
 //
-uint8_t* Z80::getIXYPtr(uint8_t s, uint8_t d) {
+uint16_t Z80::getIXY(uint8_t s, uint8_t d) {
 	int8_t disp = int8_t(d);
 	switch(s) {
-		case 1: return &ram[reg.IX.W + disp]; // (IX + d)
-		case 2: return &ram[reg.IY.W + disp]; // (IY + d)
+		case 1: return reg.IX.W + disp;	// (IX + d)
+		case 2: return reg.IY.W + disp;	// (IY + d);
 	}
-	return NULL;
+	return 0;	// If we've got here, then something's gone horribly wrong
 }
 
 void Z80::out(uint16_t addr, uint8_t v) {

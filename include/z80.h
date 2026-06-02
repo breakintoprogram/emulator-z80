@@ -173,16 +173,15 @@ private:
 	void		execute_x3z7();						// Restart instructions
 
 	uint16_t	fetchWord();						// Fetch a word from the PC
-	bool		isROM(uint8_t* p);					// Return true if the pointer is in ROM space
+	bool 		isROM(uint16_t a);					// Return true if the address is in ROM space
 	void		writeByte(uint16_t a, uint8_t d);	// Write a byte to the address space
-	void		writeByte(uint8_t* p, uint8_t d);	// Write a byte to the address space by pointer
 	uint8_t		readByte(uint16_t a);				// Read a byte from the address space
 	void		writeWord(uint16_t a, uint16_t d);	// Write a word to the address space
 	uint16_t	readWord(uint16_t a);				// Read a word from the address space
 	void		push(uint16_t v);					// PUSH a value onto the stack
 	uint16_t	pop();								// POP a value off the stack
-	uint8_t*	getIndPtr(uint8_t s);				// Get indirect address pointer from HL, IX or IY
-	uint8_t* 	getIXYPtr(uint8_t s, uint8_t d);	// Get indirect address pointer from IX+d or IY+d
+	uint16_t	getInd(uint8_t s);					// Get indirect address from HL, IX or IY
+	uint16_t 	getIXY(uint8_t s, uint8_t d);		// Get indirect address from IX+d or IY+d
 
 	void		out(uint16_t addr, uint8_t v);
 	uint8_t		in(uint16_t addr);
