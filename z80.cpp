@@ -263,15 +263,18 @@ void Z80::execute_ED() {
 		case 1: {
 			switch(z) {
 				case 0: { // IN (C)
-					if (y != 6) {
- 						reg.AF.A = in(reg.BC.W);
+					uint8_t* r = t_r[0][y];
+					uint8_t b = in(reg.BC.W);
+					if (r) {
+						*r = b;
 					}
-					reg.setFlagsSZ(reg.AF.A);
-					reg.setFlagsP(reg.AF.A);
+					reg.setFlagsSZ(b);
+					reg.setFlagsP(b);
 				} break;	
 				case 1: { // OUT (C)
-					if (y != 6) {
-						out(reg.BC.W, reg.AF.A);
+					uint8_t* r = t_r[0][y];
+					if (r) {
+						out(reg.BC.W, *r);
 					}
 				} break;
 				case 2: { // ADC/SBC
