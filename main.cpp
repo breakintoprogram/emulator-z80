@@ -19,6 +19,7 @@
 #include "defines.h"
 #include "ula.h"
 #include "keyboard.h"
+#include "memory.h"
 #include "z80.h"
 
 #define code "roms/48.rom"
@@ -27,7 +28,7 @@
 Keyboard* keyboard;
 Ula*      ula;
 Z80*      z80;
-uint8_t*  ram;
+Mem*      mem;
 uint8_t*  ports;
 
 bool load(uint8_t* buffer, string filename) {
@@ -61,18 +62,18 @@ int main()
 	int        turbo = 1;
 	SDL_Event  e;
 
-	ram = new uint8_t[RAM_SIZE];
+	mem = new Mem();
 
-	if (!load(ram, code)) {
+	if (!load(mem->getRam(), code)) {
 		cout << "Error loading '" << code << "'." << endl;
-		delete[] ram;
+		delete mem;
 		return 1;
 	}; 
 
 	ports = new uint8_t[256];
 	keyboard = new Keyboard(ports);
-	ula = new Ula(ram + 0x4000, ports, 1);
-	z80 = new Z80(ram, &decodeOut, &decodeIn);
+	ula = new Ula(mem->getRam() + 0x4000, ports, 1);
+	z80 = new Z80(mem, &decodeOut, &decodeIn);
 
     for(int i=0; i<=255; i++) {
         ports[i] = 0xFF;
@@ -108,7 +109,7 @@ int main()
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(true); break;
 							case SDLK_g: z80->setSingleStep(false); break;
-							case SDLK_l: load(ram + 0x8000, test); break;
+							case SDLK_l: load(mem->getRam() + 0x8000, test); break;
 						}
 					}
 					else {
@@ -149,7 +150,7 @@ int main()
 		}
 	}
 
-	delete[] ram;
+	delete   mem;
 	delete[] ports;
 	delete   keyboard;
 	delete   ula;

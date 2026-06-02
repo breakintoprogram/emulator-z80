@@ -18,6 +18,7 @@
 
 #include "defines.h"
 #include "registers.h"
+#include "mem.h"
 
 using namespace std;
 
@@ -26,7 +27,7 @@ typedef	uint8_t (*in_t)(uint16_t);
 
 class Z80 {
 public:
-	Z80(uint8_t* ram, out_t pout, in_t pin);
+	Z80(Mem* mem, out_t pout, in_t pin);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -46,7 +47,7 @@ public:
 	in_t  	 pin;
 
 private:
-	uint8_t* ram;
+	Mem* mem;
 
 	vector<uint16_t> breakpoints;
 
@@ -173,11 +174,6 @@ private:
 	void		execute_x3z7();						// Restart instructions
 
 	uint16_t	fetchWord();						// Fetch a word from the PC
-	bool 		isROM(uint16_t a);					// Return true if the address is in ROM space
-	void		writeByte(uint16_t a, uint8_t d);	// Write a byte to the address space
-	uint8_t		readByte(uint16_t a);				// Read a byte from the address space
-	void		writeWord(uint16_t a, uint16_t d);	// Write a word to the address space
-	uint16_t	readWord(uint16_t a);				// Read a word from the address space
 	void		push(uint16_t v);					// PUSH a value onto the stack
 	uint16_t	pop();								// POP a value off the stack
 	uint16_t	getInd(uint8_t s);					// Get indirect address from HL, IX or IY

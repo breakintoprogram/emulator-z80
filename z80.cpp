@@ -9,8 +9,8 @@
 
 #include "z80.h"
 
-Z80::Z80(uint8_t* ram, out_t pout, in_t pin) :
-	ram(ram),
+Z80::Z80(Mem* mem, out_t pout, in_t pin) :
+	mem(mem),
 	pout(pout),
 	pin(pin),
 	p(0),
@@ -101,7 +101,7 @@ void Z80::debug() {
 //
 void Z80::fetch()
 {
-	data = readByte(reg.PC++);
+	data = mem->readByte(reg.PC++);
 	if (trace) {
 		cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 	}
@@ -173,15 +173,15 @@ void Z80::execute_CB() {
 		switch(x) {
 			case 0: { // ROT
 				auto f = lut_rot[y];
-				b = readByte(a);
+				b = mem->readByte(a);
 				(this->*f)(&b);
-				writeByte(a, b);
+				mem->write(a, b);
 				if (r) *r = b;
 				reg.AF.B = 0;
 				reg.AF.N = 0;
 			} break;
 			case 1: { // BIT
-				b = readByte(a) & s;
+				b = mem->readByte(a) & s;
 				reg.AF.Z = (b == 0);
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
@@ -189,13 +189,13 @@ void Z80::execute_CB() {
 				reg.AF.N = 0;					
 			} break;
 			case 2: { // RES
-				b = readByte(a) & ~s;
-				writeByte(a, b);
+				b = mem->readByte(a) & ~s;
+				mem->write(a, b);
 				if (r) *r = b;
 			} break;
 			case 3: { // SET
-				b = readByte(a) | s;
-				writeByte(a, b);
+				b = mem->readByte(a) | s;
+				mem->write(a, b);
 				if (r) *r = b;		 
 			} break;
 		}
@@ -216,13 +216,13 @@ void Z80::execute_CB() {
 				}
 				else {
 					uint16_t a = getInd(0);		// Get the memory address
-					b = readByte(a);			// Get the byte
+					b = mem->readByte(a);		// Get the byte
 					(this->*f)(&b);				// Execute the function on the memory location				
-					writeByte(a, b);
+					mem->write(a, b);
 				}
 			} break;
 			case 1: { // BIT y,r[z]				// This is a read only operation so no need for ROM check
-				b = r ? *r : readByte(getInd(0));
+				b = r ? *r : mem->readByte(getInd(0));
 				b &= s;							// Mask it out
 				reg.AF.Z = (b == 0);
 				reg.AF.S = (y == 7 && b != 0);
@@ -236,7 +236,8 @@ void Z80::execute_CB() {
 				}
 				else {
 					uint16_t a = getInd(0);		// do the operation in memory
-					writeByte(a, readByte(a) & ~s);				
+					b = mem->readByte(a) & ~s;
+					mem->write(a, b);				
 				}
 			} break;
 			case 3: { // SET y,r[z]
@@ -245,7 +246,8 @@ void Z80::execute_CB() {
 				}
 				else {
 					uint16_t a = getInd(0);		// do the operation in memory
-					writeByte(a, readByte(a) | s);					
+					b = mem->readByte(a) | s;
+					mem->write(a, b);					
 				}		
 			} break;
 		}
@@ -303,10 +305,10 @@ void Z80::execute_ED() {
 					uint16_t* rp = t_rp1[shift_IXY][p];
 					uint16_t  dd = fetchWord();
 					if (q ==0) {
-						writeWord(dd, *rp);	
+						mem->write(dd, *rp);	
 					}
 					else {
-						*rp = readWord(dd);	
+						*rp = mem->readWord(dd);	
 					}
 				} break;
 				case 4: { // NEG
@@ -334,22 +336,22 @@ void Z80::execute_ED() {
 							reg.AF.A = reg.R;
 						} break;
 						case 4: { // RRD
-							uint16_t d = readByte(reg.HL.W);
+							uint8_t d = mem->readByte(reg.HL.W);
 							uint8_t a = reg.AF.A;
 							reg.AF.A = (reg.AF.A & 0xF0) | (d & 0x0F);
 							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
-							writeByte(reg.HL.W, d);
+							mem->write(reg.HL.W, d);
 							reg.setFlagsSZ(reg.AF.A);
 							reg.setFlagsP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
 						case 5: { // RLD
-							uint16_t d = readByte(reg.HL.W);
+							uint8_t d = mem->readByte(reg.HL.W);
 							uint8_t a = reg.AF.A;
 							reg.AF.A = (reg.AF.A & 0xF0) | ((d & 0xF0) >> 4);
 							d = ((d & 0x0F) << 4) | (a & 0x0F);
-							writeByte(reg.HL.W, d);
+							mem->write(reg.HL.W, d);
 							reg.setFlagsSZ(reg.AF.A);
 							reg.setFlagsP(reg.AF.A);
 							reg.AF.B = 0;
@@ -578,38 +580,38 @@ void Z80::execute_x0z2() {
 	if (q == 0) {
 		switch(p) {
 			case 0: { // LD (BC),A
-				writeByte(reg.BC.W, reg.AF.A);
+				mem->write(reg.BC.W, reg.AF.A);
 			} break;
 			case 1: { // LD (DE),A
-				writeByte(reg.DE.W, reg.AF.A);
+				mem->write(reg.DE.W, reg.AF.A);
 			} break;
 			case 2: { // LD (nn),HL/IX/IY 
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();
-				writeWord(dd, *rp);
+				mem->write(dd, *rp);
 			} break;
 			case 3: { // LD (nn),A
 				uint16_t  dd = fetchWord();				
-				writeByte(dd, reg.AF.A);				// Write the accumulator to memory
+				mem->write(dd, reg.AF.A);				// Write the accumulator to memory
 			} break;
 		}
 	}
 	else {
 		switch(p) {
 			case 0: { // LD A,(BC)
-				reg.AF.A = readByte(reg.BC.W);
+				reg.AF.A = mem->readByte(reg.BC.W);
 			} break;
 			case 1: { // LD A,(DE)
-				reg.AF.A = readByte(reg.DE.W);
+				reg.AF.A = mem->readByte(reg.DE.W);
 			} break;
 			case 2: { // LD HL/IX/IY,(nn)
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();				
-				*rp = readWord(dd);
+				*rp = mem->readWord(dd);
 			} break;
 			case 3: { // LD A,(nn)
 				uint16_t  dd = fetchWord();				
-				reg.AF.A = readByte(dd);				// Read the accumulator from memory
+				reg.AF.A = mem->readByte(dd);				// Read the accumulator from memory
 			} break;
 		}
 	}
@@ -645,10 +647,10 @@ void Z80::execute_x0z4() {
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
-		b = readByte(a);
+		b = mem->readByte(a);
 		c = b ;
 		b++;
-		writeByte(a, b);
+		mem->write(a, b);
 	}
 	reg.setFlagsSZ(b);
 	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
@@ -672,10 +674,10 @@ void Z80::execute_x0z5() {
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
-		b = readByte(a);
+		b = mem->readByte(a);
 		c = b ;
 		b--;
-		writeByte(a, b);
+		mem->write(a, b);
 	}
 	reg.setFlagsSZ(b);
 	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
@@ -696,7 +698,7 @@ void Z80::execute_x0z6() {
 	else {
 		uint16_t a = getInd(shift_IXY);	// Otherwise next byte is the index
 		fetch();						// Followed by the immediate value
-		writeByte(a, data);				// And store
+		mem->write(a, data);			// And store
 	}
 	shift_IXY = 0;
 }
@@ -743,12 +745,12 @@ void Z80::execute_x1__()
 				*rd = *rs;							// Copy the value to the desin
 			}
 			else {									// Source is memory
-				*rd = readByte(getInd(shift_IXY));	// Copy the memory to the register
+				*rd = mem->readByte(getInd(shift_IXY));
 			}
 		}
 		else {										// Destination is memory
 			if (rs) {								// Source is register
-				writeByte(getInd(shift_IXY), *rs);	// Copy the register to the memory
+				mem->write(getInd(shift_IXY), *rs);	// Copy the register to the memory
 			}
 			else {
 				NOP;								// If we get here, something has gone horribly wrong
@@ -768,7 +770,7 @@ void Z80::execute_x2__()
 		(reg.*f)(*r);							// Use the registry contents
 	}
 	else {										// Otherwise do it on a memory location
-		(reg.*f)(readByte(getInd(shift_IXY)));
+		(reg.*f)(mem->readByte(getInd(shift_IXY)));
 	}
 	shift_IXY = 0;
 }
@@ -857,9 +859,9 @@ void Z80::execute_x3z3() {
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = t_rp1[shift_IXY][2];
-			uint16_t  dd = readWord(reg.SP); 	// Read the value from the stack
-			writeWord(reg.SP, *rp);				// Write the register to the stack
-			*rp = dd;							// Set the register to the new value
+			uint16_t  dd = mem->readWord(reg.SP); 	// Read the value from the stack
+			mem->write(reg.SP, *rp);				// Write the register to the stack
+			*rp = dd;								// Set the register to the new value
 		} break;
 		case 5: { // EX DE,HL
 			reg.ex(&reg.DE, &reg.HL);
@@ -946,52 +948,21 @@ void Z80::execute_x3z7() {
 	shift_IXY = 0;
 }
 
-// Return true if the memory is in ROM - assumes p is somewhere in ram buffer
-//
-bool Z80::isROM(uint16_t a) {
-	return a < 0x4000;
-}
-
-// Write byte to ram
-//
-void Z80::writeByte(uint16_t a, uint8_t d) { // Into ram[a]
-	if(!isROM(a)) {
-		ram[a] = d;
-	}
-}
-
-// Read a byte from ram
-//
-uint8_t Z80::readByte(uint16_t a) {
-	return ram[a];
-}
-
-// Write a word to ram
-//
-void Z80::writeWord(uint16_t a, uint16_t d) {
-	writeByte(a, d & 0xFF);		// Write the lsb byte out
-	writeByte(a + 1, d >> 8);	// Write the msb byte out
-}
-
-// Read a word from ram
-//
-uint16_t Z80::readWord(uint16_t a) {
-	return readByte(a) | (readByte(a + 1) << 8);
-}
-
 // Push v on the stack
 //
 void Z80::push(uint16_t v)
 {
-	writeByte(--reg.SP, v >> 8);	// Push MSB
-	writeByte(--reg.SP, v & 0xFF);	// Push LSB
+	uint8_t lsb = v & 0xFF;
+	uint8_t msb = v >> 8;
+	mem->write(--reg.SP, msb);
+	mem->write(--reg.SP, lsb);
 }
 
 // Pop off the stack
 //
 uint16_t Z80::pop()
 {
-	return readByte(reg.SP++) | readByte(reg.SP++) << 8;	// Pop LSB then MSB
+	return mem->readByte(reg.SP++) | mem->readByte(reg.SP++) << 8;	// Pop LSB then MSB
 }
 
 // Get an indirect pointer from (HL), (IX + d) or (IY + d)
@@ -1029,7 +1000,7 @@ uint8_t Z80::in(uint16_t addr) {
 }
 
 void Z80::ldi() {	
-	writeByte(reg.DE.W++, readByte(reg.HL.W++));
+	mem->write(reg.DE.W++, mem->readByte(reg.HL.W++));
 	reg.BC.W--;
 	reg.AF.P = (reg.BC.W != 0);
 	reg.AF.B = 0;
@@ -1037,7 +1008,7 @@ void Z80::ldi() {
 }
 
 void Z80::cpi() {	
-	uint8_t d = readByte(reg.HL.W++);
+	uint8_t d = mem->readByte(reg.HL.W++);
 	uint8_t a = reg.AF.A;
 	uint8_t b = a - d;
 	reg.BC.W--;	
@@ -1049,17 +1020,17 @@ void Z80::cpi() {
 }
 
 void Z80::ini() {	
-	writeByte(reg.HL.W++, in(reg.BC.W));
+	mem->write(reg.HL.W++, in(reg.BC.W));
 	reg.BC.L--;
 }
 
 void Z80::outi() {	
-	out(reg.BC.W, readByte(reg.HL.W++));
+	out(reg.BC.W, mem->readByte(reg.HL.W++));
 	reg.BC.L--;
 }
 
 void Z80::ldd() {	
-	writeByte(reg.DE.W--, readByte(reg.HL.W--));
+	mem->write(reg.DE.W--, mem->readByte(reg.HL.W--));
 	reg.BC.W--;
 	reg.AF.P = (reg.BC.W != 0);
 	reg.AF.B = 0;
@@ -1067,7 +1038,7 @@ void Z80::ldd() {
 }
 
 void Z80::cpd() {	
-	uint8_t d = readByte(reg.HL.W--);
+	uint8_t d = mem->readByte(reg.HL.W--);
 	uint8_t a = reg.AF.A;
 	uint8_t b = a - d;
 	reg.BC.W--;	
@@ -1079,12 +1050,12 @@ void Z80::cpd() {
 }
 
 void Z80::ind() {	
-	writeByte(reg.HL.W--, in(reg.BC.W));
+	mem->write(reg.HL.W--, in(reg.BC.W));
 	reg.BC.L--;
 }
 
 void Z80::outd() {	
-	out(reg.BC.W, readByte(reg.HL.W--));
+	out(reg.BC.W, mem->readByte(reg.HL.W--));
 	reg.BC.L--;
 }
 
