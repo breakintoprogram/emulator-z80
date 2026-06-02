@@ -13,13 +13,14 @@
 #include <SDL2/SDL.h>
 
 #include "mem.h"
+#include "ports.h"
 #include "defines.h"
 
 using namespace std;
 
 class Ula {
 public:
-    Ula(Mem* mem, uint8_t* port, int scale);
+    Ula(Mem* mem, Ports* ports, int scale);
     ~Ula();
 
     void render();

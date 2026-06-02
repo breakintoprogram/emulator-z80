@@ -15,9 +15,9 @@
 #define HBORDER 48
 #define VBORDER 56
 
-Ula::Ula(Mem* mem, uint8_t* port, int scale) :
+Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	ram(mem->getRam() + 0x4000),
-	ulaPort(port),
+	ulaPort(ports->getPortsOut()),
 	state(0),
 	scanX(0),
 	scanY(0),

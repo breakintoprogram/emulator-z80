@@ -19,15 +19,13 @@
 #include "defines.h"
 #include "registers.h"
 #include "mem.h"
+#include "ports.h"
 
 using namespace std;
 
-typedef	void    (*out_t)(uint16_t, uint8_t);
-typedef	uint8_t (*in_t)(uint16_t);
-
 class Z80 {
 public:
-	Z80(Mem* mem, out_t pout, in_t pin);
+	Z80(Mem* mem, Ports* ports);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -43,11 +41,9 @@ public:
 	void     decode();
 	void     execute();
 
-	out_t    pout;
-	in_t  	 pin;
-
 private:
-	Mem* mem;
+	Mem*   mem;
+	Ports* ports;
 
 	vector<uint16_t> breakpoints;
 
@@ -178,9 +174,6 @@ private:
 	uint16_t	pop();								// POP a value off the stack
 	uint16_t	getInd(uint8_t s);					// Get indirect address from HL, IX or IY
 	uint16_t 	getIXY(uint8_t s, uint8_t d);		// Get indirect address from IX+d or IY+d
-
-	void		out(uint16_t addr, uint8_t v);
-	uint8_t		in(uint16_t addr);
 
 	void		rlc(uint8_t* r);
 	void		rrc(uint8_t* r);

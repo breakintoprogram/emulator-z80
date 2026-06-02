@@ -9,7 +9,7 @@
 
 #include "keyboard.h"
 
-Keyboard::Keyboard(uint8_t *ports) : ports(ports)
+Keyboard::Keyboard(Ports* ports) : ports(ports)
 {
 }
 
@@ -69,11 +69,9 @@ void Keyboard::press(SDL_Keycode sym, bool pressed) {
 }
 
 void Keyboard::port(uint8_t p, uint8_t bit, bool pressed) {
-    uint8_t b = 1 << bit;
-    if(pressed) {
-        ports[p] &= ~b;
-    }
-    else {
-        ports[p] |= b;
-    }
+	uint16_t b = 1 << bit;
+	uint8_t* i = ports->getPortsIn();
+	uint8_t  d = i[p];
+
+	i[p] = pressed ? d &= ~b : d |= b;
 }

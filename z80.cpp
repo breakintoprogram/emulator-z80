@@ -9,10 +9,9 @@
 
 #include "z80.h"
 
-Z80::Z80(Mem* mem, out_t pout, in_t pin) :
+Z80::Z80(Mem* mem, Ports* ports) :
 	mem(mem),
-	pout(pout),
-	pin(pin),
+	ports(ports),
 	p(0),
 	q(0),
 	x(0),
@@ -262,7 +261,7 @@ void Z80::execute_ED() {
 			switch(z) {
 				case 0: { // IN (C)
 					uint8_t* r = t_r[0][y];
-					uint8_t b = in(reg.BC.W);
+					uint8_t b = ports->in(reg.BC.W);
 					if (r) {
 						*r = b;
 					}
@@ -272,7 +271,7 @@ void Z80::execute_ED() {
 				case 1: { // OUT (C)
 					uint8_t* r = t_r[0][y];
 					if (r) {
-						out(reg.BC.W, *r);
+						ports->out(reg.BC.W, *r);
 					}
 				} break;
 				case 2: { // ADC/SBC
@@ -851,11 +850,11 @@ void Z80::execute_x3z3() {
 		} break;
 		case 2: { // OUT (n),A
 			fetch();
-			out((reg.AF.A << 8) | data, reg.AF.A);
+			ports->out((reg.AF.A << 8) | data, reg.AF.A);
 		} break;
 		case 3: { // IN A,(n)
 			fetch();
-			reg.AF.A=in((reg.AF.A << 8) | data);
+			reg.AF.A = ports->in((reg.AF.A << 8) | data);
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = t_rp1[shift_IXY][2];
@@ -986,19 +985,6 @@ uint16_t Z80::getIXY(uint8_t s, uint8_t d) {
 	return 0;	// If we've got here, then something's gone horribly wrong
 }
 
-void Z80::out(uint16_t addr, uint8_t v) {
-	if(pout) {
-		pout(addr, v);
-	}
-}
-
-uint8_t Z80::in(uint16_t addr) {
-	if(pin) {
-		return pin(addr);
-	}
-	return 0;
-}
-
 void Z80::ldi() {	
 	mem->write(reg.DE.W++, mem->readByte(reg.HL.W++));
 	reg.BC.W--;
@@ -1020,12 +1006,12 @@ void Z80::cpi() {
 }
 
 void Z80::ini() {	
-	mem->write(reg.HL.W++, in(reg.BC.W));
+	mem->write(reg.HL.W++, ports->in(reg.BC.W));
 	reg.BC.L--;
 }
 
 void Z80::outi() {	
-	out(reg.BC.W, mem->readByte(reg.HL.W++));
+	ports->out(reg.BC.W, mem->readByte(reg.HL.W++));
 	reg.BC.L--;
 }
 
@@ -1050,12 +1036,12 @@ void Z80::cpd() {
 }
 
 void Z80::ind() {	
-	mem->write(reg.HL.W--, in(reg.BC.W));
+	mem->write(reg.HL.W--, ports->in(reg.BC.W));
 	reg.BC.L--;
 }
 
 void Z80::outd() {	
-	out(reg.BC.W, mem->readByte(reg.HL.W--));
+	ports->out(reg.BC.W, mem->readByte(reg.HL.W--));
 	reg.BC.L--;
 }
 

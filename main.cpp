@@ -20,6 +20,7 @@
 #include "ula.h"
 #include "keyboard.h"
 #include "memory.h"
+#include "ports.h"
 #include "z80.h"
 
 #define code "roms/48.rom"
@@ -29,15 +30,7 @@ Keyboard* keyboard;
 Ula*      ula;
 Z80*      z80;
 Mem*      mem;
-uint8_t*  ports;
-
-void decodeOut(uint16_t addr, uint8_t v) {
-	ports[0] = v;
-}
-
-uint8_t decodeIn(uint16_t addr) {
-	return ports[addr >> 8];
-}
+Ports*    ports;
 
 int main()
 {
@@ -55,14 +48,10 @@ int main()
 		return 1;
 	}; 
 
-	ports = new uint8_t[256];
+	ports = new Ports();
 	keyboard = new Keyboard(ports);
 	ula = new Ula(mem, ports, 1);
-	z80 = new Z80(mem, &decodeOut, &decodeIn);
-
-    for(int i=0; i<=255; i++) {
-        ports[i] = 0xFF;
-    }
+	z80 = new Z80(mem, ports);
 
 	z80->reset();
 
@@ -135,11 +124,11 @@ int main()
 		}
 	}
 
-	delete   mem;
-	delete[] ports;
-	delete   keyboard;
-	delete   ula;
-	delete   z80;
+	delete mem;
+	delete ports;
+	delete keyboard;
+	delete ula;
+	delete z80;
 	
 	return 0;
 }

@@ -12,17 +12,18 @@
 #include <cstdint>
 #include <SDL2/SDL.h>
 
+#include "ports.h"
 #include "defines.h"
 
 using namespace std;
 
 class Keyboard {
 public:
-    Keyboard(uint8_t* ports);
+    Keyboard(Ports* ports);
     ~Keyboard();
 
-    void press(SDL_Keycode sym, bool pressed);
+    void   press(SDL_Keycode sym, bool pressed);
 private:
-    uint8_t* ports;
-    void port(uint8_t p, uint8_t bit, bool pressed);
+    Ports* ports;
+    void   port(uint8_t p, uint8_t bit, bool pressed);
 };
