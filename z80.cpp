@@ -364,10 +364,13 @@ void Z80::execute_ED() {
 		} break;
 
 		case 2: { // Block instructions
-			if(y > 4) {
+			if(z < 4 && y >= 4) {
 				auto f = lut_bli[y-4][z];
 				(this->*f)();
 			}	
+			else {
+				execute_trap();
+			}
 		} break;
 
 		default: {
