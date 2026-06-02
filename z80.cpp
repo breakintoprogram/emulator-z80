@@ -172,15 +172,13 @@ void Z80::execute_CB() {
 		uint8_t  b;
 		switch(x) {
 			case 0: { // ROT
-				if (!isROM(a)) {
-					auto f = lut_rot[y];
-					b = readByte(a);
-					(this->*f)(&b);
-					writeByte(a, b);
-					reg.AF.B = 0;
-					reg.AF.N = 0;
-				}		
+				auto f = lut_rot[y];
+				b = readByte(a);
+				(this->*f)(&b);
+				writeByte(a, b);
 				if (r) *r = b;
+				reg.AF.B = 0;
+				reg.AF.N = 0;
 			} break;
 			case 1: { // BIT
 				b = readByte(a) & s;
@@ -219,9 +217,7 @@ void Z80::execute_CB() {
 				else {
 					uint16_t a = getInd(0);		// Get the memory address
 					b = readByte(a);			// Get the byte
-					if(!isROM(a)) {				// If it is not in ROM then
-						(this->*f)(&b);			// Execute the function on the memory location				
-					}
+					(this->*f)(&b);				// Execute the function on the memory location				
 					writeByte(a, b);
 				}
 			} break;
