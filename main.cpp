@@ -31,21 +31,6 @@ Z80*      z80;
 Mem*      mem;
 uint8_t*  ports;
 
-bool load(uint8_t* buffer, string filename) {
-	if (!filesystem::exists(filename)) {
-		return false;
-	}
-	auto filesize = filesystem::file_size(filename);
-	if(filesize > RAM_SIZE) {
-		return false;
-	}
-	ifstream file(filename, ios::binary);
-	if (file.read((char *)buffer, filesize)) {
-		return true;
-	}
-	return false;
-}
-
 void decodeOut(uint16_t addr, uint8_t v) {
 	ports[0] = v;
 }
@@ -64,7 +49,7 @@ int main()
 
 	mem = new Mem();
 
-	if (!load(mem->getRam(), code)) {
+	if (!mem->load(0x0000, code)) {
 		cout << "Error loading '" << code << "'." << endl;
 		delete mem;
 		return 1;
@@ -109,7 +94,7 @@ int main()
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(true); break;
 							case SDLK_g: z80->setSingleStep(false); break;
-							case SDLK_l: load(mem->getRam() + 0x8000, test); break;
+							case SDLK_l: mem->load(0x8000, test); break;
 						}
 					}
 					else {

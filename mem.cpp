@@ -7,6 +7,10 @@
 //
 // Modinfo:
 
+#include <iostream>
+#include <fstream> 
+#include <filesystem>
+
 #include "mem.h"
 
 uint8_t Mem::readByte(uint16_t address) {
@@ -28,6 +32,21 @@ void Mem::write(uint16_t address, uint16_t data) {
     uint8_t msb = data >> 8;
     write(address, lsb);
     write(address + 1, msb);
+}
+
+bool Mem::load(uint16_t address, string filename) {
+	if (!filesystem::exists(filename)) {
+		return false;
+	}
+	auto filesize = filesystem::file_size(filename);
+	if(filesize > RAM_SIZE) {
+		return false;
+	}
+	ifstream file(filename, ios::binary);
+	if (file.read((char *)(ram + address), filesize)) {
+		return true;
+	}
+	return false;
 }
 
 uint8_t* Mem::getRam() {
