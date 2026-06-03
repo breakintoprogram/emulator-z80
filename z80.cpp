@@ -1022,11 +1022,15 @@ void Z80::cpi() {
 void Z80::ini() {	
 	mem->write(reg.HL.W++, ports->in(reg.BC.W));
 	reg.BC.L--;
+	reg.AF.Z = (reg.BC.L != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::outi() {	
 	ports->out(reg.BC.W, mem->readByte(reg.HL.W++));
 	reg.BC.L--;
+	reg.AF.Z = (reg.BC.L != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::ldd() {	
@@ -1052,11 +1056,15 @@ void Z80::cpd() {
 void Z80::ind() {	
 	mem->write(reg.HL.W--, ports->in(reg.BC.W));
 	reg.BC.L--;
+	reg.AF.Z = (reg.BC.L != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::outd() {	
 	ports->out(reg.BC.W, mem->readByte(reg.HL.W--));
 	reg.BC.L--;
+	reg.AF.Z = (reg.BC.L != 0);
+	reg.AF.N = 1;
 }
 
 void Z80::ldir() {	
