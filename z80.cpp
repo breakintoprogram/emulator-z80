@@ -54,9 +54,7 @@ uint16_t Z80::getCycle() {
 // Do the NMI
 //
 void Z80::interruptRequest(uint8_t i) {
-	if(reg.IFF1 && reg.IFF2) {	// If the interrupts are enabled
-		interrupt = i;
-	}
+	interrupt = i;
 }
 
 // Reset the CPU
@@ -157,16 +155,18 @@ void Z80::execute()
 	// Might be a bit of a bodge for the moment but only handle interrupts
 	// when the shift registers are both 0, i.e. finished processing last instruction
 	//
-	if(shift_EXT == 0 && shift_IXY == 0) {
+	if (shift_EXT == 0 && shift_IXY == 0) {
 		cycle = 0;
 		reg.R++;
-		if(interrupt > 0) {		// If an interrupt has been requested
+		if (interrupt > 0) {
+			if (reg.IFF1 && reg.IFF2) {
+				reg.IFF1 = false;			// Disable the interrupts
+				reg.IFF2 = false;
+				push(reg.PC);				// Push the current program counter on the stack
+				reg.PC = interrupt;			// Set the program counter to the maskable interrupt routine
+				callDepth++;				// Increment the call depth for debugging purposes
+			}
 			interrupt = 0;
-			reg.IFF1 = false;	// Disable the interrupts
-			reg.IFF2 = false;
-			push(reg.PC);		// Push the current program counter on the stack
-			reg.PC = 0x0038;	// Set the program counter to the maskable interrupt routine
-			callDepth++;		// Increment the call depth for debugging purposes
 		}
 		if (trace) cout << endl;
 	}
