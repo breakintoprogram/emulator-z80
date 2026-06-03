@@ -152,22 +152,29 @@ void Z80::execute()
 	}
 	cycle++;
 	//
-	// Might be a bit of a bodge for the moment but only handle interrupts
-	// when the shift registers are both 0, i.e. finished processing last instruction
+	// Check for the end of a full instruction
 	//
 	if (shift_EXT == 0 && shift_IXY == 0) {
+		//
+		// Handle the interrupts
+		//
+		if (interrupt > 0) {					// If an interrupt has been requested
+			interrupt = 0;						// Cancel the request
+			if (reg.IFF1) {						// Are interrupts enabled?
+				if (reg.IM == 1) {
+					push(reg.PC);				// Push the current program counter on the stack
+					reg.PC = 0x38;				// Set the program counter to the maskable interrupt routine
+					callDepth++;
+				}
+				else if (reg.IM == 2) {
+					push(reg.PC);
+					reg.PC = mem->readWord(reg.I << 8);
+					callDepth++;
+				}
+			}
+		}
 		cycle = 0;
 		reg.R++;
-		if (interrupt > 0) {
-			if (reg.IFF1 && reg.IFF2) {
-				reg.IFF1 = false;			// Disable the interrupts
-				reg.IFF2 = false;
-				push(reg.PC);				// Push the current program counter on the stack
-				reg.PC = interrupt;			// Set the program counter to the maskable interrupt routine
-				callDepth++;				// Increment the call depth for debugging purposes
-			}
-			interrupt = 0;
-		}
 		if (trace) cout << endl;
 	}
 }
@@ -332,7 +339,11 @@ void Z80::execute_ED() {
 					callDepth--;
 				} break;
 				case 6: { // IM
-
+					switch(y & 3) {
+						case 0: reg.IM = 0; break;
+						case 2: reg.IM = 1; break;
+						case 3: reg.IM = 2; break;
+					}
 				} break;
 				case 7: { // Assorted ops
 					switch(y) {

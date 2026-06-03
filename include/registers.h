@@ -32,9 +32,10 @@ public:
 
 	uint8_t I;
 	uint8_t R;
-
-	bool IFF1;
-	bool IFF2;
+	uint8_t IM;
+	
+	bool    IFF1;
+	bool    IFF2;
 
 	void ex(REG* rp1, REG* rp2);
 
