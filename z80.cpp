@@ -88,7 +88,7 @@ void Z80::dump(bool newline) {
 	cout << (reg.AF.S  ? 'S' : '-');
 	cout << (reg.AF.Z  ? 'Z' : '-');
 	cout << (reg.AF.F5 ? '5' : '-');
-	cout << (reg.AF.H  ? 'H' : '-');
+	cout << (reg.AF.B  ? 'H' : '-');
 	cout << (reg.AF.F3 ? '3' : '-');
 	cout << (reg.AF.P  ? 'P' : '-');
 	cout << (reg.AF.N  ? 'N' : '-');
@@ -942,7 +942,7 @@ void Z80::execute_x3z5()
 // X=3, Z=6: Operate on accumulator and immediate operand
 //
 void Z80::execute_x3z6() {
-	uint8_t* r = &reg.AF.H;		// Pointer to the accumulator
+	uint8_t* r = &reg.AF.A;		// Pointer to the accumulator
 	fetch();					// Fetch the immediate operand
 	auto f = lut_alu[y];		// Look up the ALU function
 	if (f) {
@@ -1060,10 +1060,6 @@ void Z80::outd() {
 }
 
 void Z80::ldir() {	
-	if (reg.PC >= 0x4000 && reg.BC.W == 0) {
-		cout << "LDIR "; dump(true);
-		return;
-	}
 	do {
 		ldi();
 	} while (reg.BC.W != 0);
