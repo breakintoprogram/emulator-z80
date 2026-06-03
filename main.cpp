@@ -84,6 +84,7 @@ int main()
 							case SDLK_t: z80->setTrace(true); break;
 							case SDLK_g: z80->setSingleStep(false); break;
 							case SDLK_l: mem->load(0x8000, test); break;
+							case SDLK_r: z80->dump(true); break;
 						}
 					}
 					else {

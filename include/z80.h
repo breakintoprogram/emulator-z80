@@ -33,6 +33,9 @@ public:
 	void     setTrace(bool value);
 	uint16_t getCycle();
 
+	void     dump();
+	void     dump(bool newline);
+
 	void     interruptRequest(uint8_t i);
 
 	void     reset();
@@ -128,52 +131,47 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
 	};
 
-	uint8_t   data;									// Last fetched byte
-	uint8_t   x;									// Decoded opcode
-	uint8_t   y;
-	uint8_t   z;
-	uint8_t   p;
-	uint8_t   q;
-	uint8_t	  shift_EXT;							// Shift into extended opcodes (CB,ED)
-	uint8_t	  shift_IXY;							// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
-	uint8_t   index_CB;								// The index (used for DDCB and FDCB instructions)
-	uint8_t	  interrupt;
-	int16_t   callDepth;
-	int16_t   cycle;								// The current cycle (0 = ready to execute next instruction)
-	bool      singleStep;
-	bool      trace;
+	uint8_t		data;							// Last fetched byte
+	uint8_t		x;								// Decoded opcode
+	uint8_t		y;
+	uint8_t		z;
+	uint8_t		p;
+	uint8_t		q;
+	uint8_t		shift_EXT;						// Shift into extended opcodes (CB,ED)
+	uint8_t		shift_IXY;						// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
+	uint8_t		index_CB;						// The index (used for DDCB and FDCB instructions)
+	uint8_t		interrupt;
+	int16_t		callDepth;
+	int16_t		cycle;							// The current cycle (0 = ready to execute next instruction)
+	bool		singleStep;
+	bool		trace;
 
-	void 		execute_CB();						// Execute CB prefixed opcodes
-	void		execute_ED();						// Execute ED prefixed opcodes
-
-	void		execute_trap();						// Unimplemented function
-
-	void		execute_x0z0();						// Relative jumps and assorted ops
-	void		execute_x0z1();						// 16 - bit load immediate / add
-	void		execute_x0z2();						// Indirect load
-	void		execute_x0z3();						// 16-bit increment/decrement
-	void		execute_x0z4();						// 8-bit increment
-	void		execute_x0z5();						// 8-bit decrement
-	void		execute_x0z6();						// 8-bit load immediate
-	void		execute_x0z7();						// Assorted operations on accumulator flags / LD (IX/Y+n),rr / LD rr, (IX/Y+n)
-
-	void		execute_x1__();						// 8 bit loading
-	void		execute_x2__();						// Operations on accumulator and register/memory location
-
-	void		execute_x3z0();						// Conditional return
-	void		execute_x3z1();						// POP and various operations#
-	void		execute_x3z2();						// Conditional jump
-	void		execute_x3z3();						// Assorted operations
-	void		execute_x3z4();						// Conditional call
-	void		execute_x3z5();						// PUSH and various operations
-	void		execute_x3z6();						// Operate on accumulator and immediate operand
-	void		execute_x3z7();						// Restart instructions
-
-	uint16_t	fetchWord();						// Fetch a word from the PC
-	void		push(uint16_t v);					// PUSH a value onto the stack
-	uint16_t	pop();								// POP a value off the stack
-	uint16_t	getInd(uint8_t s);					// Get indirect address from HL, IX or IY
-	uint16_t 	getIXY(uint8_t s, uint8_t d);		// Get indirect address from IX+d or IY+d
+	void 		execute_CB();					// Execute CB prefixed opcodes
+	void		execute_ED();					// Execute ED prefixed opcodes
+	void		execute_trap();					// Unimplemented function
+	void		execute_x0z0();					// Relative jumps and assorted ops
+	void		execute_x0z1();					// 16 - bit load immediate / add
+	void		execute_x0z2();					// Indirect load
+	void		execute_x0z3();					// 16-bit increment/decrement
+	void		execute_x0z4();					// 8-bit increment
+	void		execute_x0z5();					// 8-bit decrement
+	void		execute_x0z6();					// 8-bit load immediate
+	void		execute_x0z7();					// Assorted operations on accumulator flags / LD (IX/Y+n),rr / LD rr, (IX/Y+n)
+	void		execute_x1__();					// 8 bit loading
+	void		execute_x2__();					// Operations on accumulator and register/memory location
+	void		execute_x3z0();					// Conditional return
+	void		execute_x3z1();					// POP and various operations#
+	void		execute_x3z2();					// Conditional jump
+	void		execute_x3z3();					// Assorted operations
+	void		execute_x3z4();					// Conditional call
+	void		execute_x3z5();					// PUSH and various operations
+	void		execute_x3z6();					// Operate on accumulator and immediate operand
+	void		execute_x3z7();					// Restart instructions
+	uint16_t	fetchWord();					// Fetch a word from the PC
+	void		push(uint16_t v);				// PUSH a value onto the stack
+	uint16_t	pop();							// POP a value off the stack
+	uint16_t	getInd(uint8_t s);				// Get indirect address from HL, IX or IY
+	uint16_t 	getIXY(uint8_t s, uint8_t d);	// Get indirect address from IX+d or IY+d
 
 	void		rlc(uint8_t* r);
 	void		rrc(uint8_t* r);

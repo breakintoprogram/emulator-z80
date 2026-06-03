@@ -71,28 +71,42 @@ void Z80::reset()
 void Z80::debug() {
 	if (shift_EXT == 0 && shift_IXY == 0) {
 		if (trace) {
-			cout << setfill('0') << hex;
-			cout << "F=[";
-			cout << (reg.AF.S  ? 'S' : '-');
-			cout << (reg.AF.Z  ? 'Z' : '-');
-			cout << (reg.AF.F5 ? '5' : '-');
-			cout << (reg.AF.H  ? 'H' : '-');
-			cout << (reg.AF.F3 ? '3' : '-');
-			cout << (reg.AF.P  ? 'P' : '-');
-			cout << (reg.AF.N  ? 'N' : '-');
-			cout << (reg.AF.C  ? 'C' : '-');
-			cout << "] ";
-			cout << "A=" << setw(2) <<(uint16_t)reg.AF.A << " ";
-			cout << "BC=" << setw(4) << reg.BC.W << " ";
-			cout << "DE=" << setw(4) << reg.DE.W << " ";
-			cout << "HL=" << setw(4) << reg.HL.W << " ";
-			cout << "IX=" << setw(4) << reg.IX.W << " ";
-			cout << "IY=" << setw(4) << reg.IY.W << " ";
-			cout << "PC=" << setw(4) << reg.PC << " : ";
+			dump();
 		}
 		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 			setSingleStep(true);
 		}
+	}
+}
+
+void Z80::dump() {
+	dump(false);
+}
+void Z80::dump(bool newline) {
+	cout << setfill('0') << hex;
+	cout << "F=[";
+	cout << (reg.AF.S  ? 'S' : '-');
+	cout << (reg.AF.Z  ? 'Z' : '-');
+	cout << (reg.AF.F5 ? '5' : '-');
+	cout << (reg.AF.H  ? 'H' : '-');
+	cout << (reg.AF.F3 ? '3' : '-');
+	cout << (reg.AF.P  ? 'P' : '-');
+	cout << (reg.AF.N  ? 'N' : '-');
+	cout << (reg.AF.C  ? 'C' : '-');
+	cout << "] ";
+	cout << "A="  << setw(2) << (uint16_t)reg.AF.A << " ";
+	cout << "BC=" << setw(4) << reg.BC.W << " ";
+	cout << "DE=" << setw(4) << reg.DE.W << " ";
+	cout << "HL=" << setw(4) << reg.HL.W << " ";
+	cout << "IX=" << setw(4) << reg.IX.W << " ";
+	cout << "IY=" << setw(4) << reg.IY.W << " ";
+	cout << "PC=" << setw(4) << reg.PC   << " ";
+	cout << "SP=" << setw(4) << reg.SP;
+	if(newline) {
+		cout << endl;
+	}
+	else {
+		cout << " : ";
 	}
 }
 
@@ -1046,6 +1060,10 @@ void Z80::outd() {
 }
 
 void Z80::ldir() {	
+	if (reg.PC >= 0x4000 && reg.BC.W == 0) {
+		cout << "LDIR "; dump(true);
+		return;
+	}
 	do {
 		ldi();
 	} while (reg.BC.W != 0);
