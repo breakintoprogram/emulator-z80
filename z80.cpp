@@ -344,9 +344,17 @@ void Z80::execute_ED() {
 						} break;
 						case 2: { // LD A,I
 							reg.AF.A = reg.I;
+							reg.setFlagsSZ(reg.AF.A);
+							reg.AF.P = 0; // Should be IFF2
+							reg.AF.B = 0;
+							reg.AF.N = 0;
 						} break;
 						case 3: { // LD A,R
 							reg.AF.A = reg.R;
+							reg.setFlagsSZ(reg.AF.A);
+							reg.AF.P = 0; // Should be IFF2
+							reg.AF.B = 0;
+							reg.AF.N = 0;
 						} break;
 						case 4: { // RRD
 							uint8_t d = mem->readByte(reg.HL.W);
@@ -751,11 +759,21 @@ void Z80::execute_x1__()
 		}
 	}
 	else {					// LD ry,rz
-		uint8_t* rs = t_r[0][z];					// The source (cannot be IXL/H)
-		uint8_t* rd = t_r[0][y];					// The destination (cannot be IXL/H)
+		uint8_t* rs = t_r[shift_IXY][z];			// The source
+		uint8_t* rd = t_r[shift_IXY][y];			// The destination (cannot be IXL/H)
+
+		if(shift_IXY > 0) {							// If the prefix is DD or FD
+			if(rd && rs == NULL) {					// If the destination is a register and source is memory
+				rd = t_r[0][y];						// Force the destination register to be H or L
+			}
+			if(rs && rd == NULL) {					// If the source is a register and destination is memory
+				rs = t_r[0][z];						// Force the source register to be H or L
+			}
+		}
+
 		if (rd) {									// Destination is a register
 			if (rs) {								// Source is a register
-				*rd = *rs;							// Copy the value to the desin
+				*rd = *rs;							// Copy the value to the destination
 			}
 			else {									// Source is memory
 				*rd = mem->readByte(getInd(shift_IXY));
