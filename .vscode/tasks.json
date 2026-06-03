@@ -5,6 +5,7 @@
             "label": "build",
             "command": "/usr/bin/g++",
             "args": [
+				"-std=c++23",
                 "-fdiagnostics-color=always",
                 "-g",
                 "-I",
