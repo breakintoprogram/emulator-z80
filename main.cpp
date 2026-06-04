@@ -81,7 +81,7 @@ int main()
 							case SDLK_RETURN: step = true; break;
 							case SDLK_d: interrupts = false; break;
 							case SDLK_e: interrupts = true; break;
-							case SDLK_t: z80->setTrace(true); break;
+							case SDLK_t: z80->setTrace(!z80->getTrace()); break;
 							case SDLK_g: z80->setSingleStep(false); break;
 							case SDLK_l: mem->load(0x8000, test); break;
 							case SDLK_o: z80->dump(cout, true); break;
@@ -97,20 +97,12 @@ int main()
 				} break;
 			}
 		}
+		//
+		// Process CPU cycle(s)
+		//
 		for(int i = 0; i < turbo; i++) {
-			//
-			// Process one cycle of the CPU
-			//
 			if(!z80->getSingleStep() || step) {
-				//
-				// Execute one instruction
-				//
-				do {
-					z80->debug();
-					z80->fetch();
-					z80->decode();
-					z80->execute();
-				} while(z80->getCycle() > 0);
+				z80->run();
 			}
 			step = false;
 		}

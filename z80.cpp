@@ -24,8 +24,8 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	callDepth(0),
 	interrupt(0),
 	singleStep(false),
-	cycle(0),
-	trace(false)
+	trace(false),
+	traceStream(cout)
 {
 }
 
@@ -43,12 +43,12 @@ void Z80::setSingleStep(bool value) {
 	singleStep = value;
 }
 
-void Z80::setTrace(bool value) {
-	trace = value;
+bool Z80::getTrace() {
+	return trace;
 }
 
-uint16_t Z80::getCycle() {
-	return cycle;
+void Z80::setTrace(bool value) {
+	trace = value;
 }
 
 // Do the NMI
@@ -64,22 +64,32 @@ void Z80::reset()
 	reg.PC = 0;
 }
 
-// Output some debugging preamble
+// Run one CPU cycle
 //
-void Z80::debug() {
-	if (shift_EXT == 0 && shift_IXY == 0) {
-		if (trace) {
-			dump();
-		}
-		if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
-			setSingleStep(true);
-		}
+void Z80::run() {
+	debug();
+	interrupts();
+	do {
+		fetch();
+		decode();
+		execute();
+	} while(shift_IXY || shift_EXT);
+	if (trace) {
+		traceStream << endl;
 	}
 }
 
-void Z80::dump() {
-	dump(cout);
+// Output some debugging preamble
+//
+void Z80::debug() {
+	if (trace) {
+		dump(traceStream);
+	}
+	if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
+		setSingleStep(true);
+	}
 }
+
 void Z80::dump(ostream& stream) {
 	dump(stream, false);
 }
@@ -113,14 +123,11 @@ void Z80::dump(ostream& stream, bool newline) {
 
 // Fetch an opcode
 //
-void Z80::fetch() {
-	fetch(cout);
-}
-void Z80::fetch(ostream& stream)
+void Z80::fetch()
 {
 	data = mem->readByte(reg.PC++);
 	if (trace) {
-		stream << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
+		traceStream << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 	}
 }
 
@@ -146,10 +153,7 @@ void Z80::decode()
 
 // Execute the instruction
 //
-void Z80::execute() {
-	execute(cout);
-}
-void Z80::execute(ostream& stream)
+void Z80::execute()
 {
 	switch(shift_EXT) {
 		case 0xCB: execute_CB(); break;
@@ -159,32 +163,30 @@ void Z80::execute(ostream& stream)
 			(this->*f)();
 		}
 	}
-	cycle++;
+	reg.R++;
+	reg.R&=0x7F;
+}
+
+// Handle interrupts
+//
+void Z80::interrupts() {
 	//
-	// Check for the end of a full instruction
+	// Handle the interrupts
 	//
-	if (shift_EXT == 0 && shift_IXY == 0) {
-		//
-		// Handle the interrupts
-		//
-		if (interrupt > 0) {					// If an interrupt has been requested
-			interrupt = 0;						// Cancel the request
-			if (reg.IFF1) {						// Are interrupts enabled?
-				if (reg.IM == 1) {
-					push(reg.PC);				// Push the current program counter on the stack
-					reg.PC = 0x38;				// Set the program counter to the maskable interrupt routine
-					callDepth++;
-				}
-				else if (reg.IM == 2) {
-					push(reg.PC);
-					reg.PC = mem->readWord(reg.I << 8);
-					callDepth++;
-				}
+	if (interrupt > 0) {					// If an interrupt has been requested
+		interrupt = 0;						// Cancel the request
+		if (reg.IFF1) {						// Are interrupts enabled?
+			if (reg.IM == 1) {
+				push(reg.PC);				// Push the current program counter on the stack
+				reg.PC = 0x38;				// Set the program counter to the maskable interrupt routine
+				callDepth++;
+			}
+			else if (reg.IM == 2) {
+				push(reg.PC);
+				reg.PC = mem->readWord(reg.I << 8);
+				callDepth++;
 			}
 		}
-		cycle = 0;
-		reg.R++;
-		if (trace) stream << endl;
 	}
 }
 

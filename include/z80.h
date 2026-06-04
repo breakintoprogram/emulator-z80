@@ -30,8 +30,8 @@ public:
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
 	void     setSingleStep(bool value);
+	bool     getTrace();
 	void     setTrace(bool value);
-	uint16_t getCycle();
 
 	void     dump();
 	void     dump(ostream& stream);
@@ -40,10 +40,7 @@ public:
 	void     interruptRequest(uint8_t i);
 
 	void     reset();
-	void     debug();
-	void     fetch();
-	void     decode();
-	void     execute();
+	void     run();
 
 private:
 	Mem*   mem;
@@ -143,12 +140,15 @@ private:
 	uint8_t		index_CB;						// The index (used for DDCB and FDCB instructions)
 	uint8_t		interrupt;
 	int16_t		callDepth;
-	int16_t		cycle;							// The current cycle (0 = ready to execute next instruction)
 	bool		singleStep;
 	bool		trace;
+	ostream&	traceStream;
 
-	void        fetch(ostream& stream);
-	void        execute(ostream& stream);
+	void        debug();
+	void		interrupts();
+	void        fetch();
+	void        decode();
+	void        execute();
 
 	void 		execute_CB();					// Execute CB prefixed opcodes
 	void		execute_ED();					// Execute ED prefixed opcodes
