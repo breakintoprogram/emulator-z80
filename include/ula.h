@@ -29,6 +29,7 @@ public:
 private:
     SDL_Window* win = NULL;
     SDL_Renderer* renderer = NULL;
+    SDL_Texture* texture = NULL;
     
     uint8_t* ram = NULL;
     uint8_t* ulaPort = NULL;
@@ -68,7 +69,6 @@ private:
     };
 
     void setColour(uint8_t colour);
-    void renderPoint(int x, int y, uint8_t colour);
     void renderByte(int x, int y, uint8_t borderColour);
     void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte);
 };

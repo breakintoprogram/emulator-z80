@@ -32,6 +32,14 @@ Z80*      z80;
 Mem*      mem;
 Ports*    ports;
 
+void cleanup() {
+	delete mem;
+	delete ports;
+	delete keyboard;
+	delete ula;
+	delete z80;
+}
+
 int main()
 {
 	bool       quit = false;
@@ -44,14 +52,21 @@ int main()
 
 	if (!mem->load(0x0000, code)) {
 		cout << "Error loading '" << code << "'." << endl;
-		delete mem;
+		cleanup();
 		return 1;
 	}; 
-
-	ports = new Ports();
-	keyboard = new Keyboard(ports);
-	ula = new Ula(mem, ports, 1);
-	z80 = new Z80(mem, ports);
+	
+	try  {
+		ports = new Ports();
+		ula = new Ula(mem, ports, 1);
+		keyboard = new Keyboard(ports);
+		z80 = new Z80(mem, ports);
+	}
+	catch(const exception& e) {
+		cout << "Error: " << e.what() << endl;
+		cleanup();
+		return 1;
+	}
 
 	z80->reset();
 
@@ -117,12 +132,6 @@ int main()
 			}
 		}
 	}
-
-	delete mem;
-	delete ports;
-	delete keyboard;
-	delete ula;
-	delete z80;
-	
+	cleanup();	
 	return 0;
 }

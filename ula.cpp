@@ -37,11 +37,17 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 		SDL_WINDOW_SHOWN
 	);
 	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, width, height);
 	setColour(7);
+	SDL_SetRenderTarget(renderer, texture);
+	if(SDL_GetRenderTarget(renderer) != texture) {
+		throw runtime_error("Unable to set render target");
+	}
 	SDL_RenderClear(renderer);
 }
 
 Ula::~Ula() {
+	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();		
@@ -133,8 +139,10 @@ void Ula::render() {
 				if(scanY == height) {
 					scanY = 0;
 					state = 0;
+					SDL_SetRenderTarget(renderer, NULL);
+					SDL_RenderCopy(renderer, texture, NULL, NULL);
 					SDL_RenderPresent(renderer);
-					SDL_RenderClear(renderer);
+					SDL_SetRenderTarget(renderer, texture);
 					vBlank = true;
 					flash = !flash;
 				}
@@ -147,23 +155,17 @@ void Ula::setColour(uint8_t colour) {
 	SDL_SetRenderDrawColor(renderer, palette[colour][0], palette[colour][1], palette[colour][2], 0x00);
 }
 
-void Ula::renderPoint(int x, int y, uint8_t colour) {
-	setColour(colour);
-	SDL_Rect p = {
-		x * videoScale, y * videoScale, videoScale, videoScale
-	};
-	SDL_RenderFillRect(renderer, &p);
-}
-
 void Ula::renderByte(int x, int y, uint8_t borderColour) {
+	setColour(borderColour);
 	for(int i = 0; i <= 7; i++) {
-		renderPoint(x++, y, borderColour);
+		SDL_RenderDrawPoint(renderer, x++, y);
 	}	
 }
 
 void Ula::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
 	for(int i = 0; i <= 7; i++) {
-		renderPoint(x++, y, ((byte & 0x80) == 0x80) ? inkColour : paperColour);
+		setColour(((byte & 0x80) == 0x80) ? inkColour : paperColour);
+		SDL_RenderDrawPoint(renderer, x++, y);
 		byte <<= 1;
 	}
 }
