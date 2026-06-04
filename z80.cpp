@@ -84,40 +84,43 @@ void Z80::dump(ostream& stream) {
 	dump(stream, false);
 }
 void Z80::dump(ostream& stream, bool newline) {
-	cout << setfill('0') << hex;
-	cout << "F=[";
-	cout << (reg.AF.S  ? 'S' : '-');
-	cout << (reg.AF.Z  ? 'Z' : '-');
-	cout << (reg.AF.F5 ? '5' : '-');
-	cout << (reg.AF.B  ? 'H' : '-');
-	cout << (reg.AF.F3 ? '3' : '-');
-	cout << (reg.AF.P  ? 'P' : '-');
-	cout << (reg.AF.N  ? 'N' : '-');
-	cout << (reg.AF.C  ? 'C' : '-');
-	cout << "] ";
-	cout << "A="  << setw(2) << (uint16_t)reg.AF.A << " ";
-	cout << "BC=" << setw(4) << reg.BC.W << " ";
-	cout << "DE=" << setw(4) << reg.DE.W << " ";
-	cout << "HL=" << setw(4) << reg.HL.W << " ";
-	cout << "IX=" << setw(4) << reg.IX.W << " ";
-	cout << "IY=" << setw(4) << reg.IY.W << " ";
-	cout << "PC=" << setw(4) << reg.PC   << " ";
-	cout << "SP=" << setw(4) << reg.SP;
+	stream << setfill('0') << hex;
+	stream << "F=[";
+	stream << (reg.AF.S  ? 'S' : '-');
+	stream << (reg.AF.Z  ? 'Z' : '-');
+	stream << (reg.AF.F5 ? '5' : '-');
+	stream << (reg.AF.B  ? 'H' : '-');
+	stream << (reg.AF.F3 ? '3' : '-');
+	stream << (reg.AF.P  ? 'P' : '-');
+	stream << (reg.AF.N  ? 'N' : '-');
+	stream << (reg.AF.C  ? 'C' : '-');
+	stream << "] ";
+	stream << "A="  << setw(2) << (uint16_t)reg.AF.A << " ";
+	stream << "BC=" << setw(4) << reg.BC.W << " ";
+	stream << "DE=" << setw(4) << reg.DE.W << " ";
+	stream << "HL=" << setw(4) << reg.HL.W << " ";
+	stream << "IX=" << setw(4) << reg.IX.W << " ";
+	stream << "IY=" << setw(4) << reg.IY.W << " ";
+	stream << "PC=" << setw(4) << reg.PC   << " ";
+	stream << "SP=" << setw(4) << reg.SP;
 	if(newline) {
-		cout << endl;
+		stream << endl;
 	}
 	else {
-		cout << " : ";
+		stream << " : ";
 	}
 }
 
 // Fetch an opcode
 //
-void Z80::fetch()
+void Z80::fetch() {
+	fetch(cout);
+}
+void Z80::fetch(ostream& stream)
 {
 	data = mem->readByte(reg.PC++);
 	if (trace) {
-		cout << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
+		stream << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 	}
 }
 
@@ -143,7 +146,10 @@ void Z80::decode()
 
 // Execute the instruction
 //
-void Z80::execute()
+void Z80::execute() {
+	execute(cout);
+}
+void Z80::execute(ostream& stream)
 {
 	switch(shift_EXT) {
 		case 0xCB: execute_CB(); break;
@@ -178,7 +184,7 @@ void Z80::execute()
 		}
 		cycle = 0;
 		reg.R++;
-		if (trace) cout << endl;
+		if (trace) stream << endl;
 	}
 }
 

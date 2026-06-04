@@ -49,6 +49,7 @@ private:
 	Mem*   mem;
 	Ports* ports;
 
+	vector<string> callstack;
 	vector<uint16_t> breakpoints;
 
 	// Look-up tables for the x and z decode stage
@@ -146,6 +147,9 @@ private:
 	int16_t		cycle;							// The current cycle (0 = ready to execute next instruction)
 	bool		singleStep;
 	bool		trace;
+
+	void        fetch(ostream& stream);
+	void        execute(ostream& stream);
 
 	void 		execute_CB();					// Execute CB prefixed opcodes
 	void		execute_ED();					// Execute ED prefixed opcodes
