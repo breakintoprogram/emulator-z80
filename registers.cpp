@@ -163,6 +163,11 @@ void Registers::setFlagsP(uint8_t d) {
 	AF.P = p;
 }	
 
+void Registers::setFlagsSZP(uint8_t d) {
+	setFlagsSZ(d);
+	setFlagsP(d);
+}
+
 bool Registers::F_NZ() { return AF.Z == 0; }
 bool Registers::F_Z()  { return AF.Z == 1; }
 bool Registers::F_NC() { return AF.C == 0; }

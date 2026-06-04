@@ -297,8 +297,7 @@ void Z80::execute_ED() {
 					if (r) {
 						*r = b;
 					}
-					reg.setFlagsSZ(b);
-					reg.setFlagsP(b);
+					reg.setFlagsSZP(b);
 				} break;	
 				case 1: { // OUT (C)
 					uint8_t* r = t_r[0][y];
@@ -384,8 +383,7 @@ void Z80::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | (d & 0x0F);
 							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
 							mem->write(reg.HL.W, d);
-							reg.setFlagsSZ(reg.AF.A);
-							reg.setFlagsP(reg.AF.A);
+							reg.setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
@@ -395,8 +393,7 @@ void Z80::execute_ED() {
 							reg.AF.A = (reg.AF.A & 0xF0) | ((d & 0xF0) >> 4);
 							d = ((d & 0x0F) << 4) | (a & 0x0F);
 							mem->write(reg.HL.W, d);
-							reg.setFlagsSZ(reg.AF.A);
-							reg.setFlagsP(reg.AF.A);
+							reg.setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 						} break;
@@ -427,8 +424,7 @@ void Z80::execute_ED() {
 //
 void Z80::rlc(uint8_t * r) {
 	rlca(r);
-	reg.setFlagsSZ(*r);
-	reg.setFlagsP(*r);
+	reg.setFlagsSZP(*r);
 }
 void Z80::rlca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -444,8 +440,7 @@ void Z80::rlca(uint8_t * r) {
 //
 void Z80::rrc(uint8_t * r) {
 	rrca(r);
-	reg.setFlagsSZ(*r);
-	reg.setFlagsP(*r);
+	reg.setFlagsSZP(*r);
 }
 void Z80::rrca(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -461,8 +456,7 @@ void Z80::rrca(uint8_t * r) {
 //
 void Z80::rl(uint8_t * r) {
 	rla(r);
-	reg.setFlagsSZ(*r);
-	reg.setFlagsP(*r);
+	reg.setFlagsSZP(*r);
 }
 void Z80::rla(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -478,8 +472,7 @@ void Z80::rla(uint8_t * r) {
 //
 void Z80::rr(uint8_t * r) {
 	rra(r);
-	reg.setFlagsSZ(*r);
-	reg.setFlagsP(*r);
+	reg.setFlagsSZP(*r);
 }
 void Z80::rra(uint8_t * r) {
 	uint8_t d = *r;				// The data to be operated on
@@ -498,8 +491,7 @@ void Z80::sla(uint8_t * r) {
 	reg.AF.C = c;				// Carry is set to the bit shifted out
 	reg.AF.B = 0;
 	reg.AF.N = 0;
-	reg.setFlagsSZ(d);
-	reg.setFlagsP(d);
+	reg.setFlagsSZP(d);
 	*r = d;						// Store result back
 }
 
@@ -511,8 +503,7 @@ void Z80::sra(uint8_t * r) {
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
 	reg.AF.B = 0;
 	reg.AF.N = 0;
-	reg.setFlagsSZ(d);
-	reg.setFlagsP(d);
+	reg.setFlagsSZP(d);
 	*r = d;						// Store result back
 }
 
@@ -523,8 +514,7 @@ void Z80::sll(uint8_t * r) {
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
 	reg.AF.B = 0;
 	reg.AF.N = 0;
-	reg.setFlagsSZ(d);
-	reg.setFlagsP(d);
+	reg.setFlagsSZP(d);
 	*r = d;						// Store the result back
 }
 
@@ -535,8 +525,7 @@ void Z80::srl(uint8_t * r) {
 	reg.AF.C = c;				// Carry flag is set to the bit shifted out
 	reg.AF.B= 0;
 	reg.AF.N = 0;
-	reg.setFlagsSZ(d);
-	reg.setFlagsP(d);
+	reg.setFlagsSZP(d);
 	*r = d;						// Store the result back
 }
 
