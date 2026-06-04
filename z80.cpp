@@ -69,7 +69,7 @@ void Z80::run() {
 	debug();
 	fetch();
 	while(data == 0xDD || data == 0xFD) {
-		shift_IXY = (data == 0xDD ? 1 : 2);
+		shift_IXY = ((data & 0b00100000) >> 5) + 1;
 		fetch();
 	}
 	decode();
