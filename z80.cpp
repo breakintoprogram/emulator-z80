@@ -17,7 +17,6 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	x(0),
 	y(0),
 	z(0),
-	shift_EXT(0),
 	shift_IXY(0),
 	data(0),
 	breakpoints(),
@@ -53,8 +52,8 @@ void Z80::setTrace(bool value) {
 
 // Do the NMI
 //
-void Z80::interruptRequest(uint8_t i) {
-	interrupt = i;
+void Z80::interruptRequest() {
+	interrupt = true;
 }
 
 // Reset the CPU
@@ -68,12 +67,14 @@ void Z80::reset()
 //
 void Z80::run() {
 	debug();
-	interrupts();
-	do {
+	fetch();
+	while(data == 0xDD || data == 0xFD) {
+		shift_IXY = (data == 0xDD ? 1 : 2);
 		fetch();
-		decode();
-		execute();
-	} while(shift_IXY || shift_EXT);
+	}
+	decode();
+	execute();
+	interrupts();
 	if (trace) {
 		traceStream << endl;
 	}
@@ -155,14 +156,17 @@ void Z80::decode()
 //
 void Z80::execute()
 {
-	switch(shift_EXT) {
-		case 0xCB: execute_CB(); break;
-		case 0xED: execute_ED(); break;
-		default: {
-			auto f = lut_xz[x][z];
-			(this->*f)();
-		}
+	if (data == 0xCB) {
+		execute_CB();
 	}
+	else if (data == 0xED) {
+		execute_ED();
+	}
+	else {
+		auto f = lut_xz[x][z];
+		(this->*f)();
+	}
+	shift_IXY = 0;
 	reg.R++;
 	reg.R&=0x7F;
 }
@@ -173,8 +177,8 @@ void Z80::interrupts() {
 	//
 	// Handle the interrupts
 	//
-	if (interrupt > 0) {					// If an interrupt has been requested
-		interrupt = 0;						// Cancel the request
+	if (interrupt) {						// If an interrupt has been requested
+		interrupt = false;					// Cancel the request
 		if (reg.IFF1) {						// Are interrupts enabled?
 			if (reg.IM == 1) {
 				push(reg.PC);				// Push the current program counter on the stack
@@ -196,8 +200,11 @@ void Z80::execute_CB() {
 	// The index has been stored in index_CB
 	// This will have immediately followed the DDCB or FDCB shift pair
 	//
-	if (shift_IXY != 0 ) {		
-		uint16_t a = getIXY(shift_IXY, index_CB);	
+	if (shift_IXY != 0) {		
+		fetch();								// If it is a DDCB or FDCB opcode shift then
+		uint16_t a = getIXY(shift_IXY, data);	// The next byte is the index
+		fetch();								// Fetch the instruction
+		decode();								// And decode
 		uint8_t* r = t_r[0][z];	
 		uint8_t  s = 1<<y;	
 		uint8_t  b;
@@ -230,12 +237,13 @@ void Z80::execute_CB() {
 				if (r) *r = b;		 
 			} break;
 		}
-		shift_IXY = 0;
 	}
 	//
 	// Normal CB operations
 	//
 	else {
+		fetch();								// Fetch the instruction
+		decode();								// And decode
 	 	uint8_t*  r = t_r[0][z];				// Look up the register; NULL if (HL)
 		uint8_t   s = 1<<y;
 		uint8_t   b;
@@ -283,12 +291,13 @@ void Z80::execute_CB() {
 			} break;
 		}
 	}
-	shift_EXT = 0;
 }
 
 void Z80::execute_ED() {
-	switch(x) {
+	fetch();
+	decode();
 
+	switch(x) {
 		case 1: {
 			switch(z) {
 				case 0: { // IN (C)
@@ -307,8 +316,8 @@ void Z80::execute_ED() {
 				} break;
 				case 2: { // ADC/SBC
 					uint8_t c = reg.AF.C;
-					uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL, IX or IY
-					uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
+					uint16_t* rp1 = t_rp1[0][2]; // HL
+					uint16_t* rp2 = t_rp1[0][p]; // The other register pair
 					uint32_t  l;
 					uint16_t  w;
 					if (q == 0) {
@@ -332,7 +341,7 @@ void Z80::execute_ED() {
 					*rp1 = w;
 				} break;
 				case 3: { // Load register pair from/to immediate address
-					uint16_t* rp = t_rp1[shift_IXY][p];
+					uint16_t* rp = t_rp1[0][p];
 					uint16_t  dd = fetchWord();
 					if (q ==0) {
 						mem->write(dd, *rp);	
@@ -416,8 +425,6 @@ void Z80::execute_ED() {
 			execute_trap();
 		} break;
 	}
-	shift_EXT = 0;
-	shift_IXY = 0;
 }
 
 // Note that RLC A affects SZC, RLCA only affects carry
@@ -580,7 +587,6 @@ void Z80::execute_x0z0()
 			}
 		} break;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -602,7 +608,6 @@ void Z80::execute_x0z1() {
 		reg.AF.N = 0;
 		*rp1 = w;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -647,7 +652,6 @@ void Z80::execute_x0z2() {
 			} break;
 		}
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -661,7 +665,6 @@ void Z80::execute_x0z3() {
 	else {			// DEC
 		(*rp)--;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -688,7 +691,6 @@ void Z80::execute_x0z4() {
 	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
 	reg.AF.P = (c == 0x7F);
 	reg.AF.N = 0;
-	shift_IXY = 0;
 }
 
 //
@@ -715,7 +717,6 @@ void Z80::execute_x0z5() {
 	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
 	reg.AF.P = (c == 0x80);
 	reg.AF.N = 1;
-	shift_IXY = 0;
 }
 
 //
@@ -732,7 +733,6 @@ void Z80::execute_x0z6() {
 		fetch();						// Followed by the immediate value
 		mem->write(a, data);			// And store
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -757,7 +757,6 @@ void Z80::execute_x0z7() {
 			reg.AF.C = !reg.AF.C;
 		} break;	
 	}
-	shift_IXY = 0;
 }
 
 // 8 bit loading
@@ -793,7 +792,6 @@ void Z80::execute_x1__()
 			}
 		}
 	}
-	shift_IXY = 0;
 }
 
 // Operations on accumulator and register/memory location
@@ -808,7 +806,6 @@ void Z80::execute_x2__()
 	else {										// Otherwise do it on a memory location
 		(reg.*f)(mem->readByte(getInd(shift_IXY)));
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -821,7 +818,6 @@ void Z80::execute_x3z0() {
 		reg.PC = pop();
 		callDepth--;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -854,7 +850,6 @@ void Z80::execute_x3z1()
 			} break;
 		}
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -867,7 +862,6 @@ void Z80::execute_x3z2() {
 	if(c) {
 		reg.PC = dd;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -879,11 +873,6 @@ void Z80::execute_x3z3() {
 			reg.PC = fetchWord();
 		} break;
 		case 1: { // CB prefix
-			shift_EXT = 0xCB;
-			if(shift_IXY) {			// If it is a DDCB or FDCB opcode shift then
-				fetch();			// The next byte is the index
-				index_CB = data;	// Store it here for later
-			}
 		} break;
 		case 2: { // OUT (n),A
 			fetch();
@@ -911,7 +900,6 @@ void Z80::execute_x3z3() {
 			reg.IFF2 = true;
 		} break;
 	}
-	if(shift_EXT == 0) shift_IXY = 0;
 }
 
 //
@@ -926,7 +914,6 @@ void Z80::execute_x3z4() {
 		reg.PC = dd;
 		callDepth++;
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -934,29 +921,16 @@ void Z80::execute_x3z4() {
 //
 void Z80::execute_x3z5()
 {
-	if (q == 0) {	// PUSH
+	if (q == 0) {		// PUSH
 		uint16_t* rp = t_rp2[shift_IXY][p];
 		push(*rp);
-		shift_IXY = 0;
 	}
 	else {
-		shift_IXY = 0;
-		switch (p) {
-			case 0: { // CALL nn
-				uint16_t dd = fetchWord();
-				push(reg.PC);
-				reg.PC = dd;
-				callDepth++;
-			} break;
-			case 1: { // DD prefix
-				shift_IXY = 1;
-			} break;
-			case 2: { // ED prefix
-				shift_EXT = 0xED;
-			} break;
-			case 3: { // FD prefix
-				shift_IXY = 2;
-			} break;
+		if(p == 0) {	// CALL nn
+			uint16_t dd = fetchWord();
+			push(reg.PC);
+			reg.PC = dd;
+			callDepth++;
 		}
 	}
 }
@@ -971,7 +945,6 @@ void Z80::execute_x3z6() {
 	if (f) {
 		(reg.*f)(data);			// And execute it
 	}
-	shift_IXY = 0;
 }
 
 //
@@ -981,7 +954,6 @@ void Z80::execute_x3z7() {
 	push(reg.PC);
 	reg.PC = y * 8;
 	callDepth++;
-	shift_IXY = 0;
 }
 
 // Push v on the stack

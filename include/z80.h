@@ -37,7 +37,7 @@ public:
 	void     dump(ostream& stream);
 	void     dump(ostream& stream, bool newline);
 
-	void     interruptRequest(uint8_t i);
+	void     interruptRequest();
 
 	void     reset();
 	void     run();
@@ -135,10 +135,8 @@ private:
 	uint8_t		z;
 	uint8_t		p;
 	uint8_t		q;
-	uint8_t		shift_EXT;						// Shift into extended opcodes (CB,ED)
 	uint8_t		shift_IXY;						// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
-	uint8_t		index_CB;						// The index (used for DDCB and FDCB instructions)
-	uint8_t		interrupt;
+	bool		interrupt;
 	int16_t		callDepth;
 	bool		singleStep;
 	bool		trace;

@@ -128,7 +128,7 @@ int main()
 		if(ula->getvBlank()) {
 			ula->setvBlank(false);
 			if(!z80->getSingleStep() || interrupts) {
-				z80->interruptRequest(0x38);
+				z80->interruptRequest();
 			}
 		}
 	}
