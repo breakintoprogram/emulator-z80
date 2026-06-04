@@ -78,9 +78,12 @@ void Z80::debug() {
 }
 
 void Z80::dump() {
-	dump(false);
+	dump(cout);
 }
-void Z80::dump(bool newline) {
+void Z80::dump(ostream& stream) {
+	dump(stream, false);
+}
+void Z80::dump(ostream& stream, bool newline) {
 	cout << setfill('0') << hex;
 	cout << "F=[";
 	cout << (reg.AF.S  ? 'S' : '-');

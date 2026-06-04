@@ -34,7 +34,8 @@ public:
 	uint16_t getCycle();
 
 	void     dump();
-	void     dump(bool newline);
+	void     dump(ostream& stream);
+	void     dump(ostream& stream, bool newline);
 
 	void     interruptRequest(uint8_t i);
 
