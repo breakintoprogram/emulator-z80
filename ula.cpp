@@ -25,7 +25,7 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	width(HRES + (HBORDER * 2)),
 	height(VRES + (VBORDER * 2)),
 	vBlank(false),
-	flash(false)
+	frame(0)
 {
     SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow(
@@ -63,6 +63,8 @@ void Ula::setvBlank(bool b) {
 
 void Ula::render() {
 	uint8_t borderColour = (*ulaPort) & 0x07;
+	bool    flash = frame & 0x10;
+
 	switch(state) {
 		//
 		// Top border
@@ -144,7 +146,7 @@ void Ula::render() {
 					SDL_RenderPresent(renderer);
 					SDL_SetRenderTarget(renderer, texture);
 					vBlank = true;
-					flash = !flash;
+					frame++;
 				}
 			}
 		} break;

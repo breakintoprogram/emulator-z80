@@ -34,14 +34,14 @@ private:
     uint8_t* ram = NULL;
     uint8_t* ulaPort = NULL;
 
-    int  videoScale;
-    int  state;
-    int  scanX;
-    int  scanY;
-    int  width;
-    int  height;
-    bool vBlank;
-    bool flash;
+    int     videoScale;
+    int     state;
+    int     scanX;
+    int     scanY;
+    int     width;
+    int     height;
+    uint8_t frame;
+    bool    vBlank;
 
     uint8_t palette[16][3] = {
         //
