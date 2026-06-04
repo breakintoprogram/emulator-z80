@@ -49,7 +49,6 @@ private:
 	Mem*   mem;
 	Ports* ports;
 
-	vector<string> callstack;
 	vector<uint16_t> breakpoints;
 
 	// Look-up tables for the x and z decode stage
