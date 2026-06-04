@@ -154,13 +154,7 @@ void Registers::setFlagsSZ(uint8_t d) {
 }	
 
 void Registers::setFlagsP(uint8_t d) {
-	bool p = true;
-	for(int i = 0; i < 8; i++) {
-		if(d & 1<<i) {
-			p = !p;
-		}
-	}
-	AF.P = p;
+	AF.P = lut_parity[d];
 }	
 
 void Registers::setFlagsSZP(uint8_t d) {
