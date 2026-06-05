@@ -38,6 +38,7 @@ public:
 	bool    IFF2;
 
 	void ex(REG* rp1, REG* rp2);
+	void exx();
 
 	void A_add(uint8_t d);
 	void A_adc(uint8_t d);

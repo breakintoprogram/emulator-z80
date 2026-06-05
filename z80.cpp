@@ -20,7 +20,6 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	shift_IXY(0),
 	data(0),
 	breakpoints(),
-	callDepth(0),
 	interrupt(0),
 	singleStep(false),
 	trace(false),
@@ -183,12 +182,10 @@ void Z80::interrupts() {
 			if (reg.IM == 1) {
 				push(reg.PC);				// Push the current program counter on the stack
 				reg.PC = 0x38;				// Set the program counter to the maskable interrupt routine
-				callDepth++;
 			}
 			else if (reg.IM == 2) {
 				push(reg.PC);
 				reg.PC = mem->readWord(reg.I << 8);
-				callDepth++;
 			}
 		}
 	}
@@ -355,7 +352,6 @@ void Z80::execute_ED() {
 				} break;
 				case 5: { // RETI/RETN
 					reg.PC = pop();
-					callDepth--;
 				} break;
 				case 6: { // IM
 					switch(y & 3) {
@@ -538,7 +534,7 @@ void Z80::srl(uint8_t * r) {
 
 void Z80::execute_trap()
 {
-	cout << "unimplemented opcode" << endl;
+	throw runtime_error("unimplemented opcode");
 }
 
 //
@@ -788,7 +784,7 @@ void Z80::execute_x1__()
 				mem->write(getInd(shift_IXY), *rs);	// Copy the register to the memory
 			}
 			else {
-				NOP;								// If we get here, something has gone horribly wrong
+				throw runtime_error("execute_x1: source and data are both memory locations");
 			}
 		}
 	}
@@ -816,7 +812,6 @@ void Z80::execute_x3z0() {
 	bool c = (reg.*f)();	// Get the condition
 	if(c) {
 		reg.PC = pop();
-		callDepth--;
 	}
 }
 
@@ -833,12 +828,9 @@ void Z80::execute_x3z1()
 		switch (p) {
 			case 0: { // RET
 				reg.PC = pop();
-				callDepth--;
 			} break;
 			case 1: { // EXX
-				reg.ex(&reg.HL, &reg.HL_);
-				reg.ex(&reg.DE, &reg.DE_);
-				reg.ex(&reg.BC, &reg.BC_);
+				reg.exx();
 			} break;
 			case 2: { // JP (HL/IX/IY)
 				uint16_t* rp = t_rp1[shift_IXY][2];
@@ -912,7 +904,6 @@ void Z80::execute_x3z4() {
 	if(c) {
 		push(reg.PC);
 		reg.PC = dd;
-		callDepth++;
 	}
 }
 
@@ -930,7 +921,6 @@ void Z80::execute_x3z5()
 			uint16_t dd = fetchWord();
 			push(reg.PC);
 			reg.PC = dd;
-			callDepth++;
 		}
 	}
 }
@@ -953,7 +943,6 @@ void Z80::execute_x3z6() {
 void Z80::execute_x3z7() {
 	push(reg.PC);
 	reg.PC = y * 8;
-	callDepth++;
 }
 
 // Push v on the stack
@@ -991,7 +980,7 @@ uint16_t Z80::getIXY(uint8_t s, uint8_t d) {
 		case 1: return reg.IX.W + disp;	// (IX + d)
 		case 2: return reg.IY.W + disp;	// (IY + d);
 	}
-	return 0;	// If we've got here, then something's gone horribly wrong
+	throw runtime_error("getIXY: invalid shift value");
 }
 
 void Z80::ldi() {	

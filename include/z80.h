@@ -137,7 +137,6 @@ private:
 	uint8_t		q;
 	uint8_t		shift_IXY;						// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
 	bool		interrupt;
-	int16_t		callDepth;
 	bool		singleStep;
 	bool		trace;
 	ostream&	traceStream;

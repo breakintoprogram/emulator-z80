@@ -23,6 +23,12 @@ void Registers::ex(REG* rp1, REG* rp2)
 	(*rp2).W = d;
 }
 
+void Registers::exx() {
+	ex(&HL, &HL_);
+	ex(&DE, &DE_);
+	ex(&BC, &BC_);
+}
+
 void Registers::A_add(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a + d;
