@@ -33,7 +33,6 @@ public:
 	bool     getTrace();
 	void     setTrace(bool value);
 
-	void     dump();
 	void     dump(ostream& stream);
 	void     dump(ostream& stream, bool newline);
 
@@ -43,10 +42,23 @@ public:
 	void     run();
 
 private:
-	Mem*   mem;
-	Ports* ports;
+	Mem*      mem;				// Pointer to the memory class
+	Ports*    ports;			// Pointer to the ports class
+	Registers reg;				// The registers
 
-	vector<uint16_t> breakpoints;
+	uint8_t	  data;				// Last fetched byte
+	uint8_t	  x;				// Decoded opcode values
+	uint8_t	  y;
+	uint8_t	  z;
+	uint8_t	  p;
+	uint8_t	  q;
+	uint8_t	  shift_IXY;		// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
+	bool	  interrupt;		// Set when an interrupt has been requested
+	bool	  singleStep;		// Set when single-stepping
+	bool	  trace;			// Set to enable tracing to traceStream
+	ostream&  traceStream;		// The traceStream (defaults to cout)
+
+	vector<uint16_t> breakpoints;	// The breakpoint list
 
 	// Look-up tables for the x and z decode stage
 	//
@@ -116,11 +128,6 @@ private:
 		&Registers::F_M,
 	};
 
-	// Look
-	//
-
-	Registers reg;									// The registers
-
 	// 8-bit register lookup
 	//
 	uint8_t* t_r[3][8] = {
@@ -136,24 +143,12 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   }
 	};
-
+	
 	uint16_t * t_rp2[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
 	};
-
-	uint8_t		data;							// Last fetched byte
-	uint8_t		x;								// Decoded opcode
-	uint8_t		y;
-	uint8_t		z;
-	uint8_t		p;
-	uint8_t		q;
-	uint8_t		shift_IXY;						// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
-	bool		interrupt;
-	bool		singleStep;
-	bool		trace;
-	ostream&	traceStream;
 
 	void        debug();
 	void		interrupts();

@@ -356,6 +356,7 @@ void Z80::execute_ED() {
 				case 6: { // IM
 					switch(y & 3) {
 						case 0: reg.IM = 0; break;
+						case 1: reg.IM = 0; break; // IM 0/1
 						case 2: reg.IM = 1; break;
 						case 3: reg.IM = 2; break;
 					}
