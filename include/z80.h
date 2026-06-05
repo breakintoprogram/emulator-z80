@@ -54,6 +54,7 @@ private:
 	uint8_t	  q;
 	uint8_t	  shift_IXY;		// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
 	bool	  interrupt;		// Set when an interrupt has been requested
+	bool      halted;			// Is the CPU in a halt state?
 	bool	  singleStep;		// Set when single-stepping
 	bool	  trace;			// Set to enable tracing to traceStream
 	ostream&  traceStream;		// The traceStream (defaults to cout)

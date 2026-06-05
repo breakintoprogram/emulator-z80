@@ -21,6 +21,7 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	data(0),
 	breakpoints(),
 	interrupt(0),
+	halted(false),
 	singleStep(false),
 	trace(false),
 	traceStream(cout)
@@ -65,14 +66,16 @@ void Z80::reset()
 // Run one CPU cycle
 //
 void Z80::run() {
-	debug();
-	fetch();
-	while(data == 0xDD || data == 0xFD) {
-		shift_IXY = ((data & 0b00100000) >> 5) + 1;
+	if(!halted) {
+		debug();
 		fetch();
+		while(data == 0xDD || data == 0xFD) {
+			shift_IXY = ((data & 0b00100000) >> 5) + 1;
+			fetch();
+		}
+		decode();
+		execute();
 	}
-	decode();
-	execute();
 	interrupts();
 	if (trace) {
 		traceStream << endl;
@@ -177,8 +180,9 @@ void Z80::interrupts() {
 	//
 	// Handle the interrupts
 	//
-	if (interrupt) {						// If an interrupt has been requested
+	if (interrupt) {						// If an interrupt has been triggered
 		interrupt = false;					// Acknowledge
+		halted = false;						// CPU is no longer halted
 		if (reg.IFF1) {						// Are interrupts enabled?
 			reg.IFF1 = false;				// Disable interrupts
 			if (reg.IM == 0) {
@@ -642,9 +646,7 @@ void Z80::execute_x0z7() {
 void Z80::execute_x1__()
 {
 	if (y == 6 && z == 6) {	// HALT
-		if(!reg.IFF1) {
-			reg.PC--;
-		}
+		halted = true;
 	}
 	else {					// LD ry,rz
 		uint8_t  ss = (z != 6 && y == 6 ? 0 : shift_IXY);
