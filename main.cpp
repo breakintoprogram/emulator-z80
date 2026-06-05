@@ -24,7 +24,7 @@
 #include "z80.h"
 
 #define code "roms/48.rom"
-#define test "tests/z80doc_noblknop.bin"
+#define test "tests/z80doc.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -117,7 +117,12 @@ int main()
 		//
 		for(int i = 0; i < turbo; i++) {
 			if(!z80->getSingleStep() || step) {
-				z80->run();
+				try {
+					z80->run();
+				}
+				catch(const exception& e) {
+					cout << "Error: " << e.what() << endl;
+				}
 			}
 			step = false;
 		}

@@ -938,50 +938,58 @@ void Z80::outd() {
 }
 
 void Z80::ldir() {	
-	do {
-		ldi();
-	} while (reg.BC.W != 0);
+	ldi();
+	if(reg.BC.W != 0) {
+		reg.PC-=2;
+	}
 }
 
 void Z80::cpir() {	
-	do {
-		cpi();
-	} while (reg.BC.W != 0 && reg.AF.Z == 0);
+	cpi();
+	if(reg.BC.W != 0 && reg.AF.Z == 0) {
+		reg.PC-=2;
+	}	
 }
 
 void Z80::inir() {	
-	do {
-		ini();
-	} while (reg.BC.L != 0);
+	ini();
+	if(reg.BC.L !=0) {
+		reg.PC-=2;
+	}
 }
 
 void Z80::otir() {	
-	do {
-		outi();
-	} while (reg.BC.L != 0);
+	outi();
+	if(reg.BC.L !=0) {
+		reg.PC-=2;
+	}
 }
 
 void Z80::lddr() {	
-	do {
-		ldd();
-	} while (reg.BC.W != 0);
+	ldd();
+	if(reg.BC.W != 0) {
+		reg.PC-=2;
+	}
 }
 
 void Z80::cpdr() {	
-	do {
-		cpd();
-	} while (reg.BC.W != 0 && reg.AF.Z == 0);
+	cpd();
+	if(reg.BC.W !=0 && reg.AF.Z == 0) {
+		reg.PC-=2;
+	}	
 }
 
 void Z80::indr() {	
-	do {
-		ind();
-	} while (reg.BC.L != 0);
+	ind();
+	if(reg.BC.L !=0) {
+		reg.PC-=2;
+	}
 }
 
 void Z80::otdr() {	
-	do {
-		outd();
-	} while (reg.BC.L != 0);
+	outd();
+	if(reg.BC.L !=0) {
+		reg.PC-=2;
+	}
 }
 
