@@ -29,7 +29,7 @@ void Registers::exx() {
 	ex(&BC, &BC_);
 }
 
-void Registers::A_add(uint8_t d) {
+void Registers::adda(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a + d;
 	uint8_t  b = w & 0xFF;
@@ -43,7 +43,7 @@ void Registers::A_add(uint8_t d) {
 
 }
 
-void Registers::A_adc(uint8_t d) {
+void Registers::adca(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a + d + AF.C;
 	uint8_t  b = w & 0xFF;
@@ -57,7 +57,7 @@ void Registers::A_adc(uint8_t d) {
 	AF.A = b;
 }
 
-void Registers::A_sub(uint8_t d) {
+void Registers::suba(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
@@ -70,7 +70,7 @@ void Registers::A_sub(uint8_t d) {
 	AF.A = b;
 }
 
-void Registers::A_sbc(uint8_t d) {
+void Registers::sbca(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d - AF.C;
 	uint8_t  b = w & 0xFF;
@@ -84,27 +84,7 @@ void Registers::A_sbc(uint8_t d) {
 	AF.A = b;
 }
 
-void Registers::A_and(uint8_t d) {
-	AF.L = 0x10;	// Flags reset; Borrow flag set
-	AF.A &= d;
-	setFlagsSZ(AF.A);
-	setFlagsP(AF.A);
-}
-
-void Registers::A_xor(uint8_t d) {
-	AF.L = 0x00;	// Flags reset
-	AF.A ^= d;
-	setFlagsSZ(AF.A);
-	setFlagsP(AF.A);
-}
-void Registers::A_or(uint8_t d) {
-	AF.L = 0x00;	// Flags reset
-	AF.A |= d;
-	setFlagsSZ(AF.A);
-	setFlagsP(AF.A);
-}
-
-void Registers::A_cp(uint8_t d) {
+void Registers::cpa(uint8_t d) {
 	uint8_t  a = AF.A;
 	uint16_t w = a - d;
 	uint8_t  b = w & 0xFF;
@@ -116,19 +96,39 @@ void Registers::A_cp(uint8_t d) {
 	AF.N = 1;
 }
 
-void Registers::A_neg() {
-	uint8_t a = AF.A;
-	AF.A = 0;
-	A_sub(a);
+void Registers::anda(uint8_t d) {
+	AF.L = 0x10;	// Flags reset; Borrow flag set
+	AF.A &= d;
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
 }
 
-void Registers::A_not() {
+void Registers::xora(uint8_t d) {
+	AF.L = 0x00;	// Flags reset
+	AF.A ^= d;
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
+}
+void Registers::ora(uint8_t d) {
+	AF.L = 0x00;	// Flags reset
+	AF.A |= d;
+	setFlagsSZ(AF.A);
+	setFlagsP(AF.A);
+}
+
+void Registers::neg() {
+	uint8_t a = AF.A;
+	AF.A = 0;
+	suba(a);
+}
+
+void Registers::cpl() {
 	AF.A=~AF.A;
 	AF.B = 1;
 	AF.N = 1;
 }
 
-void Registers::A_daa() {
+void Registers::daa() {
 	uint8_t a = AF.A;
 	uint8_t b = AF.B;
 	uint8_t c = AF.C;
@@ -145,13 +145,134 @@ void Registers::A_daa() {
 	if( a > 0x99) c = 1;
 	
 	if (AF.N) {
-		A_sub(i);
+		suba(i);
 	} else {
-		A_add(i);		
+		adda(i);		
 	};
 
 	AF.C = c;
 	setFlagsP(AF.A);
+}
+
+// Note that RLC A affects SZC, RLCA only affects carry
+//
+void Registers::rlc(uint8_t * r) {
+	_rlc(r);
+	setFlagsSZP(*r);
+}
+void Registers::rlca() {
+	_rlc(&AF.A);
+}
+void Registers::_rlc(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
+	d = d << 1 | c;				// Shift left, and copy the bit shifted out into bit 0
+	AF.C = c;					// Carry is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	*r = d;						// Store result back
+}
+
+// Note that RRC A affects SZC, RRCA only affects carry
+//
+void Registers::rrc(uint8_t * r) {
+	_rrc(r);
+	setFlagsSZP(*r);
+}
+void Registers::rrca() {
+	_rrc(&AF.A);
+}
+void Registers::_rrc(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
+	d = d >>1 | c<<7;			// Shift right, and copy the bit shifted out into bit 7
+	AF.C = c;					// Carry is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	*r = d;						// Store result back
+}
+
+// Note that RL A affects SZC, RLA only affects carry
+//
+void Registers::rl(uint8_t * r) {
+	_rl(r);
+	setFlagsSZP(*r);
+}
+void Registers::rla() {
+	_rl(&AF.A);
+}
+void Registers::_rl(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
+	d = d << 1 | AF.C;			// Shift left, and copy carry into bit 0
+	AF.C = c;					// Carry is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	*r = d;						// Store result back
+}
+
+// Note that RR A affects SZC, RRA only affects carry
+//
+void Registers::rr(uint8_t * r) {
+	_rr(r);
+	setFlagsSZP(*r);
+}
+void Registers::rra() {
+	_rr(&AF.A);
+}
+void Registers::_rr(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
+	d = d >>1 | AF.C<<7; 		// Shift right, and copy carry into bit 7
+	AF.C = c;					// Carry is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	*r = d;						// Store result back
+}
+
+void Registers::sla(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
+	d = d << 1;					// Shift the data left; 0 is shifted in
+	AF.C = c;					// Carry is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	setFlagsSZP(d);
+	*r = d;						// Store result back
+}
+
+void Registers::sra(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t s = d&0x80;			// The sign bit we want to preserve
+	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
+	d = d >> 1 | s;				// Shift the data right, preserving bit 7
+	AF.C = c;					// Carry flag is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	setFlagsSZP(d);
+	*r = d;						// Store result back
+}
+
+void Registers::sll(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
+	d = d << 1 | 1;				// Shift the data left, setting bit 0 to 1
+	AF.C = c;					// Carry flag is set to the bit shifted out
+	AF.B = 0;
+	AF.N = 0;
+	setFlagsSZP(d);
+	*r = d;						// Store the result back
+}
+
+void Registers::srl(uint8_t * r) {
+	uint8_t d = *r;				// The data to be operated on
+	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
+	d = d >>1;					// Shift the data right, setting bit 7 to 0
+	AF.C = c;					// Carry flag is set to the bit shifted out
+	AF.B= 0;
+	AF.N = 0;
+	setFlagsSZP(d);
+	*r = d;						// Store the result back
 }
 
 void Registers::setFlagsSZ(uint8_t d) {

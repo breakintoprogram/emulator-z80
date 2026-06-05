@@ -60,27 +60,27 @@ private:
 	// Look-up table for ALU operations
 	//
 	vector<void (Registers::*)(uint8_t)> lut_alu = {
-		&Registers::A_add,
-		&Registers::A_adc,
-		&Registers::A_sub,
-		&Registers::A_sbc,
-		&Registers::A_and,
-		&Registers::A_xor,
-		&Registers::A_or,
-		&Registers::A_cp
+		&Registers::adda,
+		&Registers::adca,
+		&Registers::suba,
+		&Registers::sbca,
+		&Registers::anda,
+		&Registers::xora,
+		&Registers::ora,
+		&Registers::cpa
 	};
 
 	// Look-up table for ROT operations
 	//
-	vector<void (Z80::*)(uint8_t *)> lut_rot = {
-		&Z80::rlc,
-		&Z80::rrc,
-		&Z80::rl,
-		&Z80::rr,
-		&Z80::sla,
-		&Z80::sra,
-		&Z80::sll,
-		&Z80::srl
+	vector<void (Registers::*)(uint8_t *)> lut_rot = {
+		&Registers::rlc,
+		&Registers::rrc,
+		&Registers::rl,
+		&Registers::rr,
+		&Registers::sla,
+		&Registers::sra,
+		&Registers::sll,
+		&Registers::srl
 	};
 
 	// Look-up table for block operations
@@ -173,19 +173,6 @@ private:
 	uint16_t	pop();							// POP a value off the stack
 	uint16_t	getInd(uint8_t s);				// Get indirect address from HL, IX or IY
 	uint16_t 	getIXY(uint8_t s, uint8_t d);	// Get indirect address from IX+d or IY+d
-
-	void		rlc(uint8_t* r);
-	void		rrc(uint8_t* r);
-	void		rl(uint8_t* r);
-	void		rr(uint8_t* r);
-	void		sla(uint8_t* r);
-	void		sra(uint8_t* r);
-	void		sll(uint8_t* r);
-	void		srl(uint8_t* r);
-	void		rlca(uint8_t* r);
-	void		rrca(uint8_t* r);
-	void		rla(uint8_t* r);
-	void		rra(uint8_t* r);
 
 	void 		ldi();
 	void		cpi();

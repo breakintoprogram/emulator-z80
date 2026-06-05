@@ -209,7 +209,7 @@ void Z80::execute_CB() {
 			case 0: { // ROT
 				auto f = lut_rot[y];
 				b = mem->readByte(a);
-				(this->*f)(&b);
+				(reg.*f)(&b);
 				mem->write(a, b);
 				if (r) *r = b;
 				reg.AF.B = 0;
@@ -248,12 +248,12 @@ void Z80::execute_CB() {
 			case 0: { // ROT
 				auto f = lut_rot[y];			// Look up the ROT operation
 				if (r) {						// If it is a register then
-					(this->*f)(r);				// Execute the function on the register
+					(reg.*f)(r);				// Execute the function on the register
 				}
 				else {
 					uint16_t a = getInd(0);		// Get the memory address
 					b = mem->readByte(a);		// Get the byte
-					(this->*f)(&b);				// Execute the function on the memory location				
+					(reg.*f)(&b);				// Execute the function on the memory location				
 					mem->write(a, b);
 				}
 			} break;
@@ -348,7 +348,7 @@ void Z80::execute_ED() {
 					}
 				} break;
 				case 4: { // NEG
-					reg.A_neg();
+					reg.neg();
 				} break;
 				case 5: { // RETI/RETN
 					reg.PC = pop();
@@ -421,115 +421,6 @@ void Z80::execute_ED() {
 			execute_trap();
 		} break;
 	}
-}
-
-// Note that RLC A affects SZC, RLCA only affects carry
-//
-void Z80::rlc(uint8_t * r) {
-	rlca(r);
-	reg.setFlagsSZP(*r);
-}
-void Z80::rlca(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
-	d = d << 1 | c;				// Shift left, and copy the bit shifted out into bit 0
-	reg.AF.C = c;				// Carry is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	*r = d;						// Store result back
-}
-
-// Note that RRC A affects SZC, RRCA only affects carry
-//
-void Z80::rrc(uint8_t * r) {
-	rrca(r);
-	reg.setFlagsSZP(*r);
-}
-void Z80::rrca(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
-	d = d >>1 | c<<7;			// Shift right, and copy the bit shifted out into bit 7
-	reg.AF.C = c;				// Carry is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	*r = d;						// Store result back
-}
-
-// Note that RL A affects SZC, RLA only affects carry
-//
-void Z80::rl(uint8_t * r) {
-	rla(r);
-	reg.setFlagsSZP(*r);
-}
-void Z80::rla(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
-	d = d << 1 | reg.AF.C;		// Shift left, and copy carry into bit 0
-	reg.AF.C = c;				// Carry is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	*r = d;						// Store result back
-}
-
-// Note that RR A affects SZC, RRA only affects carry
-//
-void Z80::rr(uint8_t * r) {
-	rra(r);
-	reg.setFlagsSZP(*r);
-}
-void Z80::rra(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
-	d = d >>1 | reg.AF.C<<7; 	// Shift right, and copy carry into bit 7
-	reg.AF.C = c;				// Carry is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	*r = d;						// Store result back
-}
-
-void Z80::sla(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
-	d = d << 1;					// Shift the data left; 0 is shifted in
-	reg.AF.C = c;				// Carry is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	reg.setFlagsSZP(d);
-	*r = d;						// Store result back
-}
-
-void Z80::sra(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t s = d&0x80;			// The sign bit we want to preserve
-	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
-	d = d >> 1 | s;				// Shift the data right, preserving bit 7
-	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	reg.setFlagsSZP(d);
-	*r = d;						// Store result back
-}
-
-void Z80::sll(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = (d&0x80)>>7;	// The bit to be shifted out is bit 7
-	d = d << 1 | 1;				// Shift the data left, setting bit 0 to 1
-	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	reg.AF.B = 0;
-	reg.AF.N = 0;
-	reg.setFlagsSZP(d);
-	*r = d;						// Store the result back
-}
-
-void Z80::srl(uint8_t * r) {
-	uint8_t d = *r;				// The data to be operated on
-	uint8_t c = d&0x01;			// The bit to be shifted out is bit 0
-	d = d >>1;					// Shift the data right, setting bit 7 to 0
-	reg.AF.C = c;				// Carry flag is set to the bit shifted out
-	reg.AF.B= 0;
-	reg.AF.N = 0;
-	reg.setFlagsSZP(d);
-	*r = d;						// Store the result back
 }
 
 void Z80::execute_trap()
@@ -736,18 +627,18 @@ void Z80::execute_x0z6() {
 //
 void Z80::execute_x0z7() {
 	switch(y) {
-		case 0: rlca(&reg.AF.A); break;			// RLCA
-		case 1: rrca(&reg.AF.A); break;			// RRCA
-		case 2: rla (&reg.AF.A); break;			// RLA
-		case 3: rra (&reg.AF.A); break;			// RRA
-		case 4: reg.A_daa(); break;				// DAA
-		case 5: reg.A_not(); break;				// CPL
-		case 6: {								// SCF
+		case 0: reg.rlca(); break;		// RLCA
+		case 1: reg.rrca(); break;		// RRCA
+		case 2: reg.rla(); break;		// RLA
+		case 3: reg.rra(); break;		// RRA
+		case 4: reg.daa(); break;		// DAA
+		case 5: reg.cpl(); break;		// CPL
+		case 6: {						// SCF
 			reg.AF.B = 0;
 			reg.AF.N = 0;
 			reg.AF.C = 1;
 		} break;			
-		case 7: {								// CCF
+		case 7: {						// CCF
 			reg.AF.B = reg.AF.C;
 			reg.AF.N = 0;
 			reg.AF.C = !reg.AF.C;
