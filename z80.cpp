@@ -484,7 +484,7 @@ void Z80::execute_x0z1() {
 	else {			// ADD HL,rr
 		uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL/IX/IY
 		uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
-		uint32_t  l = *rp1 + *rp2;
+		uint32_t  l = (*rp1) + (*rp2);
 		uint16_t  w = (l & 0xFFFF);
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
@@ -736,6 +736,7 @@ void Z80::execute_x3z3() {
 			reg.PC = fetchWord();
 		} break;
 		case 1: { // CB prefix
+			throw runtime_error("execute_x3z3: invalid operation");
 		} break;
 		case 2: { // OUT (n),A
 			fetch();
@@ -792,6 +793,9 @@ void Z80::execute_x3z5()
 			uint16_t dd = fetchWord();
 			push(reg.PC);
 			reg.PC = dd;
+		}
+		else {
+			throw runtime_error("execute_x3z5: invalid operation");
 		}
 	}
 }
