@@ -57,9 +57,9 @@ private:
 		{ &Z80::execute_x3z0, &Z80::execute_x3z1, &Z80::execute_x3z2, &Z80::execute_x3z3, &Z80::execute_x3z4, &Z80::execute_x3z5, &Z80::execute_x3z6, &Z80::execute_x3z7 }
 	};
 
-	// Look-up table for ALU operations
+	// Look-up tables for ALU operations
 	//
-	vector<void (Registers::*)(uint8_t)> lut_alu = {
+	vector<void (Registers::*)(uint8_t)> lut_alu1 = {
 		&Registers::adda,
 		&Registers::adca,
 		&Registers::suba,
@@ -68,6 +68,17 @@ private:
 		&Registers::xora,
 		&Registers::ora,
 		&Registers::cpa
+	};
+
+	vector<void (Registers::*)()> lut_alu2 = {
+		&Registers::rlca,
+		&Registers::rrca,
+		&Registers::rla,
+		&Registers::rra,
+		&Registers::daa,
+		&Registers::cpl,
+		&Registers::scf,
+		&Registers::ccf
 	};
 
 	// Look-up table for ROT operations
@@ -104,6 +115,9 @@ private:
 		&Registers::F_P,
 		&Registers::F_M,
 	};
+
+	// Look
+	//
 
 	Registers reg;									// The registers
 

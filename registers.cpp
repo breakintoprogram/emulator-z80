@@ -154,6 +154,18 @@ void Registers::daa() {
 	setFlagsP(AF.A);
 }
 
+void Registers::scf() {
+	AF.B = 0;
+	AF.N = 0;
+	AF.C = 1;
+}
+
+void Registers::ccf() {
+	AF.B = AF.C;
+	AF.N = 0;
+	AF.C = !AF.C;
+}
+
 // Note that RLC A affects SZC, RLCA only affects carry
 //
 void Registers::rlc(uint8_t * r) {

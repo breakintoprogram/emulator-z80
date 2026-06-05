@@ -51,7 +51,9 @@ public:
 	void neg();
 	void cpl();
 	void daa();
-
+	void scf();
+	void ccf();
+	
 	void rlc(uint8_t* r);
 	void rrc(uint8_t* r);
 	void rl(uint8_t* r);

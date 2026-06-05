@@ -621,24 +621,8 @@ void Z80::execute_x0z6() {
 // X=0, Z=7: Assorted operations on accumulator flags
 //
 void Z80::execute_x0z7() {
-	switch(y) {
-		case 0: reg.rlca(); break;		// RLCA
-		case 1: reg.rrca(); break;		// RRCA
-		case 2: reg.rla(); break;		// RLA
-		case 3: reg.rra(); break;		// RRA
-		case 4: reg.daa(); break;		// DAA
-		case 5: reg.cpl(); break;		// CPL
-		case 6: {						// SCF
-			reg.AF.B = 0;
-			reg.AF.N = 0;
-			reg.AF.C = 1;
-		} break;			
-		case 7: {						// CCF
-			reg.AF.B = reg.AF.C;
-			reg.AF.N = 0;
-			reg.AF.C = !reg.AF.C;
-		} break;	
-	}
+	auto f = lut_alu2[y];				// Look up the ALU function
+	(reg.*f)();							// And run
 }
 
 // 8 bit loading
@@ -681,7 +665,7 @@ void Z80::execute_x1__()
 void Z80::execute_x2__()
 {
 	uint8_t* r = t_r[shift_IXY][z];				// Pointer to the register or HL
-	auto f = lut_alu[y];						// Look up the ALU function
+	auto f = lut_alu1[y];						// Look up the ALU function
 	if (r) {									// If it's a register then
 		(reg.*f)(*r);							// Use the registry contents
 	}
@@ -817,7 +801,7 @@ void Z80::execute_x3z5()
 void Z80::execute_x3z6() {
 	uint8_t* r = &reg.AF.A;		// Pointer to the accumulator
 	fetch();					// Fetch the immediate operand
-	auto f = lut_alu[y];		// Look up the ALU function
+	auto f = lut_alu1[y];		// Look up the ALU function
 	if (f) {
 		(reg.*f)(data);			// And execute it
 	}
