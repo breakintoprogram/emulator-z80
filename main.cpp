@@ -24,7 +24,7 @@
 #include "z80.h"
 
 #define code "roms/48.rom"
-#define test "tests/z80doc.bin"
+#define test "tests/z80doc_noblknop.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
