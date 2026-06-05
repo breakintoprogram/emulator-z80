@@ -171,21 +171,29 @@ void Z80::execute()
 }
 
 // Handle interrupts
+// NB: The maskable interrupt has not been implemented
 //
 void Z80::interrupts() {
 	//
 	// Handle the interrupts
 	//
 	if (interrupt) {						// If an interrupt has been requested
-		interrupt = false;					// Cancel the request
+		interrupt = false;					// Acknowledge
 		if (reg.IFF1) {						// Are interrupts enabled?
-			if (reg.IM == 1) {
+			reg.IFF1 = false;				// Disable interrupts
+			if (reg.IM == 0) {
+				throw runtime_error("interrupts: IM 0 not implemented");
+			}
+			else if (reg.IM == 1) {
 				push(reg.PC);				// Push the current program counter on the stack
 				reg.PC = 0x38;				// Set the program counter to the maskable interrupt routine
 			}
 			else if (reg.IM == 2) {
 				push(reg.PC);
 				reg.PC = mem->readWord(reg.I << 8);
+			}
+			else {
+				throw runtime_error("interrupts: invalid IM");
 			}
 		}
 	}
@@ -352,6 +360,9 @@ void Z80::execute_ED() {
 				} break;
 				case 5: { // RETI/RETN
 					reg.PC = pop();
+					if (y != 1) { // Check for RETN
+						reg.IFF1 = reg.IFF2;
+					}
 				} break;
 				case 6: { // IM
 					switch(y & 3) {
