@@ -149,7 +149,6 @@ private:
 
 	void 		execute_CB();					// Execute CB prefixed opcodes
 	void		execute_ED();					// Execute ED prefixed opcodes
-	void		execute_trap();					// Unimplemented function
 	void		execute_x0z0();					// Relative jumps and assorted ops
 	void		execute_x0z1();					// 16 - bit load immediate / add
 	void		execute_x0z2();					// Indirect load

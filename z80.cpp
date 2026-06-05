@@ -413,19 +413,14 @@ void Z80::execute_ED() {
 				(this->*f)();
 			}	
 			else {
-				execute_trap();
+				throw runtime_error("execute_ED: invalid block instruction");
 			}
 		} break;
 
 		default: {
-			execute_trap();
+			throw runtime_error("execute_ED: invalid opcode");
 		} break;
 	}
-}
-
-void Z80::execute_trap()
-{
-	throw runtime_error("unimplemented opcode");
 }
 
 //
