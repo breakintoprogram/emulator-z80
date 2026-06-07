@@ -11,7 +11,7 @@
 
 Ports::Ports() {
 	for(int i=0; i<=255; i++) {
-        ports_in[i] = 0xFF;
+        ports_in[i] = 0b10111111;
     }
 	ports_out[0] = 0xFF;
 }

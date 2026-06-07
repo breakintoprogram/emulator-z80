@@ -316,6 +316,8 @@ void Z80::execute_ED() {
 						*r = b;
 					}
 					reg.setFlagsSZP(b);
+					reg.AF.B = 0;
+					reg.AF.N = 0;
 				} break;	
 				case 1: { // OUT (C)
 					uint8_t* r = t_r[0][y];
@@ -893,15 +895,15 @@ void Z80::cpi() {
 
 void Z80::ini() {	
 	mem->write(reg.HL.W++, ports->in(reg.BC.W));
-	reg.BC.L--;
-	reg.AF.Z = (reg.BC.L != 0);
+	reg.BC.H--;
+	reg.AF.Z = (reg.BC.H == 0);
 	reg.AF.N = 1;
 }
 
 void Z80::outi() {	
 	ports->out(reg.BC.W, mem->readByte(reg.HL.W++));
-	reg.BC.L--;
-	reg.AF.Z = (reg.BC.L != 0);
+	reg.BC.H--;
+	reg.AF.Z = (reg.BC.H == 0);
 	reg.AF.N = 1;
 }
 
@@ -927,15 +929,15 @@ void Z80::cpd() {
 
 void Z80::ind() {	
 	mem->write(reg.HL.W--, ports->in(reg.BC.W));
-	reg.BC.L--;
-	reg.AF.Z = (reg.BC.L != 0);
+	reg.BC.H--;
+	reg.AF.Z = (reg.BC.H == 0);
 	reg.AF.N = 1;
 }
 
 void Z80::outd() {	
 	ports->out(reg.BC.W, mem->readByte(reg.HL.W--));
-	reg.BC.L--;
-	reg.AF.Z = (reg.BC.L != 0);
+	reg.BC.H--;
+	reg.AF.Z = (reg.BC.H == 0);
 	reg.AF.N = 1;
 }
 
@@ -955,14 +957,14 @@ void Z80::cpir() {
 
 void Z80::inir() {	
 	ini();
-	if(reg.BC.L !=0) {
+	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
 }
 
 void Z80::otir() {	
 	outi();
-	if(reg.BC.L !=0) {
+	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
 }
@@ -976,21 +978,21 @@ void Z80::lddr() {
 
 void Z80::cpdr() {	
 	cpd();
-	if(reg.BC.W !=0 && reg.AF.Z == 0) {
+	if(reg.BC.W != 0 && reg.AF.Z == 0) {
 		reg.PC-=2;
 	}	
 }
 
 void Z80::indr() {	
 	ind();
-	if(reg.BC.L !=0) {
+	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
 }
 
 void Z80::otdr() {	
 	outd();
-	if(reg.BC.L !=0) {
+	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
 }
