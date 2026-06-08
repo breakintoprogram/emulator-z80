@@ -21,6 +21,7 @@
 #include "keyboard.h"
 #include "memory.h"
 #include "ports.h"
+#include "tape.h"
 #include "z80.h"
 
 #define code "roms/48.rom"
@@ -31,12 +32,14 @@ Ula*      ula;
 Z80*      z80;
 Mem*      mem;
 Ports*    ports;
+Tape*     tape;
 
 void cleanup() {
 	delete mem;
 	delete ports;
 	delete keyboard;
 	delete ula;
+	delete tape;
 	delete z80;
 }
 
@@ -60,6 +63,7 @@ int main()
 		ports = new Ports();
 		ula = new Ula(mem, ports, 1);
 		keyboard = new Keyboard(ports);
+		tape = new Tape(ports);
 		z80 = new Z80(mem, ports);
 	}
 	catch(const exception& e) {
@@ -136,6 +140,10 @@ int main()
 				z80->interruptRequest();
 			}
 		}
+		//
+		// Process any tape stuff
+		//
+		tape->play();
 	}
 	cleanup();	
 	return 0;
