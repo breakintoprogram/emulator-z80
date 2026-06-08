@@ -43,13 +43,23 @@ I use the VSCode IDE with the following extensions installed:
 
 The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. There are a handful of emulator specific key combinations I'm using whilst testing the code:
 
+- `F1` Turbu speed x 1
+- `F2` Turbu speed x 2
+- `F3` Turbu speed x 4
+- `F4` Turbu speed x 8
+- `F5` Turbu speed x 16
 - `F12` Enter the debugger
-- `ENTER` single-step the CPU
-- `g` resume normal CPU exection
+
+When in the debugger:
+
+- `ENTER` single-step the CPU after a breakpoint
+- `g` Exit debugger, continue normal CPU exection
 - `d` disable interrupts
 - `e` enable interrupts
 - `t` enable console debugging trace
-- `l` load the test
+- `l` load a test (see next section)
+- `o` output registers to console
+- `r` reset the CPU
 
 ## Testing
 
@@ -71,6 +81,7 @@ The following sites helped me develop and test this:
 - [Z80 Information](https://jnz.dk/z80/)
 - [The Complete Spectrum ROM Disassembly](https://skoolkid.github.io/rom/index.html)
 - [Raxoft Z80 Test Suite](https://github.com/raxoft/z80test)
+- [Remy's ZX Spectrum Tools](https://zx.remysharp.com)
 
 ## Additional Credits
 
