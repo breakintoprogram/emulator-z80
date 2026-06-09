@@ -50,6 +50,29 @@ private:
     bool     bit;
 };
 
+// Inherited pulse segment class
+//
+class PulseSegment : public TapeSegment {
+public:
+    PulseSegment(uint8_t* ulaPort, uint16_t pulseWidth0, uint16_t pulseWidth1);
+    void play() override;
+protected:
+private:
+    uint16_t pulseWidth0;
+    uint16_t pulseWidth1;
+};
+
+// Inherited delay segment class
+//
+class DelaySegment : public TapeSegment {
+public:
+    DelaySegment(uint8_t* ulaPort, uint16_t delay);
+    void play() override;
+protected:
+private:
+    uint16_t delay;
+};
+
 // Inherited data segment class
 //
 class DataSegment : public TapeSegment {

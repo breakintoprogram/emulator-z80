@@ -28,7 +28,9 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     uintmax_t bytesRemaining = filesize;
     do {
         tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), TSPEED(8063)));
+        tape.push_back(make_unique<PulseSegment>(ulaPort, TSPEED(667), TSPEED(735)));
         tape.push_back(make_unique<DataSegment>(ulaPort, file, bytesRemaining, TSPEED(855), TSPEED(1710)));
+        tape.push_back(make_unique<DelaySegment>(ulaPort, TSPEED(1000)));
     }
     while(bytesRemaining > 0);
     file.close();
@@ -90,6 +92,42 @@ void ToneSegment::play() {
             }
         }
     }
+}
+
+// Inherited pulse segment class
+//
+PulseSegment::PulseSegment(uint8_t* ulaPort, uint16_t pulseWidth0, uint16_t pulseWidth1) :
+    TapeSegment(ulaPort),
+    pulseWidth0(pulseWidth0),
+    pulseWidth1(pulseWidth1)
+{
+}
+
+void PulseSegment::play() {
+    if(pulseWidth0 > 0) {
+        writeBit(0);
+        pulseWidth0--;
+        return;
+    }
+    if(pulseWidth1 > 0) {
+        writeBit(1);
+        pulseWidth1--;
+        return;
+    }
+    finished = true;
+}
+
+// Inherited delay segment class
+//
+DelaySegment::DelaySegment(uint8_t* ulaPort, uint16_t delay) :
+    TapeSegment(ulaPort),
+    delay(delay)
+{
+}
+
+void DelaySegment::play() { 
+    delay--;
+    finished = (delay == 0);
 }
 
 // Inherited data segment class
