@@ -25,20 +25,32 @@ bool Tape::open(string filename) {
 }
 
 bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
+    uintmax_t bytesRemaining = filesize;
+    do {
+        tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), TSPEED(8063)));
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, bytesRemaining));
+    }
+    while(bytesRemaining > 0);
     file.close();
-    tape.push_back(make_unique<ToneSegment>(ulaPort, 2168/4.33, 8063/4.33));
     return true;
 }
 
 void Tape::play() {
     if(tape.size() > 0) {
-        if(!tape[0]->isFinished()) {
+        if(tape[0]->isFinished()) {
+            tape.erase(tape.begin());
+        }
+        else {
             tape[0]->play();
         }
     }
 }
 
-TapeSegment::TapeSegment(uint8_t* ulaPort) : ulaPort(ulaPort)
+// Base tape segment class
+//
+TapeSegment::TapeSegment(uint8_t* ulaPort) :
+    ulaPort(ulaPort),
+    finished(false)
 {
 }
 
@@ -53,6 +65,8 @@ void TapeSegment::writeBit(uint8_t bit) {
     }
 }
 
+// Inherited lead-in tone segment class
+//
 ToneSegment::ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLength) :
     TapeSegment(ulaPort),
     pulseWidth(pulseWidth),
@@ -77,4 +91,21 @@ void ToneSegment::play() {
     }
 }
 
+// Inherited data segment class
+//
+DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining) :
+    TapeSegment(ulaPort),
+    file(file)
+{
+    uint16_t length;
+    file.read((char *)&length, 2);
+    for(int i = 0; i < length; i++) {
+        data.push_back(file.get());
+    }
+    bytesRemaining -= (length + 2);
+}
+
+void DataSegment::play() {
+    finished = true;
+}
 

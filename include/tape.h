@@ -18,20 +18,26 @@
 #include "ports.h"
 #include "defines.h"
 
+#define TSPEED(s) (s/4.5)
+
 using namespace std;
 
+// Base tape segment class
+//
 class TapeSegment{
 public:
     TapeSegment(uint8_t* ulaPort);
     virtual void play() = 0;
     bool isFinished();
 protected:
-    uint8_t* ulaPort = NULL;
+    uint8_t* ulaPort;
     bool     finished;
     void     writeBit(uint8_t bit);
 private:
 };
 
+// Inherited lead-in tone segment class
+//
 class ToneSegment : public TapeSegment {
 public:
     ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLength);
@@ -44,6 +50,20 @@ private:
     bool     bit;
 };
 
+// Inherited data segment class
+//
+class DataSegment : public TapeSegment {
+public:
+    DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining);
+    void play() override;
+protected:
+private:
+    ifstream&       file;
+    vector<uint8_t> data;
+};
+
+// The main tape class
+//
 class Tape {
 public:
     Tape(Ports* ports);
