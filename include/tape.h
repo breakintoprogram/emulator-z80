@@ -77,7 +77,7 @@ private:
 //
 class DataSegment : public TapeSegment {
 public:
-    DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining, uint16_t pulseWidth0, uint16_t pulseWidth1);
+    DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, uint16_t pulseWidth0, uint16_t pulseWidth1);
     void play() override;
 protected:
 private:

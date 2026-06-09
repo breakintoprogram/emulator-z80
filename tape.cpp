@@ -26,11 +26,16 @@ bool Tape::open(string filename) {
 
 bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     uintmax_t bytesRemaining = filesize;
+	uint16_t  blockSize;
+	uint8_t   mark;	
     do {
-        tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), TSPEED(8063)));
+    	file.read((char *)&blockSize, 2);	
+		mark = file.peek();
+        tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), mark == 0 ? TSPEED(8063) : TSPEED(3223)));
         tape.push_back(make_unique<PulseSegment>(ulaPort, TSPEED(667), TSPEED(735)));
-        tape.push_back(make_unique<DataSegment>(ulaPort, file, bytesRemaining, TSPEED(855), TSPEED(1710)));
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, TSPEED(855), TSPEED(1710)));
         tape.push_back(make_unique<DelaySegment>(ulaPort, TSPEED(1000)));
+    	bytesRemaining -= (blockSize + 2);			
     }
     while(bytesRemaining > 0);
     file.close();
@@ -80,16 +85,11 @@ ToneSegment::ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLe
 
 void ToneSegment::play() {
     writeBit(bit);
-    count--;
-    if(count == 0) {
+    if(count-- == 0) {
         count = pulseWidth;
         bit = !bit;
         if(!bit) {
-            pulseLength--;
-            if(pulseLength == 0) {
-                writeBit(0);
-                finished = true;
-            }
+			finished = (pulseLength-- == 0);
         }
     }
 }
@@ -126,13 +126,12 @@ DelaySegment::DelaySegment(uint8_t* ulaPort, uint16_t delay) :
 }
 
 void DelaySegment::play() { 
-    delay--;
-    finished = (delay == 0);
+    finished = (delay-- == 0);
 }
 
 // Inherited data segment class
 //
-DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining, uint16_t pulseWidth0, uint16_t pulseWidth1) :
+DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, uint16_t pulseWidth0, uint16_t pulseWidth1) :
     TapeSegment(ulaPort),
     file(file),
     pulseWidth0(pulseWidth0),
@@ -141,12 +140,9 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemai
     pulseCount(0),
     bit(false)
 {
-    uint16_t length;
-    file.read((char *)&length, 2);
-    for(int i = 0; i < length; i++) {
+    for(int i = 0; i < blockSize; i++) {
         data.push_back(file.get());
     }
-    bytesRemaining -= (length + 2);
 }
 
 void DataSegment::play() {    
