@@ -27,6 +27,7 @@
 #define code "roms/48.rom"
 #define test "tests/z80doc.bin"
 #define game "games/stop_the_express.tap"
+#define demo "games/stop_the_express.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -107,6 +108,7 @@ int main()
 							case SDLK_o: z80->dump(cout, true); break;
 							case SDLK_r: z80->reset(); break;
 							case SDLK_p: tape->open(game); break;
+							case SDLK_x: mem->load(0x7FD2, demo); break;
 						}
 					}
 					else {
