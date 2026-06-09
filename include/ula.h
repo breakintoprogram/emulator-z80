@@ -42,6 +42,8 @@ private:
     int     height;
     uint8_t frame;
     bool    vBlank;
+    void*   pixels;
+    int     pitch;
 
     uint32_t palette[16] = {
         //
