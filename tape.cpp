@@ -161,12 +161,11 @@ void DataSegment::play() {
         pulseCount = 0;             // Reset the pulse count
         data.erase(data.begin());   // Advance the tape one byte
     }
-    if(pulseCount-- == 0) {         // If the pulse has not started then set the pulse width
-        uint8_t b = bits & 0x01;
-        pulseCount = b ? pulseWidth1 : pulseWidth0;
+    if(pulseCount-- == 0) {         // If the pulse has not started then set the pulse width for 0 or 1
+        pulseCount = (bits & 0x80) ? pulseWidth1 : pulseWidth0;
         writeBit(bit);              // Write out the bit
         if(bit) {                   // If we've flipped twice (back to low) then...
-            bits >>= 1;             // Shift onto the next bit
+            bits <<= 1;             // Shift onto the next bit
             bitCount--;             // Decrement the bit count
         }
         bit = !bit;                 // Flip the bit 
