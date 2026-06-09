@@ -54,12 +54,17 @@ private:
 //
 class DataSegment : public TapeSegment {
 public:
-    DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining);
+    DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining, uint16_t pulseWidth0, uint16_t pulseWidth1);
     void play() override;
 protected:
 private:
     ifstream&       file;
     vector<uint8_t> data;
+    uint16_t        pulseWidth0;
+    uint16_t        pulseWidth1;
+    uint8_t         bits;
+    uint16_t        bitCount;
+    uint16_t        pulseCount;
 };
 
 // The main tape class

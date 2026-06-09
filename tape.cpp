@@ -28,7 +28,7 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     uintmax_t bytesRemaining = filesize;
     do {
         tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), TSPEED(8063)));
-        tape.push_back(make_unique<DataSegment>(ulaPort, file, bytesRemaining));
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, bytesRemaining, TSPEED(855), TSPEED(1710)));
     }
     while(bytesRemaining > 0);
     file.close();
@@ -85,6 +85,7 @@ void ToneSegment::play() {
         if(!bit) {
             pulseLength--;
             if(pulseLength == 0) {
+                writeBit(0);
                 finished = true;
             }
         }
@@ -93,9 +94,13 @@ void ToneSegment::play() {
 
 // Inherited data segment class
 //
-DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining) :
+DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemaining, uint16_t pulseWidth0, uint16_t pulseWidth1) :
     TapeSegment(ulaPort),
-    file(file)
+    file(file),
+    pulseWidth0(pulseWidth0),
+    pulseWidth1(pulseWidth1),
+    bitCount(0),
+    pulseCount(0)
 {
     uint16_t length;
     file.read((char *)&length, 2);
@@ -105,7 +110,24 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemai
     bytesRemaining -= (length + 2);
 }
 
-void DataSegment::play() {
-    finished = true;
+void DataSegment::play() {    
+    if(bitCount == 0) {             // If the bitcount is 0 then
+        if(data.size() == 0) {      // If there are no more bytes then
+            writeBit(0);            // Reset the port
+            finished = true;        // We've finished
+            return;                 // So exit
+        }
+        bits = data[0];             // Fetch the next byte
+        bitCount = 8;               // Set the bitcount back to 8
+        pulseCount = 0;             // Reset the pulse count
+        data.erase(data.begin());   // Advance the tape one byte
+    }
+    if(pulseCount-- == 0) {         // If the pulse has not started then set the pulse width
+        uint8_t b = bits & 0x01;
+        pulseCount = b ? pulseWidth1 : pulseWidth0;
+        writeBit(b);                // Write out the bit
+        bits >>= 1;                 // Shift onto the next bit
+        bitCount--;                 // Decrement the bit count
+    }
 }
 
