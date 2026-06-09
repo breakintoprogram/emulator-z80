@@ -88,6 +88,7 @@ private:
     uint8_t         bits;
     uint16_t        bitCount;
     uint16_t        pulseCount;
+    bool            bit;
 };
 
 // The main tape class

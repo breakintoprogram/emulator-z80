@@ -138,7 +138,8 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uintmax_t& bytesRemai
     pulseWidth0(pulseWidth0),
     pulseWidth1(pulseWidth1),
     bitCount(0),
-    pulseCount(0)
+    pulseCount(0),
+    bit(false)
 {
     uint16_t length;
     file.read((char *)&length, 2);
@@ -163,9 +164,12 @@ void DataSegment::play() {
     if(pulseCount-- == 0) {         // If the pulse has not started then set the pulse width
         uint8_t b = bits & 0x01;
         pulseCount = b ? pulseWidth1 : pulseWidth0;
-        writeBit(b);                // Write out the bit
-        bits >>= 1;                 // Shift onto the next bit
-        bitCount--;                 // Decrement the bit count
+        writeBit(bit);              // Write out the bit
+        if(bit) {                   // If we've flipped twice (back to low) then...
+            bits >>= 1;             // Shift onto the next bit
+            bitCount--;             // Decrement the bit count
+        }
+        bit = !bit;                 // Flip the bit 
     }
 }
 
