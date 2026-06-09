@@ -36,13 +36,8 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 		height * videoScale,
 		SDL_WINDOW_SHOWN
 	);
-	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, width, height);
-	setColour(7);
-	SDL_SetRenderTarget(renderer, texture);
-	if(SDL_GetRenderTarget(renderer) != texture) {
-		throw runtime_error("Unable to set render target");
-	}
+	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
 	SDL_RenderClear(renderer);
 }
 
@@ -62,7 +57,7 @@ void Ula::setvBlank(bool b) {
 }
 
 void Ula::render() {
-	uint8_t borderColour = (*ulaPort) & 0x07;
+	uint32_t borderColour = palette[(*ulaPort) & 0x07];
 	bool    flash = frame & 0x10;
 
 	switch(state) {
@@ -141,10 +136,8 @@ void Ula::render() {
 				if(scanY == height) {
 					scanY = 0;
 					state = 0;
-					SDL_SetRenderTarget(renderer, NULL);
 					SDL_RenderCopy(renderer, texture, NULL, NULL);
 					SDL_RenderPresent(renderer);
-					SDL_SetRenderTarget(renderer, texture);
 					vBlank = true;
 					frame++;
 				}
@@ -153,22 +146,42 @@ void Ula::render() {
 	}
 }
 
-void Ula::setColour(uint8_t colour) {
-	SDL_SetRenderDrawColor(renderer, palette[colour][0], palette[colour][1], palette[colour][2], 0x00);
-}
+void Ula::renderByte(int x, int y, uint32_t borderColour) {
+	void* pixels = nullptr;
+	int   pitch = 0;
 
-void Ula::renderByte(int x, int y, uint8_t borderColour) {
-	setColour(borderColour);
-	for(int i = 0; i <= 7; i++) {
-		SDL_RenderDrawPoint(renderer, x++, y);
-	}	
+	if (SDL_LockTexture(texture, NULL, &pixels, &pitch) == 0) {
+		uint32_t* mappedPixels = (uint32_t*)pixels;
+		uint32_t  index = x + (y * (pitch >> 2));
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index++] = borderColour;
+		mappedPixels[index] = borderColour;
+		SDL_UnlockTexture(texture);
+	}
 }
 
 void Ula::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
-	for(int i = 0; i <= 7; i++) {
-		setColour(((byte & 0x80) == 0x80) ? inkColour : paperColour);
-		SDL_RenderDrawPoint(renderer, x++, y);
-		byte <<= 1;
-	}
+	void* pixels = nullptr;
+	int   pitch = 0;
+
+	uint32_t colours[2] = {
+		palette[paperColour],
+		palette[inkColour]
+	};
+
+	if (SDL_LockTexture(texture, NULL, &pixels, &pitch) == 0) {
+		uint32_t* mappedPixels = (uint32_t*)pixels;
+		uint32_t  index = x + (y * (pitch >> 2));	
+		for(int i = 0; i < 8; i++) {
+			mappedPixels[index++] = colours[(byte & 0x80) == 0x80];
+			byte <<= 1;
+		}		
+		SDL_UnlockTexture(texture);		
+	}	
 }
 

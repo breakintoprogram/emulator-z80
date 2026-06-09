@@ -43,32 +43,31 @@ private:
     uint8_t frame;
     bool    vBlank;
 
-    uint8_t palette[16][3] = {
+    uint32_t palette[16] = {
         //
         // The normal colours
         //
-        { 0x00, 0x00, 0x00}, // Black
-        { 0x00, 0x00, 0xC0}, // Blue
-        { 0xC0, 0x00, 0x00}, // Red
-        { 0xC0, 0x00, 0xC0}, // Magenta
-        { 0x00, 0xC0, 0x00}, // Green
-        { 0x00, 0xC0, 0xC0}, // Cyan
-        { 0xC0, 0xC0, 0x00}, // Yellow
-        { 0xC0, 0xC0, 0xC0}, // White
+        0x000000, // Black
+        0x0000C0, // Blue
+        0xC00000, // Red
+        0xC000C0, // Magenta
+        0x00C000, // Green
+        0x00C0C0, // Cyan
+        0xC0C000, // Yellow
+        0xC0C0C0, // White
         //
         // The bright colours
         //
-        { 0x00, 0x00, 0x00}, // Black
-        { 0x00, 0x00, 0xFF}, // Blue
-        { 0xFF, 0x00, 0x00}, // Red
-        { 0xFF, 0x00, 0xFF}, // Magenta
-        { 0x00, 0xFF, 0x00}, // Green
-        { 0x00, 0xFF, 0xFF}, // Cyan
-        { 0xFF, 0xFF, 0x00}, // Yellow
-        { 0xFF, 0xFF, 0xFF}, // White
+        0x000000, // Black
+        0x0000FF, // Blue
+        0xFF0000, // Red
+        0xFF00FF, // Magenta
+        0x00FF00, // Green
+        0x00FFFF, // Cyan
+        0xFFFF00, // Yellow
+        0xFFFFFF, // White
     };
 
-    void setColour(uint8_t colour);
-    void renderByte(int x, int y, uint8_t borderColour);
+    void renderByte(int x, int y, uint32_t borderColour);
     void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte);
 };
