@@ -72,6 +72,9 @@ private:
         0xFFFFFF, // White
     };
 
+	void resetState();
+	void renderTexture(); 
+	
     void renderByte(uint32_t border);
     void renderByte(uint32_t ink, uint32_t paper, bool flash, uint8_t pixelData);
 };
