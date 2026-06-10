@@ -463,12 +463,15 @@ void Z80::execute_x0z0()
 		//
 		// NOP
 		//
-		case 0:	break;
+		case 0:	{
+			setT(4);
+		} break;
 		//
 		// EX AF,AF'
 		//
 		case 1: {
 			reg.ex(&reg.AF, &reg.AF_);
+			setT(4);
 			break;
 		}
 		//
@@ -480,6 +483,7 @@ void Z80::execute_x0z0()
 			if (reg.BC.H != 0) {
 				reg.PC += int8_t(data);
 			}
+			setT(13);
 		} break;
 		//
 		// JR n
@@ -487,6 +491,7 @@ void Z80::execute_x0z0()
 		case 3: {
 			fetch();
 			reg.PC += int8_t(data);
+			setT(12);
 		} break;
 		//
 		// JR c,n
@@ -497,6 +502,10 @@ void Z80::execute_x0z0()
 			fetch();					// Fetch the relative jump value
 			if(c) {						// If the condition true then
 				reg.PC += int8_t(data);	// JR to the location
+				setT(12);
+			}
+			else {
+				setT(7);
 			}
 		} break;
 	}
@@ -510,6 +519,7 @@ void Z80::execute_x0z1() {
 		uint16_t* rp = t_rp1[shift_IXY][p];
 		uint16_t  dd = fetchWord();				
 		*rp = dd;
+		setT(shift_IXY ? 14 : 10);
 	}
 	else {			// ADD HL,rr
 		uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL/IX/IY
@@ -520,6 +530,7 @@ void Z80::execute_x0z1() {
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
 		reg.AF.N = 0;
 		*rp1 = w;
+		setT(shift_IXY ? 15 : 11);
 	}
 }
 
@@ -531,18 +542,22 @@ void Z80::execute_x0z2() {
 		switch(p) {
 			case 0: { // LD (BC),A
 				mem->write(reg.BC.W, reg.AF.A);
+				setT(7);
 			} break;
 			case 1: { // LD (DE),A
 				mem->write(reg.DE.W, reg.AF.A);
+				setT(7);
 			} break;
 			case 2: { // LD (nn),HL/IX/IY 
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();
 				mem->write(dd, *rp);
+				setT(20);
 			} break;
 			case 3: { // LD (nn),A
 				uint16_t  dd = fetchWord();				
 				mem->write(dd, reg.AF.A);				// Write the accumulator to memory
+				setT(13);
 			} break;
 		}
 	}
@@ -550,18 +565,22 @@ void Z80::execute_x0z2() {
 		switch(p) {
 			case 0: { // LD A,(BC)
 				reg.AF.A = mem->readByte(reg.BC.W);
+				setT(7);
 			} break;
 			case 1: { // LD A,(DE)
 				reg.AF.A = mem->readByte(reg.DE.W);
+				setT(7);
 			} break;
 			case 2: { // LD HL/IX/IY,(nn)
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();				
 				*rp = mem->readWord(dd);
+				setT(20);
 			} break;
 			case 3: { // LD A,(nn)
 				uint16_t  dd = fetchWord();				
 				reg.AF.A = mem->readByte(dd);				// Read the accumulator from memory
+				setT(13);
 			} break;
 		}
 	}
@@ -578,6 +597,7 @@ void Z80::execute_x0z3() {
 	else {			// DEC
 		(*rp)--;
 	}
+	setT(shift_IXY ? 10 : 6);
 }
 
 //
@@ -592,6 +612,7 @@ void Z80::execute_x0z4() {
 		c = b;
 		b++;
 		*r = b;
+		setT(4);
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
@@ -599,6 +620,7 @@ void Z80::execute_x0z4() {
 		c = b ;
 		b++;
 		mem->write(a, b);
+		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
 	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
@@ -618,6 +640,7 @@ void Z80::execute_x0z5() {
 		c = b;
 		b--;
 		*r = b;
+		setT(4);
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
@@ -625,6 +648,7 @@ void Z80::execute_x0z5() {
 		c = b ;
 		b--;
 		mem->write(a, b);
+		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
 	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
@@ -640,11 +664,13 @@ void Z80::execute_x0z6() {
 	if (r) {							// If it is a register
 		fetch();						// Fetch the immediate value
 		*r = data;						// And store
+		setT(7);
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);	// Otherwise next byte is the index
 		fetch();						// Followed by the immediate value
 		mem->write(a, data);			// And store
+		setT(shift_IXY ? 19 : 7);
 	}
 }
 
@@ -662,6 +688,7 @@ void Z80::execute_x1__()
 {
 	if (y == 6 && z == 6) {	// HALT
 		halted = true;
+		setT(4);
 	}
 	else {					// LD ry,rz
 		uint8_t  ss = (z != 6 && y == 6 ? 0 : shift_IXY);
@@ -697,9 +724,11 @@ void Z80::execute_x2__()
 	auto f = lut_alu1[y];						// Look up the ALU function
 	if (r) {									// If it's a register then
 		(reg.*f)(*r);							// Use the registry contents
+		setT(4);
 	}
 	else {										// Otherwise do it on a memory location
 		(reg.*f)(mem->readByte(getInd(shift_IXY)));
+		setT(shift_IXY ? 19 : 7);
 	}
 }
 
@@ -711,6 +740,10 @@ void Z80::execute_x3z0() {
 	bool c = (reg.*f)();	// Get the condition
 	if(c) {
 		reg.PC = pop();
+		setT(11);
+	}
+	else {
+		setT(5);
 	}
 }
 
@@ -722,22 +755,27 @@ void Z80::execute_x3z1()
 	if (q == 0) {	// POP
 		uint16_t* rp = t_rp2[shift_IXY][p];
 		*rp = pop();
+		setT(shift_IXY ? 14 : 10);
 	}
 	else {
 		switch (p) {
 			case 0: { // RET
 				reg.PC = pop();
+				setT(10);
 			} break;
 			case 1: { // EXX
 				reg.exx();
+				setT(4);
 			} break;
 			case 2: { // JP (HL/IX/IY)
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				reg.PC = *rp;
+				setT(shift_IXY ? 8 : 4);
 			} break;
 			case 3: { // LD SP,HL/IX/IY
 				uint16_t* rp = t_rp1[shift_IXY][2];
 				reg.SP = *rp;
+				setT(shift_IXY ? 10: 6);
 			} break;
 		}
 	}
@@ -753,6 +791,7 @@ void Z80::execute_x3z2() {
 	if(c) {
 		reg.PC = dd;
 	}
+	setT(10);
 }
 
 //
@@ -762,6 +801,7 @@ void Z80::execute_x3z3() {
 	switch(y) {
 		case 0: { // JP
 			reg.PC = fetchWord();
+			setT(10);
 		} break;
 		case 1: { // CB prefix
 			throw runtime_error("execute_x3z3: invalid operation");
@@ -769,27 +809,33 @@ void Z80::execute_x3z3() {
 		case 2: { // OUT (n),A
 			fetch();
 			ports->out((reg.AF.A << 8) | data, reg.AF.A);
+			setT(11);
 		} break;
 		case 3: { // IN A,(n)
 			fetch();
 			reg.AF.A = ports->in((reg.AF.A << 8) | data);
+			setT(11);
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = t_rp1[shift_IXY][2];
 			uint16_t  dd = mem->readWord(reg.SP); 	// Read the value from the stack
 			mem->write(reg.SP, *rp);				// Write the register to the stack
 			*rp = dd;								// Set the register to the new value
+			setT(shift_IXY ? 23 : 19);
 		} break;
 		case 5: { // EX DE,HL
 			reg.ex(&reg.DE, &reg.HL);
+			setT(4);
 		} break;
 		case 6: { // DI
 			reg.IFF1 = false;
 			reg.IFF2 = false;
+			setT(4);
 		} break;
 		case 7: { // EI
 			reg.IFF1 = true;
 			reg.IFF2 = true;
+			setT(4);
 		} break;
 	}
 }
@@ -804,6 +850,10 @@ void Z80::execute_x3z4() {
 	if(c) {
 		push(reg.PC);
 		reg.PC = dd;
+		setT(17);
+	}
+	else {
+		setT(10);
 	}
 }
 
@@ -815,12 +865,14 @@ void Z80::execute_x3z5()
 	if (q == 0) {		// PUSH
 		uint16_t* rp = t_rp2[shift_IXY][p];
 		push(*rp);
+		setT(shift_IXY ? 15 : 11);
 	}
 	else {
 		if(p == 0) {	// CALL nn
 			uint16_t dd = fetchWord();
 			push(reg.PC);
 			reg.PC = dd;
+			setT(17);
 		}
 		else {
 			throw runtime_error("execute_x3z5: invalid operation");
@@ -837,6 +889,7 @@ void Z80::execute_x3z6() {
 	auto f = lut_alu1[y];		// Look up the ALU function
 	if (f) {
 		(reg.*f)(data);			// And execute it
+		setT(7);
 	}
 }
 
@@ -846,6 +899,7 @@ void Z80::execute_x3z6() {
 void Z80::execute_x3z7() {
 	push(reg.PC);
 	reg.PC = y * 8;
+	setT(11);
 }
 
 // Push v on the stack
