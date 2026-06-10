@@ -30,7 +30,7 @@
                     "ignoreFailures": true
                 } 
             ],
-            "preLaunchTask": "build",
+            "preLaunchTask": "debug",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ],
