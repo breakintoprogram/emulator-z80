@@ -34,16 +34,18 @@ private:
     uint8_t* ram = NULL;
     uint8_t* ulaPort = NULL;
 
-    int     videoScale;
-    int     state;
-    int     scanX;
-    int     scanY;
-    int     width;
-    int     height;
-    uint8_t frame;
-    bool    vBlank;
-    void*   pixels;
-    int     pitch;
+    int       videoScale;
+    int       state;
+    int       scanX;
+    int       scanY;
+    int       scanC;
+    uint32_t* scanP;
+    int       width;
+    int       height;
+    uint8_t   frame;
+    bool      vBlank;
+    void*     pixels;
+    int       pitch;
 
     uint32_t palette[16] = {
         //
@@ -70,6 +72,6 @@ private:
         0xFFFFFF, // White
     };
 
-    void renderByte(int x, int y, uint32_t borderColour);
-    void renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte);
+    void renderByte(uint32_t border);
+    void renderByte(uint32_t ink, uint32_t paper, bool flash, uint8_t pixelData);
 };

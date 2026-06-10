@@ -18,9 +18,10 @@
 Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	ram(mem->getRam() + 0x4000),
 	ulaPort(ports->getPortsOut()),
-	state(0),
+	state(-1),
 	scanX(0),
 	scanY(0),
+	scanP(nullptr),
 	videoScale(scale),
 	width(HRES + (HBORDER * 2)),
 	height(VRES + (VBORDER * 2)),
@@ -39,10 +40,6 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
 	SDL_RenderClear(renderer);
-	if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
-		throw runtime_error("Unable to lock texture");
-	}
-	pitch >>= 2;
 }
 
 Ula::~Ula() {
@@ -60,6 +57,32 @@ void Ula::setvBlank(bool b) {
 	vBlank = b;
 }
 
+void Ula::renderByte(uint32_t border) {
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;	
+	*scanP++ = border;		
+}
+
+void Ula::renderByte(uint32_t ink, uint32_t paper, bool flash, uint8_t pixelData) {
+	uint32_t colours[2] = {
+		palette[flash ? paper : ink],
+		palette[flash ? ink : paper]
+	};
+	*scanP++ = colours[(bool)(pixelData & 0x80)];
+	*scanP++ = colours[(bool)(pixelData & 0x40)];
+	*scanP++ = colours[(bool)(pixelData & 0x20)];
+	*scanP++ = colours[(bool)(pixelData & 0x10)];
+	*scanP++ = colours[(bool)(pixelData & 0x08)];
+	*scanP++ = colours[(bool)(pixelData & 0x04)];
+	*scanP++ = colours[(bool)(pixelData & 0x02)];
+	*scanP++ = colours[(bool)(pixelData & 0x01)];	
+}
+
 void Ula::render() {
 	uint32_t borderColour = palette[(*ulaPort) & 0x07];
 	bool    flash = frame & 0x10;
@@ -69,23 +92,21 @@ void Ula::render() {
 		// Top border
 		//
 		case 0: { 
-			renderByte(scanX, scanY, borderColour);
-			scanX+=8;
-			if(scanX == width) {
-				scanX = 0;
-				scanY++;
-				if(scanY == VBORDER) {
-					state = 1;		
-				}
+			renderByte(borderColour);		// Render 8 pixels worth of border
+			if(--scanC == 0) {				// Count down until we've filled the top border
+				scanC = HBORDER / 8;		// Set up the next state
+				scanY = 0;
+				state = 1;
 			}
 		} break;
 		//
 		// Left border
 		//
 		case 1: {
-			renderByte(scanX, scanY, borderColour);
-			scanX+=8;
-			if(scanX == HBORDER) {
+			renderByte(borderColour);		// Render 8 pixels worth of border
+			if(--scanC == 0) {				// Count down until we've filled the left border
+				scanC = HRES / 8;			// Set up the next state
+				scanX = 0;
 				state = 2;
 			}
 		} break;
@@ -93,21 +114,24 @@ void Ula::render() {
 		// Scanline
 		//
 		case 2: {
-			uint16_t x = scanX - HBORDER;
-			uint16_t y = scanY - VBORDER;
-			uint16_t p = ((y & 0xC0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | (x >> 3);
-			uint16_t a = ((y & 0xF8) << 2) | (x >> 3) | 0x1800;
-			uint8_t  c = ram[a];
-			uint8_t  ink = (c & 0x07) | ((c & 0x40) >> 3);
-			uint8_t  paper = ((c & 0x78) >> 3);
-			if(c < 0x80 || !flash) {
-				renderByte(HBORDER + x, VBORDER + y, ink, paper, ram[p]);
-			}
-			else {
-				renderByte(HBORDER + x, VBORDER + y, paper, ink ,ram[p]);
-			}
-			scanX+=8;
-			if(scanX == HBORDER + HRES) {
+			// First get the location of the pixel and attribute data in the Spectrum memory map
+			//
+			uint16_t specPixels = ((scanY & 0xC0) << 5) | ((scanY & 0x07) << 8) | ((scanY & 0x38) << 2) | scanX;
+			uint16_t specAttribute = ((scanY & 0xF8) << 2) | scanX | 0x1800;
+			//
+			// Fetch the attribute value and isolate the ink and paper values
+			// This function also adds the bright value to both
+			//
+			uint8_t  attr = ram[specAttribute];
+			uint8_t  ink = (attr & 0x07) | ((attr & 0x40) >> 3);
+			uint8_t  paper = ((attr & 0x78) >> 3);
+			//
+			// Render a single byte's worth of data, taking into account the flash attribute bit
+			//
+			renderByte(ink, paper, attr < 0x80 || !flash, ram[specPixels]);
+			scanX++;
+			if(--scanC == 0) {				// Count down until we've filled the scanline
+				scanC = HBORDER / 8;		// Set up the next state
 				state = 3;
 			}
 		} break;
@@ -115,15 +139,14 @@ void Ula::render() {
 		// Right border
 		//
 		case 3: {
-			renderByte(scanX, scanY, borderColour);
-			scanX+=8;
-			if(scanX == width) {
-				scanX = 0;
-				scanY++;
-				if(scanY < (VBORDER + VRES)) {
-					state = 1;
+			renderByte(borderColour);		// Render 8 pixels worth of border
+			if(--scanC == 0) {				// Count down until we've filled the right border
+				if(++scanY < VRES) {		// If we've not done 192 lines then
+					scanC = HBORDER / 8;	// Set up the next state
+					state = 1;				// For the left border
 				}
-				else {
+				else {						// Otherwise, switch to the bottom border state
+					scanC = width * VBORDER / 8;
 					state = 4;
 				}
 			}
@@ -132,58 +155,36 @@ void Ula::render() {
 		// Bottom border
 		//
 		case 4: {
-			renderByte(scanX, scanY, borderColour);
-			scanX+=8;
-			if(scanX == width) {
-				scanX = 0;
-				scanY++;
-				if(scanY == height) {
-					scanY = 0;
-					state = 0;
-					SDL_UnlockTexture(texture);
-					SDL_RenderCopy(renderer, texture, NULL, NULL);
-					SDL_RenderPresent(renderer);
-					if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
-						throw runtime_error("Unable to lock texture");
-					}
-					pitch >>= 2;
-					vBlank = true;
-					frame++;
+			renderByte(borderColour);		// Render the bottom border
+			if(--scanC == 0) {				// Count down until we've filled it
+				//
+				// This bit unlocks the texture we've just drawn to, and
+				// blits it to the screen, finally locking the texture so
+				// we can draw the next frame
+				//
+				SDL_UnlockTexture(texture);
+				SDL_RenderCopy(renderer, texture, NULL, NULL);
+				SDL_RenderPresent(renderer);
+				if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
+					throw runtime_error("Unable to lock texture");
 				}
+				scanP = (uint32_t*)pixels;	// Set up the top border state
+				scanC = width * VBORDER / 8;
+				vBlank = true;				// Flag a vblank at this point
+				frame++;					// Increment the frame counter
+				state = 0;					// Rinse, lather and repeat
 			}
+		} break;
+		//
+		// Default - set the ball rolling
+		//
+		default: {
+			if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
+				throw runtime_error("Unable to lock texture");
+			}
+			scanP = (uint32_t*)pixels;
+			scanC = width * VBORDER / 8;	
+			state = 0;		
 		} break;
 	}
 }
-
-void Ula::renderByte(int x, int y, uint32_t borderColour) {
-	uint32_t  index = x + (y * pitch);
-	uint32_t* mappedPixels = (uint32_t*)pixels + index;
-
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels++ = borderColour;
-	*mappedPixels   = borderColour;
-}
-
-void Ula::renderByte(int x, int y, uint8_t inkColour, uint8_t paperColour, uint8_t byte) {
-	uint32_t  index = x + (y * pitch);	
-	uint32_t* mappedPixels = (uint32_t*)pixels + index;
-
-	uint32_t colours[2] = {
-		palette[paperColour],
-		palette[inkColour]
-	};
-	*mappedPixels++ = colours[(bool)(byte & 0x80)];
-	*mappedPixels++ = colours[(bool)(byte & 0x40)];
-	*mappedPixels++ = colours[(bool)(byte & 0x20)];
-	*mappedPixels++ = colours[(bool)(byte & 0x10)];
-	*mappedPixels++ = colours[(bool)(byte & 0x08)];
-	*mappedPixels++ = colours[(bool)(byte & 0x04)];
-	*mappedPixels++ = colours[(bool)(byte & 0x02)];
-	*mappedPixels   = colours[(bool)(byte & 0x01)];
-}
-
