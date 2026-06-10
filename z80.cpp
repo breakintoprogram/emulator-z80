@@ -50,6 +50,18 @@ void Z80::setTrace(bool value) {
 	trace = value;
 }
 
+uint8_t Z80::getT() {
+	return t;
+}
+
+void Z80::setT(uint8_t value) {
+	t = value;
+}
+
+void Z80::incT(uint8_t value) {
+	t += value;
+}
+
 // Do the NMI
 //
 void Z80::interruptRequest() {
@@ -67,6 +79,7 @@ void Z80::reset()
 //
 void Z80::run() {
 	if(!halted) {
+		setT(0);
 		debug();
 		fetch();
 		while(data == 0xDD || data == 0xFD) {
@@ -78,7 +91,7 @@ void Z80::run() {
 	}
 	interrupts();
 	if (trace) {
-		traceStream << endl;
+		traceStream << "(" << (uint16_t)getT() << "T)" << endl;
 	}
 }
 
