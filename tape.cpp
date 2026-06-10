@@ -84,14 +84,14 @@ ToneSegment::ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLe
 }
 
 void ToneSegment::play() {
-    writeBit(bit);
     if(count-- == 0) {
         count = pulseWidth;
-        bit = !bit;
-        if(!bit) {
+        if(bit) {
 			finished = (pulseLength-- == 0);
         }
+        bit = !bit;
     }
+    writeBit(bit);
 }
 
 // Inherited pulse segment class
@@ -138,7 +138,7 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, u
     pulseWidth1(pulseWidth1),
     bitCount(0),
     pulseCount(0),
-    bit(false)
+    bit(true)
 {
     for(int i = 0; i < blockSize; i++) {
         data.push_back(file.get());
@@ -146,25 +146,29 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, u
 }
 
 void DataSegment::play() {    
-    if(bitCount == 0) {             // If the bitcount is 0 then
-        if(data.size() == 0) {      // If there are no more bytes then
-            writeBit(0);            // Reset the port
-            finished = true;        // We've finished
-            return;                 // So exit
+    if(pulseCount-- == 0) {                 // If the pulse has ended (or not started) then
+        if(bit) {                           // If we've finished (or not started) playing the square wave
+            if(bitCount > 0) {              // If there are more bits to process then
+                bits <<= 1;                 // Shift onto the next bit
+                bitCount--;                 // Decrement the bit count
+            }
+            else {                          // Otherwise get the next byte to process
+                if(data.size() == 0) {      // Are there any more bytes?
+                    finished = true;        // No, so we're done here
+                    return;
+                }
+                bits = data[0];             // Get the next 8 bits
+                bitCount = 8;               // Set the bit count
+                data.erase(data.begin());   // Advance the data onto the next byte ready for next time
+            }
         }
-        bits = data[0];             // Fetch the next byte
-        bitCount = 8;               // Set the bitcount back to 8
-        pulseCount = 0;             // Reset the pulse count
-        data.erase(data.begin());   // Advance the tape one byte
+        //
+        // This bit calculates the pulse width; 0s and 1s are
+        // represented by different widths of square waves
+        //
+        pulseCount = (bits & 0x80) ? pulseWidth1 : pulseWidth0;  
+        bit = !bit;                     // Flip the bit
     }
-    if(pulseCount-- == 0) {         // If the pulse has not started then set the pulse width for 0 or 1
-        pulseCount = (bits & 0x80) ? pulseWidth1 : pulseWidth0;
-        writeBit(bit);              // Write out the bit
-        if(bit) {                   // If we've flipped twice (back to low) then...
-            bits <<= 1;             // Shift onto the next bit
-            bitCount--;             // Decrement the bit count
-        }
-        bit = !bit;                 // Flip the bit 
-    }
+    writeBit(bit);
 }
 
