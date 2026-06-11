@@ -107,13 +107,16 @@ Follow the instructions for loading TAP files to run them.
 The following sites helped me develop and test this:
 
 - [Decoding Z80 Opcodes](http://www.z80.info/decoding.htm)
-- [Z80 Information](https://jnz.dk/z80/)
+- [Z80 Information](https://jnz.dk/z80)
 - [The Complete Spectrum ROM Disassembly](https://skoolkid.github.io/rom/index.html)
 - [Raxoft Z80 Test Suite](https://github.com/raxoft/z80test)
 - [Remy's ZX Spectrum Tools](https://zx.remysharp.com)
+- [Spectrum Computing](https://spectrumcomputing.co.uk)
 
 ## Additional Credits
 
 Amstrad and Sky Group for allowing developers to use and distribute the original and unaltered ZX Spectrum ROM images for personal use in emulators.
 
 Patrik Rak (Raxoft) for his excellent Zilog Z80 CPU test suite.
+
+Stop the Express was published by Sinclair Research Ltd (UK) and created by Hudson Soft (Japan). I downloaded the TAP file from the [Spectrum Computing website](https://spectrumcomputing.co.uk/entry/4916/ZX-Spectrum/Stop_the_Express) and have provided it here for testing purposes only.
