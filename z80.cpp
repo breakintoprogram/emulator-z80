@@ -17,11 +17,13 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	x(0),
 	y(0),
 	z(0),
+	t(0),
 	shift_IXY(0),
 	data(0),
 	breakpoints(),
 	interrupt(0),
 	halted(false),
+	blockop(false),
 	singleStep(false),
 	trace(false),
 	traceStream(cout)
@@ -78,22 +80,23 @@ void Z80::reset()
 // Run one CPU cycle
 //
 void Z80::run() {
-	if(!halted) {
-		setT(0);
-		debug();
+	if (!halted) {
+		if (!blockop) {
+			debug();
+		}
 		fetch();
-		while(data == 0xDD || data == 0xFD) {
+		while (data == 0xDD || data == 0xFD) {
 			shift_IXY = ((data & 0b00100000) >> 5) + 1;
 			fetch();
 		}
 		decode();
 		execute();
-		if(getT() == 0) {
+		if (getT() == 0) {
 			throw runtime_error("No T-states registered for this instruction");
 		}
 	}
 	interrupts();
-	if (trace) {
+	if (!blockop && trace) {
 		traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
 	}
 }
@@ -104,7 +107,7 @@ void Z80::debug() {
 	if (trace) {
 		dump(traceStream);
 	}
-	if(find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
+	if (find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 		setSingleStep(true);
 	}
 }
@@ -466,10 +469,22 @@ void Z80::execute_ED() {
 		} break;
 
 		case 2: { // Block instructions
-			if(z < 4 && y >= 4) {
-				auto f = lut_bli[y-4][z];
-				(this->*f)();
-				setT(16);
+			if (z < 4 && y >= 4) {
+				uint8_t i = y - 4;
+				if (i < 2) {			// Is it a one-shot block instruction like LDI, IND?
+					setT(16);			// Yes, so just set the T-states
+				}
+				else {					// Otherwise it's a block operation like LDIR, INDR
+					if (blockop) {		// If we're already processing it then
+						incT(21);		// Just increment the T-states
+					}
+					else {
+						setT(16);		// Otherwise initialise the T-states and
+						blockop = true;	// flag that we're in a block operation
+					}
+				}
+				auto f = lut_bli[i][z];	// Lookup the function pointer for the block instruction
+				(this->*f)();			// And run it
 			}	
 			else {
 				throw runtime_error("execute_ED: invalid block instruction");
@@ -1045,6 +1060,9 @@ void Z80::ldir() {
 	if(reg.BC.W != 0) {
 		reg.PC-=2;
 	}
+	else {
+		blockop = false;
+	}
 }
 
 void Z80::cpir() {	
@@ -1052,12 +1070,18 @@ void Z80::cpir() {
 	if(reg.BC.W != 0 && reg.AF.Z == 0) {
 		reg.PC-=2;
 	}	
+	else {
+		blockop = false;
+	}
 }
 
 void Z80::inir() {	
 	ini();
 	if(reg.BC.H != 0) {
 		reg.PC-=2;
+	}
+	else {
+		blockop = false;
 	}
 }
 
@@ -1066,12 +1090,18 @@ void Z80::otir() {
 	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
+	else {
+		blockop = false;
+	}
 }
 
 void Z80::lddr() {	
 	ldd();
 	if(reg.BC.W != 0) {
 		reg.PC-=2;
+	}
+	else {
+		blockop = false;
 	}
 }
 
@@ -1080,6 +1110,9 @@ void Z80::cpdr() {
 	if(reg.BC.W != 0 && reg.AF.Z == 0) {
 		reg.PC-=2;
 	}	
+	else {
+		blockop = false;
+	}
 }
 
 void Z80::indr() {	
@@ -1087,12 +1120,18 @@ void Z80::indr() {
 	if(reg.BC.H != 0) {
 		reg.PC-=2;
 	}
+	else {
+		blockop = false;
+	}
 }
 
 void Z80::otdr() {	
 	outd();
 	if(reg.BC.H != 0) {
 		reg.PC-=2;
+	}
+	else {
+		blockop = false;
 	}
 }
 
