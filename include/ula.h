@@ -23,7 +23,7 @@ public:
     Ula(Mem* mem, Ports* ports, int scale);
     ~Ula();
 
-    void render();
+	void render(uint16_t tStates);
     bool getvBlank();
     void setvBlank(bool b);
 private:
@@ -46,6 +46,7 @@ private:
     bool      vBlank;
     void*     pixels;
     int       pitch;
+	int32_t   tcount;
 
     uint32_t palette[16] = {
         //
@@ -72,6 +73,7 @@ private:
         0xFFFFFF, // White
     };
 
+	void render();
 	void resetState();
 	void renderTexture(); 
 	

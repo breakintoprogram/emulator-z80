@@ -146,24 +146,21 @@ int main(int argc, char* argv[])
 		for(int i = 0; i < turbo; i++) {
 			if(!z80->getSingleStep() || step) {
 				try {
-					z80->run();
-					tape->play(z80->getT());
+					z80->run();										// Run the CPU
+					tape->play(z80->getT());						// Play any inserted cassette
+					ula->render(z80->getT());						// Render a number of pixels
+					if(ula->getvBlank()) {							// On the vblank
+						ula->setvBlank(false);						// Service any interrupts
+						if(!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
+							z80->interruptRequest();
+						}
+					}
 				}
 				catch(const exception& e) {
 					cout << "Error: " << e.what() << endl;
 				}
 			}
 			step = false;
-		}
-		//
-		// Update the screen 
-		//
-		ula->render();
-		if(ula->getvBlank()) {
-			ula->setvBlank(false);
-			if(!z80->getSingleStep() || interrupts) {
-				z80->interruptRequest();
-			}
 		}
 	}
 	cleanup();	

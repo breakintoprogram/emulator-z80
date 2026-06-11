@@ -26,7 +26,8 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	width(HRES + (HBORDER * 2)),
 	height(VRES + (VBORDER * 2)),
 	vBlank(false),
-	frame(0)
+	frame(0),
+	tcount(0)
 {
     SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow(
@@ -89,6 +90,22 @@ void Ula::renderTexture() {
 	SDL_RenderPresent(renderer);
 }
 
+// Maintain a tally of T-states for the renderer and render the appropriate number of pixels
+// The tally in tcount is multiplied by 1024 for limited fixed point precision
+// Parameters: 
+// - tStates: Number of T-states to deduct from the tally
+//
+void Ula::render(uint16_t tStates) {
+	const uint16_t td = 224 * 1024 / 44;	// The number of T-states for 8 pixels
+	tcount += (tStates * 1024);				// Add last T-states executed to the running tally, multiplied by 1024
+	while(tcount >= td && ! getvBlank()) {	// Whilst we've got T-states to run, and there's not been a vblank then
+		render();							// Render 8 pixels of the screen
+		tcount -= td;						// Deduct 8 pixels worth of T-states from the tally
+	}
+}
+
+// State machine to render the screen 8 pixels at a time, including the borders
+//
 void Ula::render() {
 	uint32_t borderColour = palette[(*ulaPort) & 0x07];
 	bool    flash = frame & 0x10;
