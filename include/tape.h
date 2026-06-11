@@ -85,7 +85,7 @@ private:
     int16_t         pulseWidth1;
     int16_t         pulseCount;
     uint8_t         bits;
-    uint16_t        bitCount;
+    uint8_t         bitMask;
     bool            bit;
 };
 

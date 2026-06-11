@@ -127,6 +127,7 @@ DelaySegment::DelaySegment(uint8_t* ulaPort, int16_t delay) :
 }
 
 void DelaySegment::play(uint16_t tStates) { 
+    writeBit(0);
     delay -= tStates;
     finished = (delay <= 0);
 }
@@ -138,7 +139,7 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, i
     file(file),
     pulseWidth0(pulseWidth0),
     pulseWidth1(pulseWidth1),
-    bitCount(0),
+    bitMask(0),
     pulseCount(0),
     bit(true)
 {
@@ -151,17 +152,14 @@ void DataSegment::play(uint16_t tStates) {
     pulseCount -= tStates;
     if(pulseCount <= 0) {                   // If the pulse has ended (or not started) then
         if(bit) {                           // If we've finished (or not started) playing the square wave
-            if(bitCount > 0) {              // If there are more bits to process then
-                bits <<= 1;                 // Shift onto the next bit
-                bitCount--;                 // Decrement the bit count
-            }
-            else {                          // Otherwise get the next byte to process
+            bitMask >>= 1;                  // Shift onto the next bit
+            if(bitMask == 0) {              // If there are no more bits to process then
                 if(data.size() == 0) {      // Are there any more bytes?
                     finished = true;        // No, so we're done here
                     return;
                 }
                 bits = data[0];             // Get the next 8 bits
-                bitCount = 8;               // Set the bit count
+                bitMask = 0x80;             // Set the bit mask
                 data.erase(data.begin());   // Advance the data onto the next byte ready for next time
             }
         }
@@ -169,7 +167,7 @@ void DataSegment::play(uint16_t tStates) {
         // This bit calculates the pulse width; 0s and 1s are
         // represented by different widths of square waves
         //
-        pulseCount += ((bits & 0x80) ? pulseWidth1 : pulseWidth0);  
+        pulseCount += ((bits & bitMask) ? pulseWidth1 : pulseWidth0);  
         bit = !bit;                         // Flip the bit
     }
     writeBit(bit);

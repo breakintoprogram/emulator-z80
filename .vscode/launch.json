@@ -6,6 +6,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
             "args": [
+                "load=games/stop_the_express.tap"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

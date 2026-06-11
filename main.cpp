@@ -26,8 +26,6 @@
 
 #define code "roms/48.rom"
 #define test "tests/z80doc.bin"
-#define game "games/stop_the_express.tap"
-#define demo "games/stop_the_express.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -52,6 +50,7 @@ int main(int argc, char* argv[])
 	bool       interrupts = true;
 	int        turbo = 1;
 	int        scale = 1;
+	string     tapeFile;
 	SDL_Event  e;
 
 	mem = new Mem();
@@ -67,6 +66,11 @@ int main(int argc, char* argv[])
 	
 		if(token == "s" || token =="scale") {
 			scale = stoi(parameter);
+			continue;
+		}
+
+		if (token == "l" || token == "load") {
+			tapeFile = parameter;
 			continue;
 		}
 	}
@@ -129,8 +133,7 @@ int main(int argc, char* argv[])
 							case SDLK_l: mem->load(0x8000, test); break;
 							case SDLK_o: z80->dump(cout, true); break;
 							case SDLK_r: z80->reset(); break;
-							case SDLK_p: tape->open(game); break;
-							case SDLK_x: mem->load(0x7FD2, demo); break;
+							case SDLK_p: tape->open(tapeFile); break;
 						}
 					}
 					else {
@@ -149,6 +152,7 @@ int main(int argc, char* argv[])
 			if(!z80->getSingleStep() || step) {
 				try {
 					z80->run();
+					tape->play(z80->getT());
 				}
 				catch(const exception& e) {
 					cout << "Error: " << e.what() << endl;
@@ -166,10 +170,6 @@ int main(int argc, char* argv[])
 				z80->interruptRequest();
 			}
 		}
-		//
-		// Process any tape stuff
-		//
-		tape->play(z80->getT());
 	}
 	cleanup();	
 	return 0;
