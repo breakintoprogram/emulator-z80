@@ -31,10 +31,10 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     do {
     	file.read((char *)&blockSize, 2);	
 		mark = file.peek();
-        tape.push_back(make_unique<ToneSegment>(ulaPort, TSPEED(2168), mark == 0 ? TSPEED(8063) : TSPEED(3223)));
-        tape.push_back(make_unique<PulseSegment>(ulaPort, TSPEED(667), TSPEED(735)));
-        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, TSPEED(855), TSPEED(1710)));
-        tape.push_back(make_unique<DelaySegment>(ulaPort, TSPEED(1000)));
+        tape.push_back(make_unique<ToneSegment>(ulaPort, 2168, mark == 0 ? 8063 : 3223));
+        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));
+        tape.push_back(make_unique<DelaySegment>(ulaPort, 1000));
     	bytesRemaining -= (blockSize + 2);			
     }
     while(bytesRemaining > 0);
@@ -42,13 +42,13 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     return true;
 }
 
-void Tape::play() {
+void Tape::play(uint16_t tStates) {
     if(tape.size() > 0) {
         if(tape[0]->isFinished()) {
             tape.erase(tape.begin());
         }
         else {
-            tape[0]->play();
+            tape[0]->play(tStates);
         }
     }
 }
@@ -74,7 +74,7 @@ void TapeSegment::writeBit(uint8_t bit) {
 
 // Inherited lead-in tone segment class
 //
-ToneSegment::ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLength) :
+ToneSegment::ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseLength) :
     TapeSegment(ulaPort),
     pulseWidth(pulseWidth),
     pulseLength(pulseLength),
@@ -83,9 +83,10 @@ ToneSegment::ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLe
 {
 }
 
-void ToneSegment::play() {
-    if(count-- == 0) {
-        count = pulseWidth;
+void ToneSegment::play(uint16_t tStates) {
+    count -= tStates;
+    if(count <= 0) {
+        count += pulseWidth;
         if(bit) {
 			finished = (pulseLength-- == 0);
         }
@@ -96,22 +97,22 @@ void ToneSegment::play() {
 
 // Inherited pulse segment class
 //
-PulseSegment::PulseSegment(uint8_t* ulaPort, uint16_t pulseWidth0, uint16_t pulseWidth1) :
+PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1) :
     TapeSegment(ulaPort),
     pulseWidth0(pulseWidth0),
     pulseWidth1(pulseWidth1)
 {
 }
 
-void PulseSegment::play() {
+void PulseSegment::play(uint16_t tStates) {
     if(pulseWidth0 > 0) {
         writeBit(0);
-        pulseWidth0--;
+        pulseWidth0 -= tStates;
         return;
     }
     if(pulseWidth1 > 0) {
         writeBit(1);
-        pulseWidth1--;
+        pulseWidth1 -= tStates;
         return;
     }
     finished = true;
@@ -119,19 +120,20 @@ void PulseSegment::play() {
 
 // Inherited delay segment class
 //
-DelaySegment::DelaySegment(uint8_t* ulaPort, uint16_t delay) :
+DelaySegment::DelaySegment(uint8_t* ulaPort, int16_t delay) :
     TapeSegment(ulaPort),
     delay(delay)
 {
 }
 
-void DelaySegment::play() { 
-    finished = (delay-- == 0);
+void DelaySegment::play(uint16_t tStates) { 
+    delay -= tStates;
+    finished = (delay <= 0);
 }
 
 // Inherited data segment class
 //
-DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, uint16_t pulseWidth0, uint16_t pulseWidth1) :
+DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, int16_t pulseWidth0, int16_t pulseWidth1) :
     TapeSegment(ulaPort),
     file(file),
     pulseWidth0(pulseWidth0),
@@ -145,8 +147,9 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, u
     }
 }
 
-void DataSegment::play() {    
-    if(pulseCount-- == 0) {                 // If the pulse has ended (or not started) then
+void DataSegment::play(uint16_t tStates) {    
+    pulseCount -= tStates;
+    if(pulseCount <= 0) {                   // If the pulse has ended (or not started) then
         if(bit) {                           // If we've finished (or not started) playing the square wave
             if(bitCount > 0) {              // If there are more bits to process then
                 bits <<= 1;                 // Shift onto the next bit
@@ -166,8 +169,8 @@ void DataSegment::play() {
         // This bit calculates the pulse width; 0s and 1s are
         // represented by different widths of square waves
         //
-        pulseCount = (bits & 0x80) ? pulseWidth1 : pulseWidth0;  
-        bit = !bit;                     // Flip the bit
+        pulseCount += ((bits & 0x80) ? pulseWidth1 : pulseWidth0);  
+        bit = !bit;                         // Flip the bit
     }
     writeBit(bit);
 }

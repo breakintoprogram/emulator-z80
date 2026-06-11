@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 		//
 		// Process any tape stuff
 		//
-		tape->play();
+		tape->play(z80->getT());
 	}
 	cleanup();	
 	return 0;

@@ -18,8 +18,6 @@
 #include "ports.h"
 #include "defines.h"
 
-#define TSPEED(s) (s/4.5)
-
 using namespace std;
 
 // Base tape segment class
@@ -27,7 +25,7 @@ using namespace std;
 class TapeSegment{
 public:
     TapeSegment(uint8_t* ulaPort);
-    virtual void play() = 0;
+    virtual void play(uint16_t tStates) = 0;
     bool isFinished();
 protected:
     uint8_t* ulaPort;
@@ -40,13 +38,13 @@ private:
 //
 class ToneSegment : public TapeSegment {
 public:
-    ToneSegment(uint8_t* ulaPort, uint16_t pulseWidth, uint16_t pulseLength);
-    void play() override;
+    ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseLength);
+    void play(uint16_t tStates) override;
 protected:
 private:
-    uint16_t pulseWidth;
-    uint16_t pulseLength;
-    uint16_t count;
+    int16_t pulseWidth;
+    int16_t pulseLength;
+    int16_t  count;
     bool     bit;
 };
 
@@ -54,20 +52,20 @@ private:
 //
 class PulseSegment : public TapeSegment {
 public:
-    PulseSegment(uint8_t* ulaPort, uint16_t pulseWidth0, uint16_t pulseWidth1);
-    void play() override;
+    PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1);
+    void play(uint16_t tStates) override;
 protected:
 private:
-    uint16_t pulseWidth0;
-    uint16_t pulseWidth1;
+    int16_t pulseWidth0;
+    int16_t pulseWidth1;
 };
 
 // Inherited delay segment class
 //
 class DelaySegment : public TapeSegment {
 public:
-    DelaySegment(uint8_t* ulaPort, uint16_t delay);
-    void play() override;
+    DelaySegment(uint8_t* ulaPort, int16_t delay);
+    void play(uint16_t tStates) override;
 protected:
 private:
     uint16_t delay;
@@ -77,17 +75,17 @@ private:
 //
 class DataSegment : public TapeSegment {
 public:
-    DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, uint16_t pulseWidth0, uint16_t pulseWidth1);
-    void play() override;
+    DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, int16_t pulseWidth0, int16_t pulseWidth1);
+    void play(uint16_t tStates) override;
 protected:
 private:
     ifstream&       file;
     vector<uint8_t> data;
-    uint16_t        pulseWidth0;
-    uint16_t        pulseWidth1;
+    int16_t         pulseWidth0;
+    int16_t         pulseWidth1;
+    int16_t         pulseCount;
     uint8_t         bits;
     uint16_t        bitCount;
-    uint16_t        pulseCount;
     bool            bit;
 };
 
@@ -99,7 +97,7 @@ public:
 
     bool open(string filename);
     bool openTAP(ifstream& file, uintmax_t filesize);
-    void play();
+    void play(uint16_t tStates);
 private:
     uint8_t*  ulaPort = NULL;
 
