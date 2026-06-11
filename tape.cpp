@@ -132,12 +132,12 @@ void TapeSegment::writeBit(uint8_t bit) {
 // Parameters
 // - ulaPort: Pointer to the ULA port address space
 // - pulseWidth: Width (in T-states) of the tone pulse
-// - pulseLength: Number of pulses
+// - pulseCount: Number of pulses
 //
-ToneSegment::ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseLength) :
+ToneSegment::ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseCount) :
     TapeSegment(ulaPort),
     pulseWidth(pulseWidth),
-    pulseLength(pulseLength),
+    pulseCount(pulseCount),
     count(pulseWidth),
     bit(false)
 {
@@ -149,11 +149,12 @@ ToneSegment::ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseLeng
 //
 void ToneSegment::play(uint16_t tStates) {
     count -= tStates;                           // Decrease the pulse count timer
-    if(count <= 0) {                            // If less than zero then we need to flip the bit
-        count += pulseWidth;                    // Reset the pulse counter timer for the next pulse
-        if(bit) {                               // If we've done a full pulse then
-			finished = (pulseLength-- == 0);    // Decrease the pulse length by 1 and flag finished when done
+    if (count <= 0) {                           // If less than zero then we need to flip the bit
+        if (pulseCount-- == 0) {                // Have we done the required number of pulses?
+            finished = true;                    // Yes, so flag we've finished this segment
+            return;
         }
+        count += pulseWidth;                    // Reset the pulse counter timer for the next pulse
         bit = !bit;                             // Flip the bit
     }
     writeBit(bit);                              // Write to the EAR port

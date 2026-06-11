@@ -38,12 +38,12 @@ private:
 //
 class ToneSegment : public TapeSegment {
 public:
-    ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseLength);
+    ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseCount);
     void play(uint16_t tStates) override;
 protected:
 private:
     int16_t pulseWidth;
-    int16_t pulseLength;
+    int16_t pulseCount;
     int16_t  count;
     bool     bit;
 };
