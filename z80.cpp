@@ -50,15 +50,15 @@ void Z80::setTrace(bool value) {
 	trace = value;
 }
 
-uint8_t Z80::getT() {
+uint16_t Z80::getT() {
 	return t;
 }
 
-void Z80::setT(uint8_t value) {
+void Z80::setT(uint16_t value) {
 	t = value;
 }
 
-void Z80::incT(uint8_t value) {
+void Z80::incT(uint16_t value) {
 	t += value;
 }
 
