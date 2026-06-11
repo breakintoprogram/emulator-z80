@@ -41,6 +41,19 @@ I use the VSCode IDE with the following extensions installed:
 
 ## Running
 
+The emulator takes the following command line parameters:
+
+- `s` or `scale` Set the emulator scale (default = 1)
+- `l` or `load` Prepare a tape image for loading
+
+Example: To run the emulator at 2x scale
+
+```
+bin/emulator-z80 s=2
+```
+
+### Keys
+
 The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. There are a handful of emulator specific key combinations I'm using whilst testing the code:
 
 - `F1` Turbu speed x 1
@@ -57,21 +70,37 @@ When in the debugger:
 - `d` disable interrupts
 - `e` enable interrupts
 - `t` enable console debugging trace
-- `l` load a test (see next section)
 - `o` output registers to console
 - `r` reset the CPU
+- `p` play the loaded TAP image
+
+### Tape Interface
+
+After preparing the tape image on launch from the command line, for example:
+
+```
+bin/emulator-z80 l=games/stop_the_express.tap
+```
+
+Do the following to load the image:
+
+- `LOAD ""` from BASIC
+- `F12` then `p` to start the TAP file playing
+- `G` to restart the Spectrum
+
+It should start loading at that point.
+
+NB: The tape interface only supports TAP files at the moment.
 
 ## Testing
 
-I've included compiled binaries of Raxoft's excellent Zilog Z80 CPU Test Suite in the tests folder. Tests are loaded into memory at address 0x8000 (32768) by pressing the following key combination:
+I've included Raxoft's excellent [Zilog Z80 CPU Test Suite](https://github.com/raxoft/z80test)
+in the tests folder as TAP files. For more details on the tests please go to their GitHub page
+or read the [readme.txt](tests/readme.txt) in the tests folder.
 
-- `F12` pause the CPU and go into debugger mode
-- `l` load the test
-- `g` resume normal CPU exection
+At present time, the emulator passes the z80doc test, with the exception of LD A,R.
 
-Then from Sinclair BASIC, type `RANDOMIZE USER 32768`
-
-To change the test, change  `#define test` at the top of `main.cpp`, compile and re-run.
+Follow the instructions for loading TAP files to run them.
 
 ## Useful links
 

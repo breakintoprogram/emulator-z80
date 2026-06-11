@@ -5,9 +5,6 @@
 // Created:	        22/05/2026
 // Last Updated:	28/05/2026
 //
-// NB:
-// Interactive ZX Spectrum ROM disassembly: https://skoolkid.github.io/rom/index.html
-//
 // Modinfo:
 
 #include <iostream>
@@ -25,7 +22,6 @@
 #include "z80.h"
 
 #define code "roms/48.rom"
-#define test "tests/z80doc.bin"
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -130,7 +126,6 @@ int main(int argc, char* argv[])
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(!z80->getTrace()); break;
 							case SDLK_g: z80->setSingleStep(false); break;
-							case SDLK_l: mem->load(0x8000, test); break;
 							case SDLK_o: z80->dump(cout, true); break;
 							case SDLK_r: z80->reset(); break;
 							case SDLK_p: tape->open(tapeFile); break;
