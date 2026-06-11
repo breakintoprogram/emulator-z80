@@ -94,7 +94,7 @@ void Z80::run() {
 	}
 	interrupts();
 	if (trace) {
-		traceStream << "(" << (uint16_t)getT() << "T)" << endl;
+		traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
 	}
 }
 
