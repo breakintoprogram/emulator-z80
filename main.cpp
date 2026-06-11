@@ -45,28 +45,48 @@ void cleanup() {
 	delete z80;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	bool       quit = false;
 	bool       step = false;
 	bool       interrupts = true;
 	int        turbo = 1;
+	int        scale = 1;
 	SDL_Event  e;
 
 	mem = new Mem();
 
+	// Handle any command-line parameters
+	//
+	vector<string> arguments(argv + 1, argv + argc);
+
+	for(string argument : arguments) {
+		size_t delimiter = argument.find("=");
+		string token(argument.substr(0, delimiter));
+		string parameter(delimiter == string::npos ? "" : argument.substr(delimiter + 1));
+	
+		if(token == "s" || token =="scale") {
+			scale = stoi(parameter);
+			continue;
+		}
+	}
+
+	// Load the ROM in
+	//
 	if (!mem->load(0x0000, code)) {
 		cout << "Error loading '" << code << "'." << endl;
 		cleanup();
 		return 1;
 	}; 
 	
+	// Initialise the rest of the system
+	//
 	try  {
-		ports = new Ports();
-		ula = new Ula(mem, ports, 1);
-		keyboard = new Keyboard(ports);
-		tape = new Tape(ports);
-		z80 = new Z80(mem, ports);
+		ports = new Ports();				// I/O ports (keyboard, ULA)
+		ula = new Ula(mem, ports, scale);	// ULA (video)
+		keyboard = new Keyboard(ports);		// Keyboard interface
+		tape = new Tape(ports);				// Tape interface
+		z80 = new Z80(mem, ports);			// The Z80 CPU itself
 	}
 	catch(const exception& e) {
 		cout << "Error: " << e.what() << endl;
@@ -74,8 +94,10 @@ int main()
 		return 1;
 	}
 
-	z80->reset();
+	z80->reset();						// Reset the Z80
 
+	// The main loop
+	//
 	while (!quit) {
 		while (SDL_PollEvent(&e) != 0) {
 			switch (e.type) {
