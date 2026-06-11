@@ -88,6 +88,9 @@ void Z80::run() {
 		}
 		decode();
 		execute();
+		if(getT() == 0) {
+			throw runtime_error("No T-states registered for this instruction");
+		}
 	}
 	interrupts();
 	if (trace) {
@@ -239,6 +242,7 @@ void Z80::execute_CB() {
 				if (r) *r = b;
 				reg.AF.B = 0;
 				reg.AF.N = 0;
+				setT(23);
 			} break;
 			case 1: { // BIT
 				b = mem->readByte(a) & s;
@@ -246,17 +250,20 @@ void Z80::execute_CB() {
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
 				reg.AF.B = 1;
-				reg.AF.N = 0;					
+				reg.AF.N = 0;		
+				setT(20);			
 			} break;
 			case 2: { // RES
 				b = mem->readByte(a) & ~s;
 				mem->write(a, b);
 				if (r) *r = b;
+				setT(23);
 			} break;
 			case 3: { // SET
 				b = mem->readByte(a) | s;
 				mem->write(a, b);
-				if (r) *r = b;		 
+				if (r) *r = b;	
+				setT(23);	 
 			} break;
 		}
 	}
@@ -274,12 +281,14 @@ void Z80::execute_CB() {
 				auto f = lut_rot[y];			// Look up the ROT operation
 				if (r) {						// If it is a register then
 					(reg.*f)(r);				// Execute the function on the register
+					setT(8);
 				}
 				else {
 					uint16_t a = getInd(0);		// Get the memory address
 					b = mem->readByte(a);		// Get the byte
 					(reg.*f)(&b);				// Execute the function on the memory location				
 					mem->write(a, b);
+					setT(15);
 				}
 			} break;
 			case 1: { // BIT y,r[z]				// This is a read only operation so no need for ROM check
@@ -289,26 +298,31 @@ void Z80::execute_CB() {
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
 				reg.AF.B = 1;
-				reg.AF.N = 0;				
+				reg.AF.N = 0;		
+				setT(r ? 8 : 12);		
 			} break;
 			case 2: { // RES y,r[z]
 				if (r) {
 					*r &= ~s;					// r is a register pointer
+					setT(8);
 				}
 				else {
 					uint16_t a = getInd(0);		// do the operation in memory
 					b = mem->readByte(a) & ~s;
-					mem->write(a, b);				
+					mem->write(a, b);		
+					setT(15);		
 				}
 			} break;
 			case 3: { // SET y,r[z]
 				if (r) {
 					*r |= s;					// r is a register pointer
+					setT(8);
 				}
 				else {
 					uint16_t a = getInd(0);		// do the operation in memory
 					b = mem->readByte(a) | s;
-					mem->write(a, b);					
+					mem->write(a, b);		
+					setT(15);			
 				}		
 			} break;
 		}
@@ -331,12 +345,14 @@ void Z80::execute_ED() {
 					reg.setFlagsSZP(b);
 					reg.AF.B = 0;
 					reg.AF.N = 0;
+					setT(12);
 				} break;	
 				case 1: { // OUT (C)
 					uint8_t* r = t_r[0][y];
 					if (r) {
 						ports->out(reg.BC.W, *r);
 					}
+					setT(12);
 				} break;
 				case 2: { // ADC/SBC
 					uint8_t c = reg.AF.C;
@@ -363,6 +379,7 @@ void Z80::execute_ED() {
 					reg.AF.C = (l > 0xFFFF);
 					reg.AF.S = (w > 0x7FFF);
 					*rp1 = w;
+					setT(15);
 				} break;
 				case 3: { // Load register pair from/to immediate address
 					uint16_t* rp = t_rp1[0][p];
@@ -373,15 +390,18 @@ void Z80::execute_ED() {
 					else {
 						*rp = mem->readWord(dd);	
 					}
+					setT(p == 2 ? 16 : 20);
 				} break;
 				case 4: { // NEG
 					reg.neg();
+					setT(4);
 				} break;
 				case 5: { // RETI/RETN
 					reg.PC = pop();
 					if (y != 1) { // Check for RETN
 						reg.IFF1 = reg.IFF2;
 					}
+					setT(14);
 				} break;
 				case 6: { // IM
 					switch(y & 3) {
@@ -390,14 +410,17 @@ void Z80::execute_ED() {
 						case 2: reg.IM = 1; break;
 						case 3: reg.IM = 2; break;
 					}
+					setT(8);
 				} break;
 				case 7: { // Assorted ops
 					switch(y) {
 						case 0: { // LD I,A
 							reg.I = reg.AF.A;
+							setT(9);
 						} break;
 						case 1: { // LD R,A
 							reg.R = reg.AF.A;
+							setT(9);
 						} break;
 						case 2: { // LD A,I
 							reg.AF.A = reg.I;
@@ -405,6 +428,7 @@ void Z80::execute_ED() {
 							reg.AF.P = reg.IFF2;
 							reg.AF.B = 0;
 							reg.AF.N = 0;
+							setT(9);
 						} break;
 						case 3: { // LD A,R
 							reg.AF.A = reg.R;
@@ -412,6 +436,7 @@ void Z80::execute_ED() {
 							reg.AF.P = reg.IFF2;
 							reg.AF.B = 0;
 							reg.AF.N = 0;
+							setT(9);
 						} break;
 						case 4: { // RRD
 							uint8_t d = mem->readByte(reg.HL.W);
@@ -422,6 +447,7 @@ void Z80::execute_ED() {
 							reg.setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
+							setT(18);
 						} break;
 						case 5: { // RLD
 							uint8_t d = mem->readByte(reg.HL.W);
@@ -432,6 +458,7 @@ void Z80::execute_ED() {
 							reg.setFlagsSZP(reg.AF.A);
 							reg.AF.B = 0;
 							reg.AF.N = 0;
+							setT(18);
 						} break;
 					}
 				} break;
@@ -442,6 +469,7 @@ void Z80::execute_ED() {
 			if(z < 4 && y >= 4) {
 				auto f = lut_bli[y-4][z];
 				(this->*f)();
+				setT(16);
 			}	
 			else {
 				throw runtime_error("execute_ED: invalid block instruction");
@@ -680,6 +708,7 @@ void Z80::execute_x0z6() {
 void Z80::execute_x0z7() {
 	auto f = lut_alu2[y];				// Look up the ALU function
 	(reg.*f)();							// And run
+	setT(y == 4 ? 8 : 4);				// DAA is 8 T-states, all other opcodes are 4
 }
 
 // 8 bit loading
@@ -700,14 +729,17 @@ void Z80::execute_x1__()
 		if (rd) {									// Destination is a register
 			if (rs) {								// Source is a register
 				*rd = *rs;							// Copy the value to the destination
+				setT(4);
 			}
 			else {									// Source is memory
 				*rd = mem->readByte(getInd(shift_IXY));
+				setT(shift_IXY ? 19 : 7);
 			}
 		}
 		else {										// Destination is memory
 			if (rs) {								// Source is register
 				mem->write(getInd(shift_IXY), *rs);	// Copy the register to the memory
+				setT(shift_IXY ? 19 : 7);
 			}
 			else {
 				throw runtime_error("execute_x1: source and data are both memory locations");
