@@ -96,12 +96,12 @@ public:
     Tape(Ports* ports);
 
     bool open(string filename);
-    bool openTAP(ifstream& file, uintmax_t filesize);
     void play(uint16_t tStates);
 private:
     uint8_t*  ulaPort = NULL;
-
     vector<unique_ptr<TapeSegment>> tape;
+
+    bool openTAP(ifstream& file, uintmax_t filesize);
 };
 
 
