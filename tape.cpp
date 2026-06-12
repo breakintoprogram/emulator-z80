@@ -89,12 +89,9 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
 // - tStates: Number of T-states to deduct from the pulse counters
 //
 void Tape::play(uint16_t tStates) {
-    if(tape.size() > 0) {
-        if(tape[0]->isFinished()) {
-            tape.erase(tape.begin());
-        }
-        else {
-            tape[0]->play(tStates);
+    if (tape.size() > 0) {					// While there are segments to play
+        if (tape[0]->play(tStates)) {		// Play the segment, if it flags it has finished then
+	        tape.erase(tape.begin());		// Erase that segment; rinse, lather and repeat
         }
     }
 }
@@ -104,17 +101,8 @@ void Tape::play(uint16_t tStates) {
 // - ulaPort: Pointer to the ULA port address space
 //
 TapeSegment::TapeSegment(uint8_t* ulaPort) :
-    ulaPort(ulaPort),
-    finished(false)
+    ulaPort(ulaPort)
 {
-}
-
-// Has this segment finished?
-// Returns:
-// - true if the segment has finished, otherwise false
-//
-bool TapeSegment::isFinished() {
-    return finished;
 }
 
 // Write a bit out to the EAR port
@@ -147,18 +135,20 @@ PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseW
 // Play a single time slice of the pulse segment
 // Parameters:
 // - tStates: Number of T-states to deduct from the pulse counters
+// Returns:
+// - false if still playing, true if finished
 //
-void PulseSegment::play(uint16_t tStates) {
+bool PulseSegment::play(uint16_t tStates) {
 	count -= tStates;
 	if (count <= 0) {
 		if (pulseCount-- == 0) {
-			finished = true;
-			return;
+			return true;
 		}
 		bit = !bit;
 		count = bit ? pulseWidth0 : pulseWidth1;
 	}
 	writeBit(bit);
+	return false;
 }
 
 // Inherited delay segment class
@@ -175,11 +165,13 @@ DelaySegment::DelaySegment(uint8_t* ulaPort, int16_t delay) :
 // Play a single time slice of the delay segment
 // Parameters:
 // - tStates: Number of T-states to deduct from the pulse counters
+// Returns:
+// - false if still playing, true if finished
 //
-void DelaySegment::play(uint16_t tStates) { 
+bool DelaySegment::play(uint16_t tStates) { 
     writeBit(0);                            // Just keep writing 0's out to the EAR port
     delay -= tStates;                       // Adjust the delay
-    finished = (delay <= 0);				// Flag when we're finished
+    return delay <= 0;						// Flag when we're finished
 }
 
 // Inherited pulse segment class
@@ -204,15 +196,20 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, i
     }
 }
 
-void DataSegment::play(uint16_t tStates) {    
+// Play a single time slice of the dat segment
+// Parameters:
+// - tStates: Number of T-states to deduct from the pulse counters
+// Returns:
+// - false if still playing, true if finished
+//
+bool DataSegment::play(uint16_t tStates) {    
     count -= tStates;
     if(count <= 0) {                   		// If the pulse has ended (or not started) then
         if(bit) {                           // If we've finished (or not started) playing the square wave
             bitMask >>= 1;                  // Shift onto the next bit
             if(bitMask == 0) {              // If there are no more bits to process then
                 if(data.size() == 0) {      // Are there any more bytes?
-                    finished = true;        // No, so we're done here
-                    return;
+                    return true;			// No, so we're done here
                 }
                 bits = data[0];             // Get the next 8 bits
                 bitMask = 0x80;             // Set the bit mask
@@ -227,5 +224,6 @@ void DataSegment::play(uint16_t tStates) {
         bit = !bit;                         // Flip the bit
     }
     writeBit(bit);                          // FInally write it out
+	return false;
 }
 

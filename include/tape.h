@@ -25,11 +25,10 @@ using namespace std;
 class TapeSegment{
 public:
     TapeSegment(uint8_t* ulaPort);
-    virtual void play(uint16_t tStates) = 0;
+    virtual bool play(uint16_t tStates) = 0;
     bool isFinished();
 protected:
     uint8_t* ulaPort;
-    bool     finished;
     void     writeBit(uint8_t bit);
 private:
 };
@@ -39,7 +38,7 @@ private:
 class PulseSegment : public TapeSegment {
 public:
     PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount);
-    void play(uint16_t tStates) override;
+    bool play(uint16_t tStates) override;
 protected:
 private:
     int16_t pulseWidth0;
@@ -54,7 +53,7 @@ private:
 class DelaySegment : public TapeSegment {
 public:
     DelaySegment(uint8_t* ulaPort, int16_t delay);
-    void play(uint16_t tStates) override;
+    bool play(uint16_t tStates) override;
 protected:
 private:
     uint16_t delay;
@@ -65,7 +64,7 @@ private:
 class DataSegment : public TapeSegment {
 public:
     DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, int16_t pulseWidth0, int16_t pulseWidth1);
-    void play(uint16_t tStates) override;
+    bool play(uint16_t tStates) override;
 protected:
 private:
     ifstream&       file;
