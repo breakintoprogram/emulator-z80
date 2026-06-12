@@ -34,30 +34,19 @@ protected:
 private:
 };
 
-// Inherited lead-in tone segment class
-//
-class ToneSegment : public TapeSegment {
-public:
-    ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseCount);
-    void play(uint16_t tStates) override;
-protected:
-private:
-    int16_t pulseWidth;
-    int16_t pulseCount;
-    int16_t  count;
-    bool     bit;
-};
-
 // Inherited pulse segment class
 //
 class PulseSegment : public TapeSegment {
 public:
-    PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1);
+    PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount);
     void play(uint16_t tStates) override;
 protected:
 private:
     int16_t pulseWidth0;
     int16_t pulseWidth1;
+	int16_t pulseCount;
+	int16_t count;
+	bool    bit;
 };
 
 // Inherited delay segment class
@@ -83,7 +72,7 @@ private:
     vector<uint8_t> data;
     int16_t         pulseWidth0;
     int16_t         pulseWidth1;
-    int16_t         pulseCount;
+    int16_t         count;
     uint8_t         bits;
     uint8_t         bitMask;
     bool            bit;

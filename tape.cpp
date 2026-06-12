@@ -14,8 +14,8 @@
 //
 // The Sinclair LD-BYTES routine expects the tones to be written to the EAR port as follows:
 //
-// - Tone:  L:8063T H:8063T for the header lead in tone, or L:3223T for the shorter lead-in before the data block
-// - Pulse: L: 667T H: 735T indicating the start of the data section
+// - Pulse: L:2168T H:2168T repeated for the lead-in tone; 8063 half-pulses for header lead-in or 3223 for the subsequent data block lead-in
+// - Pulse: L: 667T H: 735T a single pulse indicating the start of the data section
 // - Data:  L: 855T H: 855T represents a zero, L:1710 H:1710 represents a 1
 // - Delay: L:1000T
 //
@@ -66,10 +66,10 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
         //
         // Push onto the tape array the correspoding objects for a single data block
         //
-        tape.push_back(make_unique<ToneSegment>(ulaPort, 2168, mark == 0 ? 8063 : 3223));   // The long or short lead-in tone
-        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));                       // The start of data pulse
-        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      // The data itself
-        tape.push_back(make_unique<DelaySegment>(ulaPort, 1000));                           // A pause
+        tape.push_back(make_unique<PulseSegment>(ulaPort, 2168, 2168, mark == 0 ? 8063 : 3223));	// The long or short lead-in tone
+        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735, 2));                       		// The start of data pulse
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
+        tape.push_back(make_unique<DelaySegment>(ulaPort, 1000));                           		// A pause
 
     	bytesRemaining -= (blockSize + 2);      // Decrease number of bytes remaining
     }
@@ -128,48 +128,19 @@ void TapeSegment::writeBit(uint8_t bit) {
     }
 }
 
-// Inherited lead-in tone segment class
-// Parameters
-// - ulaPort: Pointer to the ULA port address space
-// - pulseWidth: Width (in T-states) of the tone pulse
-// - pulseCount: Number of pulses
-//
-ToneSegment::ToneSegment(uint8_t* ulaPort, int16_t pulseWidth, int16_t pulseCount) :
-    TapeSegment(ulaPort),
-    pulseWidth(pulseWidth),
-    pulseCount(pulseCount),
-    count(pulseWidth),
-    bit(false)
-{
-}
-
-// Play a single time slice of the tone segment
-// Parameters:
-// - tStates: Number of T-states to deduct from the pulse counters
-//
-void ToneSegment::play(uint16_t tStates) {
-    count -= tStates;                           // Decrease the pulse count timer
-    if (count <= 0) {                           // If less than zero then we need to flip the bit
-        if (pulseCount-- == 0) {                // Have we done the required number of pulses?
-            finished = true;                    // Yes, so flag we've finished this segment
-            return;
-        }
-        count += pulseWidth;                    // Reset the pulse counter timer for the next pulse
-        bit = !bit;                             // Flip the bit
-    }
-    writeBit(bit);                              // Write to the EAR port
-}
-
 // Inherited pulse segment class
 // Parameters
 // - ulaPort: Pointer to the ULA port address space
 // - pulseWidth0: Width of the low pulse (in T-states)
 // - pulseWidth1: Width of the high pulse (in T-states)
 //
-PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1) :
+PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount) :
     TapeSegment(ulaPort),
     pulseWidth0(pulseWidth0),
-    pulseWidth1(pulseWidth1)
+    pulseWidth1(pulseWidth1),
+	pulseCount(pulseCount),
+	count(pulseWidth0),
+	bit(false)
 {
 }
 
@@ -178,17 +149,16 @@ PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseW
 // - tStates: Number of T-states to deduct from the pulse counters
 //
 void PulseSegment::play(uint16_t tStates) {
-    if(pulseWidth0 > 0) {                       // Do the low pulse if > 0
-        writeBit(0);
-        pulseWidth0 -= tStates;
-        return;                           
-    }
-    if(pulseWidth1 > 0) {                       // Do the high pulse if > 0
-        writeBit(1);
-        pulseWidth1 -= tStates;
-        return;
-    }
-    finished = true;                            // Flag finished
+	count -= tStates;
+	if (count <= 0) {
+		if (pulseCount-- == 0) {
+			finished = true;
+			return;
+		}
+		bit = !bit;
+		count = bit ? pulseWidth0 : pulseWidth1;
+	}
+	writeBit(bit);
 }
 
 // Inherited delay segment class
@@ -207,9 +177,9 @@ DelaySegment::DelaySegment(uint8_t* ulaPort, int16_t delay) :
 // - tStates: Number of T-states to deduct from the pulse counters
 //
 void DelaySegment::play(uint16_t tStates) { 
-    writeBit(0);                                // Just keep writing 0's out to the EAR port
-    delay -= tStates;                           // Adjust the delay
-    finished = (delay <= 0);                    // Flag when we're finished
+    writeBit(0);                            // Just keep writing 0's out to the EAR port
+    delay -= tStates;                       // Adjust the delay
+    finished = (delay <= 0);				// Flag when we're finished
 }
 
 // Inherited pulse segment class
@@ -226,7 +196,7 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, i
     pulseWidth0(pulseWidth0),
     pulseWidth1(pulseWidth1),
     bitMask(0),
-    pulseCount(0),
+    count(0),
     bit(true)
 {
     for(int i = 0; i < blockSize; i++) {    // Write out an array of bytes to be process from the file stream
@@ -235,8 +205,8 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, i
 }
 
 void DataSegment::play(uint16_t tStates) {    
-    pulseCount -= tStates;
-    if(pulseCount <= 0) {                   // If the pulse has ended (or not started) then
+    count -= tStates;
+    if(count <= 0) {                   		// If the pulse has ended (or not started) then
         if(bit) {                           // If we've finished (or not started) playing the square wave
             bitMask >>= 1;                  // Shift onto the next bit
             if(bitMask == 0) {              // If there are no more bits to process then
@@ -253,7 +223,7 @@ void DataSegment::play(uint16_t tStates) {
         // This bit calculates the pulse width; 0s and 1s are
         // represented by different widths of square waves
         //
-        pulseCount += ((bits & bitMask) ? pulseWidth1 : pulseWidth0);  
+        count += ((bits & bitMask) ? pulseWidth1 : pulseWidth0);  
         bit = !bit;                         // Flip the bit
     }
     writeBit(bit);                          // FInally write it out
