@@ -24,11 +24,11 @@ using namespace std;
 //
 class TapeSegment{
 public:
-    TapeSegment(uint8_t* ulaPort);
-    virtual bool play(uint16_t tStates) = 0;
-    bool isFinished();
+    TapeSegment(uint8_t* ulaPort, int16_t count);
+    virtual bool play(uint16_t tStates);
 protected:
     uint8_t* ulaPort;
+	int16_t  count;
     void     writeBit(uint8_t bit);
 private:
 };
@@ -44,19 +44,7 @@ private:
     int16_t pulseWidth0;
     int16_t pulseWidth1;
 	int16_t pulseCount;
-	int16_t count;
 	bool    bit;
-};
-
-// Inherited delay segment class
-//
-class DelaySegment : public TapeSegment {
-public:
-    DelaySegment(uint8_t* ulaPort, int16_t delay);
-    bool play(uint16_t tStates) override;
-protected:
-private:
-    uint16_t delay;
 };
 
 // Inherited data segment class
@@ -71,7 +59,6 @@ private:
     vector<uint8_t> data;
     int16_t         pulseWidth0;
     int16_t         pulseWidth1;
-    int16_t         count;
     uint8_t         bits;
     uint8_t         bitMask;
     bool            bit;
