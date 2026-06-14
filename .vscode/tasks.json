@@ -8,14 +8,10 @@
 				"-std=c++23",
                 "-fdiagnostics-color=always",
                 "-g",
-                "-I",
-                "${workspaceFolder}/include",
-                "-I",
-                "${workspaceFolder}/templates",
+                "-I${workspaceFolder}/include",
                 "${workspaceFolder}/*.cpp",
-                "-o",
-                "${workspaceFolder}/bin/${workspaceFolderBasename}",
-                "-lSDL2"
+                "-lSDL2",
+                "-o${workspaceFolder}/bin/${workspaceFolderBasename}"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -32,15 +28,10 @@
             "args": [
 				"-std=c++23",
 				"-O3",
-                "-fdiagnostics-color=always",
-                "-I",
-                "${workspaceFolder}/include",
-                "-I",
-                "${workspaceFolder}/templates",
+                "-I${workspaceFolder}/include",
                 "${workspaceFolder}/*.cpp",
-                "-o",
-                "${workspaceFolder}/bin/${workspaceFolderBasename}",
-                "-lSDL2"
+                "-lSDL2",
+                "-o${workspaceFolder}/bin/${workspaceFolderBasename}"
             ],
             "problemMatcher": [
                 "$gcc"
