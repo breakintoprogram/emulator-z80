@@ -12,6 +12,8 @@
 #include <vector>
 #include <fstream> 
 #include <filesystem>
+#include <chrono>
+#include <thread>
 
 #include "defines.h"
 #include "ula.h"
@@ -22,6 +24,11 @@
 #include "z80.h"
 
 #define code "roms/48.rom"
+
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
+
+// typedef duration<uint64_t, ratio<1, 50>> frame_duration;
 
 Keyboard* keyboard;
 Ula*      ula;
@@ -44,10 +51,11 @@ int main(int argc, char* argv[])
 	bool       quit = false;
 	bool       step = false;
 	bool       interrupts = true;
-	int        turbo = 1;
+	auto       speed = 20000us;
 	int        scale = 1;
 	string     tapeFile;
 	SDL_Event  e;
+	auto       nextTick = steady_clock::now() + speed;
 
 	mem = new Mem();
 
@@ -112,11 +120,11 @@ int main(int argc, char* argv[])
 				//
 				case SDL_KEYDOWN: {
 					switch (e.key.keysym.sym) {
-						case SDLK_F1: turbo = 1; break;
-						case SDLK_F2: turbo = 2; break;
-						case SDLK_F3: turbo = 4; break;
-						case SDLK_F4: turbo = 8; break;
-						case SDLK_F5: turbo = 16; break;
+						case SDLK_F1: speed = 20000us; break;
+						case SDLK_F2: speed = 10000us; break;
+						case SDLK_F3: speed =  5000us; break;
+						case SDLK_F4: speed =  2500us; break;
+						case SDLK_F5: speed =  1250us; break;
 						case SDLK_F12: z80->setSingleStep(true); break;
 					}
 					if(z80->getSingleStep()) {
@@ -143,25 +151,25 @@ int main(int argc, char* argv[])
 		//
 		// Process CPU cycle(s)
 		//
-		for(int i = 0; i < turbo; i++) {
-			if(!z80->getSingleStep() || step) {
-				try {
-					z80->run();										// Run the CPU
-					tape->play(z80->getT());						// Play any inserted cassette
-					ula->render(z80->getT());						// Render a number of pixels
-					if(ula->getvBlank()) {							// On the vblank
-						ula->setvBlank(false);						// Service any interrupts
-						if(!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
-							z80->interruptRequest();
-						}
+		if(!z80->getSingleStep() || step) {
+			try {
+				z80->run();										// Run the CPU
+				tape->play(z80->getT());						// Play any inserted cassette
+				ula->render(z80->getT());						// Render a number of pixels
+				if(ula->getvBlank()) {							// On the vblank
+					ula->setvBlank(false);						// Service any interrupts
+					if(!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
+						z80->interruptRequest();
 					}
-				}
-				catch(const exception& e) {
-					cout << "Error: " << e.what() << endl;
+					this_thread::sleep_until(nextTick);
+					nextTick = steady_clock::now() + speed;
 				}
 			}
-			step = false;
+			catch(const exception& e) {
+				cout << "Error: " << e.what() << endl;
+			}
 		}
+		step = false;
 	}
 	cleanup();	
 	return 0;

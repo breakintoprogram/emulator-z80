@@ -81,22 +81,22 @@ void Z80::reset()
 //
 void Z80::run() {
 	if (!halted) {
-		if (!blockop) {
-			debug();
-		}
-		fetch();
-		while (data == 0xDD || data == 0xFD) {
-			shift_IXY = ((data & 0b00100000) >> 5) + 1;
+		debug();
+		do {
 			fetch();
-		}
-		decode();
-		execute();
-		if (getT() == 0) {
-			throw runtime_error("No T-states registered for this instruction");
-		}
+			while (data == 0xDD || data == 0xFD) {
+				shift_IXY = ((data & 0b00100000) >> 5) + 1;
+				fetch();
+			}
+			decode();
+			execute();
+			if (getT() == 0) {
+				throw runtime_error("No T-states registered for this instruction");
+			}
+		} while (blockop);
 	}
 	interrupts();
-	if (!blockop && trace) {
+	if (trace) {
 		traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
 	}
 }
