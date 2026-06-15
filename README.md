@@ -60,7 +60,6 @@ The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. 
 - `F2` Turbu speed x 2
 - `F3` Turbu speed x 4
 - `F4` Turbu speed x 8
-- `F5` Turbu speed x 16
 - `F12` Enter the debugger
 
 When in the debugger:

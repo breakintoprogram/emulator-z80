@@ -124,7 +124,6 @@ int main(int argc, char* argv[])
 						case SDLK_F2: speed = 10000us; break;
 						case SDLK_F3: speed =  5000us; break;
 						case SDLK_F4: speed =  2500us; break;
-						case SDLK_F5: speed =  1250us; break;
 						case SDLK_F12: z80->setSingleStep(true); break;
 					}
 					if(z80->getSingleStep()) {
@@ -151,25 +150,39 @@ int main(int argc, char* argv[])
 		//
 		// Process CPU cycle(s)
 		//
-		if(!z80->getSingleStep() || step) {
-			try {
-				z80->run();										// Run the CPU
-				tape->play(z80->getT());						// Play any inserted cassette
-				ula->render(z80->getT());						// Render a number of pixels
-				if(ula->getvBlank()) {							// On the vblank
-					ula->setvBlank(false);						// Service any interrupts
-					if(!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
-						z80->interruptRequest();
-					}
-					this_thread::sleep_until(nextTick);
-					nextTick = steady_clock::now() + speed;
+		uint32_t tcnt = 0;
+		uint16_t t;
+		try {
+			if (z80->getSingleStep()) {						// Single-step mode
+				if (step) {
+					step = false;							// Flag the step as being done
+					z80->run();								// Run the CPU
+					t = z80->getT();
+					tape->play(t);							// Play any inserted cassette
+					ula->render(t);							// Render a number of pixels
 				}
 			}
-			catch(const exception& e) {
-				cout << "Error: " << e.what() << endl;
+			else {											// Normal running mode
+				while (tcnt < 448 && !ula->getvBlank()) {	// Loop for around 2 scanlines (224 x 2)
+					z80->run();								// Run the CPU
+					t = z80->getT();						// Get the T-states
+					tcnt += t;								// Add to the running total
+					tape->play(t);							// Play any inserted cassette
+					ula->render(t);							// Render a number of pixels
+				}
+			}
+			if (ula->getvBlank()) {							// On the vblank
+				ula->setvBlank(false);						// Service any interrupts
+				if (!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
+					z80->interruptRequest();
+				}
+				this_thread::sleep_until(nextTick);			// Wait until the next 1/50th of a second
+				nextTick = steady_clock::now() + speed;		// Set the next tick to be from now
 			}
 		}
-		step = false;
+		catch(const exception& e) {
+			cout << "Error: " << e.what() << endl;
+		}
 	}
 	cleanup();	
 	return 0;
