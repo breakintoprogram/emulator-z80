@@ -148,7 +148,7 @@ void Z80::dump(ostream& stream, bool newline) {
 void Z80::fetch()
 {
 	data = mem->readByte(reg.PC++);
-	if (trace) {
+	if (!blockop && trace) {
 		traceStream << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
 	}
 }
