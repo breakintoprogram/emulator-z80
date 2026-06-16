@@ -46,6 +46,7 @@ bool Tape::open(string filename) {
 	}
 	uintmax_t filesize = filesystem::file_size(filename);
     ifstream file(filename, ios::binary);
+    bool success = false;
     //
     // Convert the filename to lower case
     //
@@ -56,12 +57,15 @@ bool Tape::open(string filename) {
     // Load the file in according to filename extension
     //
     if (filename.ends_with(".tap")) {
-        return openTAP(file, filesize);
+        success = openTAP(file, filesize);
     }
-    if (filename.ends_with(".tzx")) {
-        return openTZX(file, filesize);
+    else if (filename.ends_with(".tzx")) {
+        success = openTZX(file, filesize);
     }
-    return false;
+    if(!success) {      // Clear the tape if there was an error loading it in
+        tape.clear();
+    }
+    return success;
 }
 
 // Open and process a TAP file
@@ -127,6 +131,11 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
         }
         switch(blockID) {
             case 0x10: readTZXStandardDataBlock(file); break;
+            case 0x11: readTZXTurboDataBlock(file); break;
+            case 0x12: readTZXPureTone(file); break;
+            case 0x20: readTZXPause(file); break;
+            case 0x21: readTZXGroupStart(file); break;
+            case 0x22: readTZXGroupEnd(file); break;
             case 0x30: readTZXTextDescription(file); break;
             default:
                 return false;
@@ -146,6 +155,69 @@ bool Tape::readTZXStandardDataBlock(ifstream& file) {
     tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735, 2));                       		// The start of data pulse
     tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
     tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));                             // A pause
+    return true;
+}
+
+bool Tape::readTZXTurboDataBlock(ifstream& file) {
+    uint16_t pilotPulseWidth;
+    uint16_t syncPulse1Width;
+    uint16_t syncPulse2Width;
+    uint16_t dataPulse0Width;
+    uint16_t dataPulse1Width;
+    uint16_t pilotToneLength;
+    uint8_t  usedBits;
+    uint16_t pauseLength;
+    uint32_t blockSize;
+    uint8_t  flag;	
+
+    file.read((char *)&pilotPulseWidth, 2);
+    file.read((char *)&syncPulse1Width, 2);
+    file.read((char *)&syncPulse2Width, 2);
+    file.read((char *)&dataPulse0Width, 2);
+    file.read((char *)&dataPulse1Width, 2);
+    file.read((char *)&pilotToneLength, 2);
+    usedBits = file.get();
+    file.read((char *)&pauseLength, 2);
+    blockSize = file.get() | (file.get() << 8) | (file.get() << 16);
+    flag = file.peek();
+
+    tape.push_back(make_unique<PulseSegment>(ulaPort, pilotPulseWidth, pilotPulseWidth, flag < 0x80 ? 8063 : 3223));	
+    tape.push_back(make_unique<PulseSegment>(ulaPort, syncPulse1Width, syncPulse2Width, 2));  
+    tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, dataPulse0Width, dataPulse1Width)); 
+    tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));  
+    return true;
+}
+
+bool Tape::readTZXPureTone(ifstream& file) {
+    uint16_t pulseWidth;
+    uint16_t pulseCount;
+
+    file.read((char *)&pulseWidth, 2);
+    file.read((char *)&pulseCount, 2);
+    tape.push_back(make_unique<PulseSegment>(ulaPort, pulseWidth, pulseWidth, pulseCount));
+    return true;
+}
+
+bool Tape::readTZXPause(ifstream& file) {
+    uint16_t pauseLength;
+
+    file.read((char *)&pauseLength, 2);
+    tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));
+    return true;
+}
+
+bool Tape::readTZXGroupStart(ifstream& file) {
+    uint8_t length = file.get();
+    string  description;
+
+    description.resize(length);
+    file.read(&description[0], length);
+    cout << "TZX File[0x21] Group Start: " << description << endl;
+    return true;
+}
+
+bool Tape::readTZXGroupEnd(ifstream& file) {
+    cout << "TZX File[0x22] Group End" << endl;
     return true;
 }
 

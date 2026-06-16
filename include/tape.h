@@ -80,5 +80,10 @@ private:
     bool openTZX(ifstream& file, uintmax_t filesize);
 
     bool readTZXStandardDataBlock(ifstream& file);
+    bool readTZXTurboDataBlock(ifstream& file);
     bool readTZXTextDescription(ifstream& file);
+    bool readTZXGroupStart(ifstream& file);
+    bool readTZXGroupEnd(ifstream& file);
+    bool readTZXPureTone(ifstream& file);
+    bool readTZXPause(ifstream& file);
 };
