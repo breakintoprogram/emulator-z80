@@ -30,7 +30,9 @@
 //
 Tape::Tape(Ports* ports) :
     ulaPort(ports->getPortsIn()),   // Pointer to the 256-byte ports array
-    tape()                          // Empty vector for TapeSegment objects (ToneSegment, PulseSegment, DataSegment and DelaySegment)
+    tape(),                         // Empty vector for TapeSegment objects (ToneSegment, PulseSegment, DataSegment and DelaySegment)
+	loopPos(0),						// Loop position
+	loopCount(0)					// Loop counter
 {
 }
 
@@ -124,23 +126,33 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
     //
     // Get the block header and decided how to process it
     //
-    while (true) {
+	bool success = true;
+    while (success) {
         blockID = file.get();
         if(file.eof()) {
             return true;
         }
+		cout << setw(2) << hex << "TZX [0x" << (uint16_t)blockID << "] ";
         switch(blockID) {
-            case 0x10: readTZXStandardDataBlock(file); break;
-            case 0x11: readTZXTurboDataBlock(file); break;
-            case 0x12: readTZXPureTone(file); break;
-            case 0x20: readTZXPause(file); break;
-            case 0x21: readTZXGroupStart(file); break;
-            case 0x22: readTZXGroupEnd(file); break;
-            case 0x30: readTZXTextDescription(file); break;
+            case 0x10: success = readTZXStandardDataBlock(file); break;
+            case 0x11: success = readTZXTurboDataBlock(file); break;
+            case 0x12: success = readTZXPureTone(file); break;
+			case 0x13: success = readTZXPulseSequence(file); break;
+			case 0x14: success = readTZXPureDataBlock(file); break;
+            case 0x20: success = readTZXPause(file); break;
+            case 0x21: success = readTZXGroupStart(file); break;
+            case 0x22: success = readTZXGroupEnd(file); break;
+			case 0x24: success = readTZXLoopStart(file); break;
+			case 0x25: success = readTZXLoopEnd(file); break;
+            case 0x30: success = readTZXTextDescription(file); break;
             default:
-                return false;
+				cout << "blockID not supported";
+                success = false;
+				break;
         }
+		cout << endl;
     }
+	return success;
 }
 
 bool Tape::readTZXStandardDataBlock(ifstream& file) {
@@ -188,6 +200,27 @@ bool Tape::readTZXTurboDataBlock(ifstream& file) {
     return true;
 }
 
+bool Tape::readTZXPureDataBlock(ifstream& file) {
+    uint16_t dataPulse0Width;
+    uint16_t dataPulse1Width;
+    uint16_t pilotToneLength;
+    uint8_t  usedBits;
+    uint16_t pauseLength;
+    uint32_t blockSize;
+    uint8_t  flag;	
+
+    file.read((char *)&dataPulse0Width, 2);
+    file.read((char *)&dataPulse1Width, 2);
+    usedBits = file.get();
+    file.read((char *)&pauseLength, 2);
+    blockSize = file.get() | (file.get() << 8) | (file.get() << 16);
+    flag = file.peek();
+
+    tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, dataPulse0Width, dataPulse1Width)); 
+    tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));  
+    return true;
+}
+
 bool Tape::readTZXPureTone(ifstream& file) {
     uint16_t pulseWidth;
     uint16_t pulseCount;
@@ -196,6 +229,17 @@ bool Tape::readTZXPureTone(ifstream& file) {
     file.read((char *)&pulseCount, 2);
     tape.push_back(make_unique<PulseSegment>(ulaPort, pulseWidth, pulseWidth, pulseCount));
     return true;
+}
+
+bool Tape::readTZXPulseSequence(ifstream& file) {
+	uint16_t pulseWidth;
+	uint8_t  pulseCount = file.get();
+
+	for(int i = 0; i < pulseCount; i++) {
+    	file.read((char *)&pulseWidth, 2);	
+	    tape.push_back(make_unique<PulseSegment>(ulaPort, pulseWidth, pulseWidth, 2));
+	}
+	return true;
 }
 
 bool Tape::readTZXPause(ifstream& file) {
@@ -212,13 +256,31 @@ bool Tape::readTZXGroupStart(ifstream& file) {
 
     description.resize(length);
     file.read(&description[0], length);
-    cout << "TZX File[0x21] Group Start: " << description << endl;
+    cout << "Group: " << description;
     return true;
 }
 
 bool Tape::readTZXGroupEnd(ifstream& file) {
-    cout << "TZX File[0x22] Group End" << endl;
+    cout << "Group: end";
     return true;
+}
+
+bool Tape::readTZXLoopStart(ifstream& file) {
+    file.read((char *)&loopCount, 2);
+	loopPos = file.tellg();
+	cout << "Loop: for = " << loopCount;
+	return true;
+}
+
+bool Tape::readTZXLoopEnd(ifstream& file) {
+	if (--loopCount > 0) {
+		file.seekg(loopPos);
+		cout << "Loop: next = " << loopCount;
+	}
+	else {
+		cout << "Loop: end";
+	}
+	return true;
 }
 
 bool Tape::readTZXTextDescription(ifstream& file) {
@@ -227,7 +289,7 @@ bool Tape::readTZXTextDescription(ifstream& file) {
 
     description.resize(length);
     file.read(&description[0], length);
-    cout << "TZX File[0x30] Description: " << description << endl;
+    cout << "Description: " << description;
     return true;
 }
 
