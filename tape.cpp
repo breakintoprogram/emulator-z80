@@ -122,6 +122,9 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
     //
     while (true) {
         blockID = file.get();
+        if(file.eof()) {
+            return true;
+        }
         switch(blockID) {
             case 0x10: readTZXStandardDataBlock(file); break;
             case 0x30: readTZXTextDescription(file); break;
