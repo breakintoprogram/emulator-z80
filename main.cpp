@@ -135,7 +135,11 @@ int main(int argc, char* argv[])
 							case SDLK_g: z80->setSingleStep(false); break;
 							case SDLK_o: z80->dump(cout, true); break;
 							case SDLK_r: z80->reset(); break;
-							case SDLK_p: tape->open(tapeFile); break;
+							case SDLK_p: {
+								if (!tape->open(tapeFile)) {
+									cout << "Warning: Could not open " << tapeFile << endl;
+								};
+							} break;
 						}
 					}
 					else {

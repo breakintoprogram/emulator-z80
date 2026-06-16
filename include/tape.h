@@ -77,6 +77,8 @@ private:
     vector<unique_ptr<TapeSegment>> tape;
 
     bool openTAP(ifstream& file, uintmax_t filesize);
+    bool openTZX(ifstream& file, uintmax_t filesize);
+
+    bool readTZXStandardDataBlock(ifstream& file);
+    bool readTZXTextDescription(ifstream& file);
 };
-
-

@@ -46,7 +46,22 @@ bool Tape::open(string filename) {
 	}
 	uintmax_t filesize = filesystem::file_size(filename);
     ifstream file(filename, ios::binary);
-    return openTAP(file, filesize);
+    //
+    // Convert the filename to lower case
+    //
+    for(auto& c : filename) {
+        c = tolower(c);
+    }
+    //
+    // Load the file in according to filename extension
+    //
+    if (filename.ends_with(".tap")) {
+        return openTAP(file, filesize);
+    }
+    if (filename.ends_with(".tzx")) {
+        return openTZX(file, filesize);
+    }
+    return false;
 }
 
 // Open and process a TAP file
@@ -75,6 +90,69 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
     }
     while(bytesRemaining > 0);                  // Loop, then
     file.close();                               // Close the file
+    return true;
+}
+
+// Open and process a TZX file
+// Parameters:
+// - file: A filestream pointing to the start of the TZX file
+// - filesize: Size of the file in bytes
+// Returns:
+// - true if the file could be opened and parsed, otherwise false
+//
+bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
+    string  signature;
+    uint8_t eof;
+    uint8_t majorRevision;
+    uint8_t minorRevision;
+    uint8_t blockID;
+    //
+    // First read in and check we've got a plausible TZX file
+    //
+    signature.resize(7);
+    file.read(&signature[0], signature.size());
+    if (signature != "ZXTape!") {
+        return false;
+    }
+    eof = file.get();
+    majorRevision = file.get();
+    minorRevision = file.get();
+    //
+    // Get the block header and decided how to process it
+    //
+    while (true) {
+        blockID = file.get();
+        switch(blockID) {
+            case 0x10: readTZXStandardDataBlock(file); break;
+            case 0x30: readTZXTextDescription(file); break;
+            default:
+                return false;
+        }
+    }
+}
+
+bool Tape::readTZXStandardDataBlock(ifstream& file) {
+    uint16_t pauseLength;
+    uint16_t blockSize;
+    uint8_t  flag;	
+
+    file.read((char *)&pauseLength, 2);
+    file.read((char *)&blockSize, 2);
+    flag = file.peek();
+    tape.push_back(make_unique<PulseSegment>(ulaPort, 2168, 2168, flag < 0x80 ? 8063 : 3223));	// The long or short lead-in tone
+    tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735, 2));                       		// The start of data pulse
+    tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
+    tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));                             // A pause
+    return true;
+}
+
+bool Tape::readTZXTextDescription(ifstream& file) {
+    uint8_t length = file.get();
+    string  description;
+
+    description.resize(length);
+    file.read(&description[0], length);
+    cout << "TZX File[0x30] Description: " << description << endl;
     return true;
 }
 
