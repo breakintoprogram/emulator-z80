@@ -93,4 +93,5 @@ private:
     bool readTZXPureTone(ifstream& file);
 	bool readTZXPulseSequence(ifstream& file);
     bool readTZXPause(ifstream& file);
+	bool readTZXArchiveInfo(ifstream& file);
 };

@@ -107,7 +107,7 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
 // - true if the file could be opened and parsed, otherwise false
 //
 bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
-    string  signature;
+    string  signature(7, '\0');
     uint8_t eof;
     uint8_t majorRevision;
     uint8_t minorRevision;
@@ -115,7 +115,6 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
     //
     // First read in and check we've got a plausible TZX file
     //
-    signature.resize(7);
     file.read(&signature[0], signature.size());
     if (signature != "ZXTape!") {
         return false;
@@ -132,7 +131,7 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
         if(file.eof()) {
             return true;
         }
-		cout << setw(2) << hex << "TZX [0x" << (uint16_t)blockID << "] ";
+		cout << setw(2) << setfill('0') << hex << "TZX [0x" << (uint16_t)blockID << "] ";
         switch(blockID) {
             case 0x10: success = readTZXStandardDataBlock(file); break;
             case 0x11: success = readTZXTurboDataBlock(file); break;
@@ -145,6 +144,7 @@ bool Tape::openTZX(ifstream& file, uintmax_t filesize) {
 			case 0x24: success = readTZXLoopStart(file); break;
 			case 0x25: success = readTZXLoopEnd(file); break;
             case 0x30: success = readTZXTextDescription(file); break;
+			case 0x32: success = readTZXArchiveInfo(file); break;
             default:
 				cout << "blockID not supported";
                 success = false;
@@ -252,9 +252,8 @@ bool Tape::readTZXPause(ifstream& file) {
 
 bool Tape::readTZXGroupStart(ifstream& file) {
     uint8_t length = file.get();
-    string  description;
+    string  description(length, '\0');
 
-    description.resize(length);
     file.read(&description[0], length);
     cout << "Group: " << description;
     return true;
@@ -285,12 +284,28 @@ bool Tape::readTZXLoopEnd(ifstream& file) {
 
 bool Tape::readTZXTextDescription(ifstream& file) {
     uint8_t length = file.get();
-    string  description;
+    string  description(length, '\0');
 
-    description.resize(length);
     file.read(&description[0], length);
     cout << "Description: " << description;
     return true;
+}
+
+bool Tape::readTZXArchiveInfo(ifstream& file) {
+	uint16_t length;
+	uint8_t  count;
+
+    file.read((char *)&length, 2);
+	count = file.get();
+	cout << "Archive Info:";
+	for(int i = 0; i < count; i++) {
+		uint8_t id = file.get();
+		uint8_t strlen = file.get();
+		string  str(strlen, '\0');
+		file.read(&str[0], strlen);
+		cout << endl << "- [0x" << setw(2) << setfill('0') << hex << (uint16_t)id << "]: " << str;
+	}
+	return true;
 }
 
 // Play a single time slice of the loader
