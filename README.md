@@ -52,6 +52,8 @@ Example: To run the emulator at 2x scale
 bin/emulator-z80 s=2
 ```
 
+Warnings and errors are piped to the console via cout.
+
 ### Keys
 
 The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. There are a handful of emulator specific key combinations I'm using whilst testing the code:
@@ -71,25 +73,25 @@ When in the debugger:
 - `t` enable console debugging trace
 - `o` output registers to console
 - `r` reset the CPU
-- `p` play the loaded TAP image
+- `p` play the loaded tape image
 
 ### Tape Interface
 
-After preparing the tape image on launch from the command line, for example:
+After inserting the tape file on launch from the command line, for example:
 
 ```
 bin/emulator-z80 l=games/stop_the_express.tap
 ```
 
-Do the following to load the image:
+Do the following to load the file:
 
 - `LOAD ""` from BASIC
-- `F12` then `p` to start the TAP file playing
+- `F12` then `p` to start the tape file playing
 - `G` to restart the Spectrum
 
-It should start loading at that point.
+It should start loading.
 
-NB: The tape interface only supports TAP files at the moment.
+NB: The tape interface only supports TAP and a subset of TZX files at the moment.
 
 ## Testing
 
@@ -99,7 +101,7 @@ or read the [readme.txt](tests/readme.txt) in the tests folder.
 
 At present time, the emulator passes the z80doc test, with the exception of LD A,R.
 
-Follow the instructions for loading TAP files to run them.
+Follow the instructions for loading tape files to run them.
 
 ## Useful links
 
@@ -114,8 +116,8 @@ The following sites helped me develop and test this:
 
 ## Additional Credits
 
-Amstrad and Sky Group for allowing developers to use and distribute the original and unaltered ZX Spectrum ROM images for personal use in emulators.
+Thank you to Amstrad and Sky Group for allowing developers to use and distribute the original and unaltered ZX Spectrum ROM images for personal use in their emulators.
 
-Patrik Rak (Raxoft) for his excellent Zilog Z80 CPU test suite.
+Patrik Rak (Raxoft) for his excellent Zilog Z80 CPU test suite (link above).
 
-Stop the Express was published by Sinclair Research Ltd (UK) and created by Hudson Soft (Japan). I downloaded the TAP file from the [Spectrum Computing website](https://spectrumcomputing.co.uk/entry/4916/ZX-Spectrum/Stop_the_Express) and have provided it here for testing purposes only.
+Stop the Express was published by Sinclair Research Ltd (UK) and created by Hudson Soft (Japan). I downloaded the TAP and TZX files from the [Spectrum Computing website](https://spectrumcomputing.co.uk/entry/4916/ZX-Spectrum/Stop_the_Express) and have provided them here for testing purposes only.
