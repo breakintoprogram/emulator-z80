@@ -493,11 +493,13 @@ void Z80::execute_ED() {
 				(this->*f)();			// And run it
 			}	
 			else {
+				blockop = false;
 				throw runtime_error("execute_ED: invalid block instruction");
 			}
 		} break;
 
 		default: {
+			blockop = false;			
 			throw runtime_error("execute_ED: invalid opcode");
 		} break;
 	}
