@@ -40,7 +40,7 @@ void Registers::adda(uint8_t d) {
 	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 0;
 	AF.A = b;
-
+	setFlagsF35();
 }
 
 void Registers::adca(uint8_t d) {
@@ -55,6 +55,7 @@ void Registers::adca(uint8_t d) {
 	AF.P = ((a ^ ~d) & (a ^ b) & 0x80) != 0;
 	AF.N = 0;
 	AF.A = b;
+	setFlagsF35();
 }
 
 void Registers::suba(uint8_t d) {
@@ -68,6 +69,7 @@ void Registers::suba(uint8_t d) {
 	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
+	setFlagsF35();
 }
 
 void Registers::sbca(uint8_t d) {
@@ -82,6 +84,7 @@ void Registers::sbca(uint8_t d) {
 	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
 	AF.A = b;
+	setFlagsF35();
 }
 
 void Registers::cpa(uint8_t d) {
@@ -94,6 +97,7 @@ void Registers::cpa(uint8_t d) {
 	AF.B = (((a & 0x0F) - (d & 0x0F)) & 0x10) != 0;
 	AF.P = ((a ^ d) & (a ^ b) & 0x80) != 0;
 	AF.N = 1;
+	setFlagsF35(d);
 }
 
 void Registers::anda(uint8_t d) {
@@ -101,6 +105,7 @@ void Registers::anda(uint8_t d) {
 	AF.A &= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
+	setFlagsF35();
 }
 
 void Registers::xora(uint8_t d) {
@@ -108,12 +113,15 @@ void Registers::xora(uint8_t d) {
 	AF.A ^= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
+	setFlagsF35();
 }
+
 void Registers::ora(uint8_t d) {
 	AF.L = 0x00;	// Flags reset
 	AF.A |= d;
 	setFlagsSZ(AF.A);
 	setFlagsP(AF.A);
+	setFlagsF35();
 }
 
 void Registers::neg() {
@@ -126,6 +134,7 @@ void Registers::cpl() {
 	AF.A=~AF.A;
 	AF.B = 1;
 	AF.N = 1;
+	setFlagsF35();
 }
 
 void Registers::daa() {
@@ -152,18 +161,21 @@ void Registers::daa() {
 
 	AF.C = c;
 	setFlagsP(AF.A);
+	setFlagsF35();
 }
 
 void Registers::scf() {
 	AF.B = 0;
 	AF.N = 0;
 	AF.C = 1;
+	setFlagsF35();
 }
 
 void Registers::ccf() {
 	AF.B = AF.C;
 	AF.N = 0;
 	AF.C = !AF.C;
+	setFlagsF35();
 }
 
 // Note that RLC A affects SZC, RLCA only affects carry
@@ -182,6 +194,7 @@ void Registers::_rlc(uint8_t * r) {
 	AF.C = c;					// Carry is set to the bit shifted out
 	AF.B = 0;
 	AF.N = 0;
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -201,6 +214,7 @@ void Registers::_rrc(uint8_t * r) {
 	AF.C = c;					// Carry is set to the bit shifted out
 	AF.B = 0;
 	AF.N = 0;
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -220,6 +234,7 @@ void Registers::_rl(uint8_t * r) {
 	AF.C = c;					// Carry is set to the bit shifted out
 	AF.B = 0;
 	AF.N = 0;
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -239,6 +254,7 @@ void Registers::_rr(uint8_t * r) {
 	AF.C = c;					// Carry is set to the bit shifted out
 	AF.B = 0;
 	AF.N = 0;
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -250,6 +266,7 @@ void Registers::sla(uint8_t * r) {
 	AF.B = 0;
 	AF.N = 0;
 	setFlagsSZP(d);
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -262,6 +279,7 @@ void Registers::sra(uint8_t * r) {
 	AF.B = 0;
 	AF.N = 0;
 	setFlagsSZP(d);
+	setFlagsF35(d);
 	*r = d;						// Store result back
 }
 
@@ -273,6 +291,7 @@ void Registers::sll(uint8_t * r) {
 	AF.B = 0;
 	AF.N = 0;
 	setFlagsSZP(d);
+	setFlagsF35(d);
 	*r = d;						// Store the result back
 }
 
@@ -284,6 +303,7 @@ void Registers::srl(uint8_t * r) {
 	AF.B= 0;
 	AF.N = 0;
 	setFlagsSZP(d);
+	setFlagsF35(d);
 	*r = d;						// Store the result back
 }
 
