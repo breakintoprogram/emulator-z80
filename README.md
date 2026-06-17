@@ -1,6 +1,6 @@
-# Emulator-Z80
+# Speculation
 
-This is a simple ZX Spectrum emulator rendered using SDL2.
+Speculation is a simple ZX Spectrum emulator written in C++ and rendered using SDL2.
 
 ## Why am I doing this?
 
@@ -18,7 +18,8 @@ The core of the Agon disassembler was the ideal candidate for the basis of this 
 
 The code is targetting:
 
-- Folk who would like to understand how to write a CPU emulator from first principles
+- Folk who would like to understand how to write a CPU emulator from first principles.
+- Folk who would like to understand how to write an accurate(ish) emulator for a retro computer.
 
 ## Etiquette
 
