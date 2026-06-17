@@ -301,7 +301,9 @@ void Z80::execute_CB() {
 				reg.AF.S = (y == 7 && b != 0);
 				reg.AF.P = reg.AF.Z;
 				reg.AF.B = 1;
-				reg.AF.N = 0;		
+				reg.AF.N = 0;	
+				reg.AF.X = (y == 3 && b != 0);	
+				reg.AF.Y = (y == 5 && b != 0);	
 				setT(r ? 8 : 12);		
 			} break;
 			case 2: { // RES y,r[z]
@@ -346,7 +348,7 @@ void Z80::execute_ED() {
 						*r = b;
 					}
 					reg.setFlagsSZP(b);
-					reg.setFlagsF35(b);
+					reg.setFlagsXY(b);
 					reg.AF.B = 0;
 					reg.AF.N = 0;
 					setT(12);
@@ -382,7 +384,7 @@ void Z80::execute_ED() {
 					reg.AF.Z = (w == 0);
 					reg.AF.C = (l > 0xFFFF);
 					reg.AF.S = (w > 0x7FFF);
-					reg.setFlagsF35(w >> 8);
+					reg.setFlagsXY(w >> 8);
 					*rp1 = w;
 					setT(15);
 				} break;
@@ -430,7 +432,7 @@ void Z80::execute_ED() {
 						case 2: { // LD A,I
 							reg.AF.A = reg.I;
 							reg.setFlagsSZ(reg.AF.A);
-							reg.setFlagsF35();
+							reg.setFlagsXY();
 							reg.AF.P = reg.IFF2;
 							reg.AF.B = 0;
 							reg.AF.N = 0;
@@ -439,7 +441,7 @@ void Z80::execute_ED() {
 						case 3: { // LD A,R
 							reg.AF.A = reg.R;
 							reg.setFlagsSZ(reg.AF.A);
-							reg.setFlagsF35();
+							reg.setFlagsXY();
 							reg.AF.P = reg.IFF2;
 							reg.AF.B = 0;
 							reg.AF.N = 0;
@@ -452,7 +454,7 @@ void Z80::execute_ED() {
 							d = ((a & 0x0F) << 4) | ((d & 0xF0) >> 4);
 							mem->write(reg.HL.W, d);
 							reg.setFlagsSZP(reg.AF.A);
-							reg.setFlagsF35();
+							reg.setFlagsXY();
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(18);
@@ -464,7 +466,7 @@ void Z80::execute_ED() {
 							d = ((d & 0x0F) << 4) | (a & 0x0F);
 							mem->write(reg.HL.W, d);
 							reg.setFlagsSZP(reg.AF.A);
-							reg.setFlagsF35();
+							reg.setFlagsXY();
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(18);
@@ -580,7 +582,7 @@ void Z80::execute_x0z1() {
 		reg.AF.C = (l > 0xFFFF);
 		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
 		reg.AF.N = 0;
-		reg.setFlagsF35(w >> 8);
+		reg.setFlagsXY(w >> 8);
 		*rp1 = w;
 		setT(shift_IXY ? 15 : 11);
 	}
@@ -675,7 +677,7 @@ void Z80::execute_x0z4() {
 		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
-	reg.setFlagsF35(b);
+	reg.setFlagsXY(b);
 	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
 	reg.AF.P = (c == 0x7F);
 	reg.AF.N = 0;
@@ -704,7 +706,7 @@ void Z80::execute_x0z5() {
 		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
-	reg.setFlagsF35(b);
+	reg.setFlagsXY(b);
 	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
 	reg.AF.P = (c == 0x80);
 	reg.AF.N = 1;
