@@ -67,7 +67,7 @@ public:
 	void rla();
 	void rra();
 
-	void incR();
+	void incR(uint8_t d);
 
 	void setFlagsSZ(uint8_t d);				// Set flags SZ based upon d
 	void setFlagsP(uint8_t d);				// Set flags P based upon d

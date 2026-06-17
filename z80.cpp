@@ -179,15 +179,17 @@ void Z80::execute()
 {
 	if (data == 0xCB) {
 		execute_CB();
+		reg.incR(2);
 	}
 	else if (data == 0xED) {
 		execute_ED();
+		reg.incR(2);
 	}
 	else {
 		auto f = lut_xz[x][z];
 		(this->*f)();
+		reg.incR(1);
 	}
-	reg.incR();
 	shift_IXY = 0;
 }
 
