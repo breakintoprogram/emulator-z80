@@ -118,14 +118,14 @@ void Z80::dump(ostream& stream) {
 void Z80::dump(ostream& stream, bool newline) {
 	stream << setfill('0') << hex;
 	stream << "F=[";
-	stream << (reg.AF.S  ? 'S' : '-');
-	stream << (reg.AF.Z  ? 'Z' : '-');
-	stream << (reg.AF.F5 ? '5' : '-');
-	stream << (reg.AF.B  ? 'H' : '-');
-	stream << (reg.AF.F3 ? '3' : '-');
-	stream << (reg.AF.P  ? 'P' : '-');
-	stream << (reg.AF.N  ? 'N' : '-');
-	stream << (reg.AF.C  ? 'C' : '-');
+	stream << (reg.AF.S ? 'S' : '-');
+	stream << (reg.AF.Z ? 'Z' : '-');
+	stream << (reg.AF.Y ? 'Y' : '-');
+	stream << (reg.AF.B ? 'H' : '-');
+	stream << (reg.AF.X ? 'X' : '-');
+	stream << (reg.AF.P ? 'P' : '-');
+	stream << (reg.AF.N ? 'N' : '-');
+	stream << (reg.AF.C ? 'C' : '-');
 	stream << "] ";
 	stream << "A="  << setw(2) << (uint16_t)reg.AF.A << " ";
 	stream << "BC=" << setw(4) << reg.BC.W << " ";
@@ -1006,8 +1006,8 @@ void Z80::ldi() {
 	reg.AF.B = 0;
 	reg.AF.N = 0;
 	b+=reg.AF.A;
-	reg.AF.F3 = !!(b & 0b00001000);
-	reg.AF.F5 = !!(b & 0b00000010);
+	reg.AF.X = !!(b & 0b00001000);
+	reg.AF.Y = !!(b & 0b00000010);
 
 }
 
@@ -1022,8 +1022,8 @@ void Z80::cpi() {
 	reg.AF.P = (reg.BC.W != 0);
 	reg.AF.N = 1;
 	b-=reg.AF.B;
-	reg.AF.F3 = !!(b & 0b00001000);
-	reg.AF.F5 = !!(b & 0b00000010);
+	reg.AF.X = !!(b & 0b00001000);
+	reg.AF.Y = !!(b & 0b00000010);
 }
 
 void Z80::ini() {	
@@ -1048,8 +1048,8 @@ void Z80::ldd() {
 	reg.AF.B = 0;
 	reg.AF.N = 0;	
 	b+=reg.AF.A;
-	reg.AF.F3 = !!(b & 0b00001000);
-	reg.AF.F5 = !!(b & 0b00000010);
+	reg.AF.X = !!(b & 0b00001000);
+	reg.AF.Y = !!(b & 0b00000010);
 }
 
 void Z80::cpd() {	
@@ -1063,8 +1063,8 @@ void Z80::cpd() {
 	reg.AF.P = (reg.BC.W != 0);
 	reg.AF.N = 1;
 	b-=reg.AF.B;
-	reg.AF.F3 = !!(b & 0b00001000);
-	reg.AF.F5 = !!(b & 0b00000010);
+	reg.AF.X = !!(b & 0b00001000);
+	reg.AF.Y = !!(b & 0b00000010);
 }
 
 void Z80::ind() {	

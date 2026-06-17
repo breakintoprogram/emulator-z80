@@ -23,9 +23,9 @@ union REG {
 		uint8_t C : 1;	// 1 if carry, otherwise 0
 		uint8_t N : 1;	// 1 if last operation was a subtract, otherwise 0
 		uint8_t P : 1;	// 1 if the result has an even number of 1 bits set, or a signed operation overflows
-		uint8_t F3 : 1;	// Copies bit 3 of the result
+		uint8_t X : 1;	// ? undocumented flag
 		uint8_t B : 1;	// 1 if a carry/borrow occurred between bits 3 and 4 (for BCD operations)
-		uint8_t F5 : 1;	// Copies bit 5 of the result
+		uint8_t Y : 1;	// ? undocumented flag
 		uint8_t Z : 1;	// 1 if the result is zero
 		uint8_t S : 1;	// 1 if the result is negative
 		uint8_t A;		// The accumulator
