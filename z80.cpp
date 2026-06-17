@@ -187,9 +187,8 @@ void Z80::execute()
 		auto f = lut_xz[x][z];
 		(this->*f)();
 	}
+	reg.incR();
 	shift_IXY = 0;
-	reg.R++;
-	reg.R&=0x7F;
 }
 
 // Handle interrupts

@@ -307,6 +307,10 @@ void Registers::srl(uint8_t * r) {
 	*r = d;						// Store the result back
 }
 
+void Registers::incR() {
+	R = ((R + 1) & 0x7F | (R & 0x80));
+}
+
 void Registers::setFlagsSZ(uint8_t d) {
 	AF.S = (d >= 0x80);
 	AF.Z = (d == 0x00);
