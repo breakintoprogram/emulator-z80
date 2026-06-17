@@ -301,6 +301,11 @@ void Registers::setFlagsSZP(uint8_t d) {
 	setFlagsP(d);
 }
 
+void Registers::setFlagsF35() {
+	AF.L &= 0b11010111;
+	AF.L |= AF.A & 0b00101000;
+}
+
 bool Registers::F_NZ() { return AF.Z == 0; }
 bool Registers::F_Z()  { return AF.Z == 1; }
 bool Registers::F_NC() { return AF.C == 0; }

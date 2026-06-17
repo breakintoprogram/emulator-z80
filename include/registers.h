@@ -67,9 +67,10 @@ public:
 	void rla();
 	void rra();
 
-	void setFlagsSZ(uint8_t d);				// Set flags SZ based upon D
-	void setFlagsP(uint8_t d);				// Set flags P based upon D
-	void setFlagsSZP(uint8_t d);			// Set flags SZP based upon D
+	void setFlagsSZ(uint8_t d);				// Set flags SZ based upon d
+	void setFlagsP(uint8_t d);				// Set flags P based upon d
+	void setFlagsSZP(uint8_t d);			// Set flags SZP based upon d
+	void setFlagsF35();						// Set flags F3 and F5 based upon the accumulator
 
 	bool F_NZ();
 	bool F_Z();
