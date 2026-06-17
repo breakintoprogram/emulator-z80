@@ -37,14 +37,17 @@ private:
 //
 class PulseSegment : public TapeSegment {
 public:
+    PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1);
     PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount);
+    PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses);
+    PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses, int16_t pulseCount);
     bool play(uint16_t tStates) override;
 protected:
 private:
-    int16_t pulseWidth0;
-    int16_t pulseWidth1;
-	int16_t pulseCount;
-	bool    bit;
+    vector<int16_t> pulses;     // Array of pulse widths
+    int16_t         pulseIndex; // Current index in array of half-pulses
+	int16_t         pulseCount; // Total number of half-pulses to output
+	bool            bit;        // Bit value to output
 };
 
 // Inherited data segment class

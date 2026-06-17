@@ -88,7 +88,7 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
         // Push onto the tape array the correspoding objects for a single data block
         //
         tape.push_back(make_unique<PulseSegment>(ulaPort, 2168, 2168, mark == 0 ? 8063 : 3223));	// The long or short lead-in tone
-        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735, 2));                       		// The start of data pulse
+        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));                       		// The start of data pulse
         tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
         tape.push_back(make_unique<TapeSegment>(ulaPort, 1000));                           		    // A pause
 
@@ -164,7 +164,7 @@ bool Tape::readTZXStandardDataBlock(ifstream& file) {
     file.read((char *)&blockSize, 2);
     flag = file.peek();
     tape.push_back(make_unique<PulseSegment>(ulaPort, 2168, 2168, flag < 0x80 ? 8063 : 3223));	// The long or short lead-in tone
-    tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735, 2));                       		// The start of data pulse
+    tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));                       		// The start of data pulse
     tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
     tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));                             // A pause
     return true;
@@ -194,7 +194,7 @@ bool Tape::readTZXTurboDataBlock(ifstream& file) {
     flag = file.peek();
 
     tape.push_back(make_unique<PulseSegment>(ulaPort, pilotPulseWidth, pilotPulseWidth, flag < 0x80 ? 8063 : 3223));	
-    tape.push_back(make_unique<PulseSegment>(ulaPort, syncPulse1Width, syncPulse2Width, 2));  
+    tape.push_back(make_unique<PulseSegment>(ulaPort, syncPulse1Width, syncPulse2Width));  
     tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, dataPulse0Width, dataPulse1Width)); 
     tape.push_back(make_unique<TapeSegment>(ulaPort, pauseLength));  
     return true;
@@ -232,13 +232,16 @@ bool Tape::readTZXPureTone(ifstream& file) {
 }
 
 bool Tape::readTZXPulseSequence(ifstream& file) {
-	uint16_t pulseWidth;
-	uint8_t  pulseCount = file.get();
+	uint16_t        pulseWidth;
+	uint8_t         pulseCount = file.get();
+    vector<int16_t> pulses;
 
+    pulses.reserve(pulseCount);
 	for(int i = 0; i < pulseCount; i++) {
     	file.read((char *)&pulseWidth, 2);	
-	    tape.push_back(make_unique<PulseSegment>(ulaPort, pulseWidth, pulseWidth, 2));
+        pulses.emplace_back(pulseWidth);
 	}
+	tape.push_back(make_unique<PulseSegment>(ulaPort, pulses));
 	return true;
 }
 
@@ -364,13 +367,43 @@ bool TapeSegment::play(uint16_t tStates) {
 // - ulaPort: Pointer to the ULA port address space
 // - pulseWidth0: Width of the low pulse (in T-states)
 // - pulseWidth1: Width of the high pulse (in T-states)
+// - pulseCount: Total number of half-pulses to output
 //
 PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount) :
-    TapeSegment(ulaPort, pulseWidth0),
-    pulseWidth0(pulseWidth0),
-    pulseWidth1(pulseWidth1),
-	pulseCount(pulseCount),
-	bit(false)
+    PulseSegment(ulaPort, { pulseWidth0, pulseWidth1 }, pulseCount)
+{
+}
+// Inherited pulse segment class
+// Parameters
+// - ulaPort: Pointer to the ULA port address space
+// - pulseWidth0: Width of the low pulse (in T-states)
+// - pulseWidth1: Width of the high pulse (in T-states)
+//
+PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1) :
+    PulseSegment(ulaPort, { pulseWidth0, pulseWidth1 })
+{
+}
+//
+// Parameters
+// - ulaPort: Pointer to the ULA port address space
+// - pulses: Array of pulses to play
+//
+PulseSegment::PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses) :
+    PulseSegment(ulaPort, pulses, pulses.size())
+{
+}
+//
+// Parameters
+// - ulaPort: Pointer to the ULA port address space
+// - pulses: Array of pulses to play
+// - pulseCount: Total number of half-pulses to output
+//
+PulseSegment::PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses, int16_t pulseCount) :
+    TapeSegment(ulaPort, 0),
+    pulses(pulses),
+    pulseIndex(0),
+    pulseCount(pulseCount),
+    bit(true)
 {
 }
 
@@ -383,11 +416,12 @@ PulseSegment::PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseW
 bool PulseSegment::play(uint16_t tStates) {
 	count -= tStates;
 	if (count <= 0) {
-		if (pulseCount-- == 0) {
-			return true;
-		}
-		bit = !bit;
-		count = bit ? pulseWidth0 : pulseWidth1;
+        if (pulseCount-- < 0) {
+            return true;
+        }
+        count = pulses[pulseIndex];
+        pulseIndex = (pulseIndex + 1) % pulses.size();
+        bit = !bit;
 	}
 	writeBit(bit);
 	return false;
