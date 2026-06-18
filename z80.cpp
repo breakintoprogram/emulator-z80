@@ -664,18 +664,14 @@ void Z80::execute_x0z4() {
 	uint8_t  c;
 	uint8_t  b;
 	if (r) {
-		b = *r;
-		c = b;
-		b++;
-		*r = b;
+		c = b = *r;
+		*r = ++b;
 		setT(4);
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
-		b = mem->readByte(a);
-		c = b ;
-		b++;
-		mem->write(a, b);
+		c = b = mem->readByte(a);
+		mem->write(a, ++b);
 		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
@@ -693,18 +689,14 @@ void Z80::execute_x0z5() {
 	uint8_t  c;
 	uint8_t  b;
 	if (r) {
-		b = *r;
-		c = b;
-		b--;
-		*r = b;
+		c = b = *r;
+		*r = --b;
 		setT(4);
 	}
 	else {
 		uint16_t a = getInd(shift_IXY);
-		b = mem->readByte(a);
-		c = b ;
-		b--;
-		mem->write(a, b);
+		c = b = mem->readByte(a);
+		mem->write(a, --b);
 		setT(shift_IXY ? 23 : 11);
 	}
 	reg.setFlagsSZ(b);
@@ -890,13 +882,11 @@ void Z80::execute_x3z3() {
 			setT(4);
 		} break;
 		case 6: { // DI
-			reg.IFF1 = false;
-			reg.IFF2 = false;
+			reg.IFF1 = reg.IFF2 = false;
 			setT(4);
 		} break;
 		case 7: { // EI
-			reg.IFF1 = true;
-			reg.IFF2 = true;
+			reg.IFF1 = reg.IFF2 = true;
 			setT(4);
 		} break;
 	}
