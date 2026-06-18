@@ -9,6 +9,11 @@
 
 #include "mem.h"
 
+Mem::Mem(function<bool(uint16_t)> isRAM) :
+	isRAM(isRAM)
+{
+}
+
 uint8_t Mem::readByte(uint16_t address) {
     return ram[address];
 }
@@ -18,7 +23,7 @@ uint16_t Mem::readWord(uint16_t address) {
 }
 
 void Mem::write(uint16_t address, uint8_t data) {
-    if(address >= 0x4000) {
+    if(isRAM(address)) {
         ram[address] = data;
     }
 }

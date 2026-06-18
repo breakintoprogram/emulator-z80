@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream> 
 #include <filesystem>
+#include <functional>
 
 #include "defines.h"
 
@@ -20,6 +21,8 @@ using namespace std;
 
 class Mem {
 public:
+    Mem(function<bool(uint16_t)> isRAM);
+
     uint8_t  readByte(uint16_t address);
     uint16_t readWord(uint16_t address);
     void     write(uint16_t address, uint8_t data);
@@ -28,4 +31,6 @@ public:
     uint8_t* getRam();
 private:
     uint8_t ram[RAM_SIZE];
+
+    function<bool(uint16_t)> isRAM; // Lambda function for checking if memory is writable
 };

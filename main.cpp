@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	SDL_Event  e;
 	auto       nextTick = steady_clock::now() + speed;
 
-	mem = new Mem();
+	mem = new Mem([](uint16_t address)->bool { return address >= 0x4000; });
 
 	// Handle any command-line parameters
 	//
