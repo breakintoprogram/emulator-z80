@@ -356,9 +356,7 @@ void Z80::execute_ED() {
 				} break;	
 				case 1: { // OUT (C)
 					uint8_t* r = t_r[0][y];
-					if (r) {
-						ports->out(reg.BC.W, *r);
-					}
+					ports->out(reg.BC.W, r ? *r : 0);
 					setT(12);
 				} break;
 				case 2: { // ADC/SBC
