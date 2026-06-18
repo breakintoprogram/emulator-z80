@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 
 #include "defines.h"
@@ -38,7 +39,8 @@ public:
 	bool    IFF1;
 	bool    IFF2;
 
-	void ex(REG* rp1, REG* rp2);
+	void exaf();
+	void exdehl();
 	void exx();
 
 	void adda(uint8_t d);

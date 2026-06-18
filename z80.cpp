@@ -525,7 +525,7 @@ void Z80::execute_x0z0()
 		// EX AF,AF'
 		//
 		case 1: {
-			reg.ex(&reg.AF, &reg.AF_);
+			reg.exaf();
 			setT(4);
 			break;
 		}
@@ -886,7 +886,7 @@ void Z80::execute_x3z3() {
 			setT(shift_IXY ? 23 : 19);
 		} break;
 		case 5: { // EX DE,HL
-			reg.ex(&reg.DE, &reg.HL);
+			reg.exdehl();
 			setT(4);
 		} break;
 		case 6: { // DI

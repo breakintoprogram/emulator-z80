@@ -16,17 +16,18 @@ Registers::Registers() :
 {
 }
 
-void Registers::ex(REG* rp1, REG* rp2)
-{
-	uint16_t d = (*rp1).W;
-	(*rp1).W = (*rp2).W;
-	(*rp2).W = d;
+void Registers::exaf() {
+	swap(AF, AF_);
+}
+
+void Registers::exdehl() {
+	swap(DE, HL);
 }
 
 void Registers::exx() {
-	ex(&HL, &HL_);
-	ex(&DE, &DE_);
-	ex(&BC, &BC_);
+	swap(HL, HL_);
+	swap(DE, DE_);
+	swap(BC, BC_);
 }
 
 void Registers::adda(uint8_t d) {
