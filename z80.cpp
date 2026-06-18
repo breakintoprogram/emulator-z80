@@ -93,9 +93,9 @@ void Z80::run() {
 			if (getT() == 0) {
 				throw runtime_error("No T-states registered for this instruction");
 			}
+			interrupts();
 		} while (blockop);
 	}
-	interrupts();
 	if (trace) {
 		traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
 	}
