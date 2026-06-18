@@ -29,6 +29,7 @@ public:
 
 	uint16_t PC;
 	uint16_t SP;
+	uint16_t WZ;
 
 	uint8_t I;
 	uint8_t R;
