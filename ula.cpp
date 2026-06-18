@@ -17,7 +17,7 @@
 
 Ula::Ula(Mem* mem, Ports* ports, int scale) :
 	ram(mem->getRam() + 0x4000),
-	ulaPort(ports->getPortsOut()),
+	ports(ports),
 	state(0),
 	scanX(0),
 	scanY(0),
@@ -111,7 +111,8 @@ void Ula::render(uint16_t tStates) {
 // State machine to render the screen 8 pixels at a time, including the borders
 //
 void Ula::render() {
-	uint32_t borderColour = palette[(*ulaPort) & 0x07];
+	uint8_t* borderPort = ports->getPortsOut();
+	uint32_t borderColour = palette[(*borderPort) & 0x07];
 	bool    flash = frame & 0x10;
 
 	switch(state) {
@@ -160,7 +161,9 @@ void Ula::render() {
 			if(--scanC == 0) {				// Count down until we've filled the scanline
 				scanC = HBORDER / 8;		// Set up the next state
 				state = 3;
+				attr = 0xFF					// We've done, so reset the floating bus value
 			}
+			ports->setFloating(attr);		// Set the floating bus
 		} break;
 		//
 		// Right border

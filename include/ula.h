@@ -31,9 +31,9 @@ private:
     SDL_Window* win = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Texture* texture = NULL;
-    
+
+	Ports*   ports = NULL;
     uint8_t* ram = NULL;
-    uint8_t* ulaPort = NULL;
 
     int       videoScale;
     int       state;

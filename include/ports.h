@@ -22,10 +22,12 @@ public:
 	uint8_t  in(uint16_t address);
 	void     out(uint16_t address, uint8_t data);
 
+	void     setFloating(uint8_t data);
 	uint8_t* getPortsIn();
 	uint8_t* getPortsOut();
 
 private:
 	uint8_t ports_in[256];	// Ports for the IN instruction, written to by the peripherals
 	uint8_t ports_out[1];	// Ports for the OUT instruction, written to by the Z80
+	uint8_t floating;		// Value for floating ports
 };

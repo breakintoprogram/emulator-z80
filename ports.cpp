@@ -9,7 +9,9 @@
 
 #include "ports.h"
 
-Ports::Ports() {
+Ports::Ports() :
+	floating(0xFF)
+{
 	for(int i=0; i<=255; i++) {
         ports_in[i] = 0b10111111;
     }
@@ -17,11 +19,18 @@ Ports::Ports() {
 }
 
 uint8_t Ports::in(uint16_t address) {
-	return ports_in[address >> 8];
+	if ((address & 0x0001) == 0) {		// Only interested in even numbered ports
+		return ports_in[address >> 8];	// Return the port value
+	}
+	return floating;					// Odd ports return the floating bus value
 }
 
 void Ports::out(uint16_t address, uint8_t data) {
 	ports_out[0] = data;
+}
+
+void Ports::setFloating(uint8_t data) {
+	floating = data;
 }
 
 uint8_t* Ports::getPortsIn() {
