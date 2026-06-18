@@ -81,7 +81,8 @@ void Z80::reset()
 //
 void Z80::run() {
 	if (halted) {			// If we are halted
-		interrupts();		// The CPU effectively runs NOPs and still handles interrupts
+		interrupts();		// Handle any interrupts
+		setT(4);			// Effectively running NOPs
 	}
 	else {					// CPU is not halted at this point
 		debug();
