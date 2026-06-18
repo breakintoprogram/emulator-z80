@@ -26,6 +26,7 @@ public:
 	void render(uint16_t tStates);
     bool getvBlank();
     void setvBlank(bool b);
+    bool isReadingRAM();
 private:
     SDL_Window* win = NULL;
     SDL_Renderer* renderer = NULL;

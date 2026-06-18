@@ -59,6 +59,10 @@ void Ula::setvBlank(bool b) {
 	vBlank = b;
 }
 
+bool Ula::isReadingRAM() {
+	return state == 2;
+}
+
 void Ula::renderByte(uint32_t border) {
 	for(int i = 0; i < 8; i++) {
 		*scanP++ = border;	
@@ -123,7 +127,7 @@ void Ula::render() {
 			}
 		} break;
 		//
-		// Left and right borders
+		// Left border
 		//
 		case 1: {
 			renderByte(borderColour);		// Render 8 pixels worth of border
