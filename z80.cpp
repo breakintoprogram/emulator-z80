@@ -80,9 +80,13 @@ void Z80::reset()
 // Run one CPU cycle
 //
 void Z80::run() {
-	if (!halted) {
+	if (halted) {			// If we are halted
+		interrupts();		// The CPU effectively runs NOPs and still handles interrupts
+	}
+	else {					// CPU is not halted at this point
 		debug();
-		do {
+		interrupts();		// Handle any interrupts
+		do {				// Go into a loop running a single cycle
 			fetch();
 			while (data == 0xDD || data == 0xFD) {
 				shift_IXY = ((data & 0b00100000) >> 5) + 1;
@@ -95,7 +99,6 @@ void Z80::run() {
 			}
 		} while (blockop);
 	}
-	interrupts();
 	if (trace) {
 		traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
 	}
@@ -202,9 +205,9 @@ void Z80::interrupts() {
 	//
 	if (interrupt) {						// If an interrupt has been triggered
 		interrupt = false;					// Acknowledge
-		halted = false;						// CPU is no longer halted
 		if (reg.IFF1) {						// Are interrupts enabled?
-			reg.IFF1 = false;				// Disable interrupts
+			reg.IFF1 = false;				// Yes, so disable interrupts
+			halted = false;					// Set CPU to be running
 			if (reg.IM == 0) {
 				throw runtime_error("interrupts: IM 0 not implemented");
 			}
