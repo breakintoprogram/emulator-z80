@@ -26,7 +26,9 @@ uint8_t Ports::in(uint16_t address) {
 }
 
 void Ports::out(uint16_t address, uint8_t data) {
-	ports_out[0] = data;
+	if ((address & 0x0001) == 0) {		// Only interested in even numbered ports
+		ports_out[0] = data;
+	}
 }
 
 void Ports::setFloating(uint8_t data) {
