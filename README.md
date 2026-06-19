@@ -63,6 +63,8 @@ The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. 
 - `F2` Turbu speed x 2
 - `F3` Turbu speed x 4
 - `F4` Turbu speed x 8
+- `F10` Start the tape
+- `F11` Stop the tape
 - `F12` Enter the debugger
 
 When in the debugger:
@@ -74,7 +76,6 @@ When in the debugger:
 - `t` enable console debugging trace
 - `o` output registers to console
 - `r` reset the CPU
-- `p` play the loaded tape image
 
 ### Tape Interface
 

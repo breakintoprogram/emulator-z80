@@ -74,11 +74,15 @@ public:
     Tape(Ports* ports);
 
     bool open(string filename);
+    void start();
+    void stop();
+    bool isPaused(void);
     void play(uint16_t tStates);
 private:
     uint8_t*  ulaPort = NULL;
     vector<unique_ptr<TapeSegment>> tape;
 
+    bool      paused;
 	streampos loopPos;
 	uint16_t  loopCount;
 

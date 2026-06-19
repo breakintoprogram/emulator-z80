@@ -31,9 +31,50 @@
 Tape::Tape(Ports* ports) :
     ulaPort(ports->getPortsIn()),   // Pointer to the 256-byte ports array
     tape(),                         // Empty vector for TapeSegment objects (ToneSegment, PulseSegment, DataSegment and DelaySegment)
+    paused(true),                   // Flag to indicate if the tape is paused or not
 	loopPos(0),						// Loop position
 	loopCount(0)					// Loop counter
 {
+}
+
+// Play a single time slice of the loader
+//
+// This function steps through the tape object created in the open method and will execute the play method on the one
+// at position 0 in the array until that element's isFinished method returns true. It will then remove that element
+// from the array and rinse, lather and repeat until all the elements are done. Each object in the tape array is
+// responsible for playing the appropriate tones.
+//
+// Parameters:
+// - tStates: Number of T-states to deduct from the pulse counters
+//
+void Tape::play(uint16_t tStates) {
+    if (!paused && tape.size() > 0) {		// If not paused and while there are segments to play
+        if (tape[0]->play(tStates)) {		// Play the segment, if it flags it has finished then
+	        tape.erase(tape.begin());		// Erase that segment; rinse, lather and repeat
+        }
+    }
+}
+
+void Tape::start() {
+    if (tape.size() == 0) {
+        cout << "No tape file loaded" << endl;
+        return;
+    }
+    paused = false;
+    cout << "Tape started" << endl;
+}
+
+void Tape::stop() {
+    if (tape.size() == 0) {
+        cout << "No tape file loaded" << endl;
+        return;
+    }
+    paused = true;
+    cout << "Tape stopped" << endl;
+}
+
+bool Tape::isPaused(void) {
+    return paused;
 }
 
 // Open an emulator file and process it
@@ -309,24 +350,6 @@ bool Tape::readTZXArchiveInfo(ifstream& file) {
 		cout << endl << "- [0x" << setw(2) << setfill('0') << hex << (uint16_t)id << "]: " << str;
 	}
 	return true;
-}
-
-// Play a single time slice of the loader
-//
-// This function steps through the tape object created in the open method and will execute the play method on the one
-// at position 0 in the array until that element's isFinished method returns true. It will then remove that element
-// from the array and rinse, lather and repeat until all the elements are done. Each object in the tape array is
-// responsible for playing the appropriate tones.
-//
-// Parameters:
-// - tStates: Number of T-states to deduct from the pulse counters
-//
-void Tape::play(uint16_t tStates) {
-    if (tape.size() > 0) {					// While there are segments to play
-        if (tape[0]->play(tStates)) {		// Play the segment, if it flags it has finished then
-	        tape.erase(tape.begin());		// Erase that segment; rinse, lather and repeat
-        }
-    }
 }
 
 // Base tape segment class, just plays nothing

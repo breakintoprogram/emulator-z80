@@ -53,11 +53,16 @@ int main(int argc, char* argv[])
 	bool       interrupts = true;
 	auto       speed = 20000us;
 	int        scale = 1;
-	string     tapeFile;
 	SDL_Event  e;
 	auto       nextTick = steady_clock::now() + speed;
 
-	mem = new Mem([](uint16_t address)->bool { return address >= 0x4000; });
+	mem = new Mem(						// Memory interface with lambda for 'is RAM' check
+		[](uint16_t address)->bool {
+			return address >= 0x4000;
+		}
+	);
+	ports = new Ports();				// I/O ports (keyboard, ULA)
+	tape = new Tape(ports);				// Tape interface
 
 	// Handle any command-line parameters
 	//
@@ -68,13 +73,18 @@ int main(int argc, char* argv[])
 		string token(argument.substr(0, delimiter));
 		string parameter(delimiter == string::npos ? "" : argument.substr(delimiter + 1));
 	
-		if(token == "s" || token =="scale") {
+		if (token == "s" || token =="scale") {
 			scale = stoi(parameter);
 			continue;
 		}
 
 		if (token == "l" || token == "load") {
-			tapeFile = parameter;
+			cout << "Loading tape file " << parameter << endl;
+			if (!tape->open(parameter)) {
+				cout << "Error: Could not open tape file";
+				cleanup();
+				return 1;
+			}
 			continue;
 		}
 	}
@@ -90,10 +100,8 @@ int main(int argc, char* argv[])
 	// Initialise the rest of the system
 	//
 	try  {
-		ports = new Ports();				// I/O ports (keyboard, ULA)
 		ula = new Ula(mem, ports, scale);	// ULA (video)
 		keyboard = new Keyboard(ports);		// Keyboard interface
-		tape = new Tape(ports);				// Tape interface
 		z80 = new Z80(mem, ports);			// The Z80 CPU itself
 	}
 	catch(const exception& e) {
@@ -124,6 +132,8 @@ int main(int argc, char* argv[])
 						case SDLK_F2: speed = 10000us; break;
 						case SDLK_F3: speed =  5000us; break;
 						case SDLK_F4: speed =  2500us; break;
+						case SDLK_F10: tape->start(); break;
+						case SDLK_F11: tape->stop(); break;
 						case SDLK_F12: z80->setSingleStep(true); break;
 					}
 					if(z80->getSingleStep()) {
@@ -135,11 +145,6 @@ int main(int argc, char* argv[])
 							case SDLK_g: z80->setSingleStep(false); break;
 							case SDLK_o: z80->dump(cout, true); break;
 							case SDLK_r: z80->reset(); break;
-							case SDLK_p: {
-								if (!tape->open(tapeFile)) {
-									cout << "Warning: Could not open " << tapeFile << endl;
-								};
-							} break;
 						}
 					}
 					else {
