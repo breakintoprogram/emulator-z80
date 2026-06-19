@@ -48,29 +48,32 @@ Tape::Tape(Ports* ports) :
 // - tStates: Number of T-states to deduct from the pulse counters
 //
 void Tape::play(uint16_t tStates) {
-    if (!paused && tape.size() > 0) {		// If not paused and while there are segments to play
-        if (tape[0]->play(tStates)) {		// Play the segment, if it flags it has finished then
-	        tape.erase(tape.begin());		// Erase that segment; rinse, lather and repeat
+    if (!paused) {						// If not paused and while there are segments to play
+        if (tape[0]->play(tStates)) {	// Play the segment, if it flags it has finished then
+	        tape.erase(tape.begin());	// Erase that segment; rinse, lather and repeat
+			if (tape.size() == 0) {
+				stop();
+			}
         }
     }
 }
 
 void Tape::start() {
-    if (tape.size() == 0) {
-        cout << "No tape file loaded" << endl;
-        return;
-    }
-    paused = false;
-    cout << "Tape started" << endl;
+	if (paused) {
+		if (tape.size() == 0) {
+			cout << "No tape file loaded" << endl;
+			return;
+		}
+		paused = false;
+		cout << "Tape started" << endl;
+	}
 }
 
 void Tape::stop() {
-    if (tape.size() == 0) {
-        cout << "No tape file loaded" << endl;
-        return;
-    }
-    paused = true;
-    cout << "Tape stopped" << endl;
+	if (!paused) {
+    	paused = true;
+    	cout << "Tape stopped" << endl;
+	}
 }
 
 bool Tape::isPaused(void) {
