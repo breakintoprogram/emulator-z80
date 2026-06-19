@@ -88,10 +88,9 @@ bin/emulator-z80 l=games/stop_the_express.tap
 Do the following to load the file:
 
 - `LOAD ""` from BASIC
-- `F12` then `p` to start the tape file playing
-- `G` to restart the Spectrum
+- `F10` to start the tape file playing
 
-It should start loading.
+It should start loading. For games that have a multipart load, i.e. Gauntlet, press `F11` to stop the tape as directed by the game.
 
 NB: The tape interface only supports TAP and a subset of TZX files at the moment.
 
@@ -101,7 +100,7 @@ I've included Raxoft's excellent [Zilog Z80 CPU Test Suite](https://github.com/r
 in the tests folder as TAP files. For more details on the tests please go to their GitHub page
 or read the [readme.txt](tests/readme.txt) in the tests folder.
 
-At present time, the emulator passes the z80doc test, with the exception of LD A,R.
+At present time, the emulator passes the z80doc test, and most of the z80full test.
 
 Follow the instructions for loading tape files to run them.
 
@@ -122,4 +121,11 @@ Thank you to Amstrad and Sky Group for allowing developers to use and distribute
 
 Patrik Rak (Raxoft) for his excellent Zilog Z80 CPU test suite (link above).
 
-Stop the Express was published by Sinclair Research Ltd (UK) and created by Hudson Soft (Japan). I downloaded the TAP and TZX files from the [Spectrum Computing website](https://spectrumcomputing.co.uk/entry/4916/ZX-Spectrum/Stop_the_Express) and have provided them here for testing purposes only.
+Stop the Express was published by Sinclair Research Ltd (UK) and created by Hudson Soft (Japan).
+
+Vectron was originally published by Insight Software and developed by Mike Follin, Mark Wilson, Peter Gough and Tim Follin. 
+
+I sourced these from the Spectrum Computing website (links below) and are provided in this repo for testing purposes only.
+
+- [Stop the Express](https://spectrumcomputing.co.uk/entry/4916/ZX-Spectrum/Stop_the_Express)
+- [Vectron](https://spectrumcomputing.co.uk/entry/5548/ZX-Spectrum/Vectron)
