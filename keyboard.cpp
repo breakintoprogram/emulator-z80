@@ -72,6 +72,8 @@ void Keyboard::port(uint8_t p, uint8_t bit, bool pressed) {
 	uint16_t b = 1 << bit;
 	uint8_t* i = ports->getPortsIn();
 	uint8_t  d = i[p];
+    uint8_t  v = pressed ? d &= ~b : d |= b;
 
-	i[p] = pressed ? d &= ~b : d |= b;
+	i[p] = v;   // Write the value to the correct port
+    i[0] = v;   // And a copy for port 0x00FE for routines that check for any key being pressed
 }
