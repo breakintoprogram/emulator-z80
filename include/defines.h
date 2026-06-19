@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#define EMULATOR_NAME "Speculation"
 #define RAM_SIZE 0x10000
 
 union REG {

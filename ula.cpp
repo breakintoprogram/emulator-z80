@@ -31,7 +31,7 @@ Ula::Ula(Mem* mem, Ports* ports, int scale) :
 {
     SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow(
-		"emulator",
+		EMULATOR_NAME,
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width * videoScale,
