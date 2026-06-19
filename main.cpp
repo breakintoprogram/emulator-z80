@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 		if (token == "l" || token == "load") {
 			cout << "Loading tape file " << parameter << endl;
 			if (!tape->open(parameter)) {
-				cout << "Error: Could not open tape file";
+				cout << "Error: Could not open tape file" << endl;
 				cleanup();
 				return 1;
 			}
