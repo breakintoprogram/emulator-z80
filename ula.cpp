@@ -161,7 +161,7 @@ void Ula::render() {
 			if(--scanC == 0) {				// Count down until we've filled the scanline
 				scanC = HBORDER / 8;		// Set up the next state
 				state = 3;
-				attr = 0xFF					// We've done, so reset the floating bus value
+				attr = 0xFF;				// We've done, so reset the floating bus value
 			}
 			ports->setFloating(attr);		// Set the floating bus
 		} break;
