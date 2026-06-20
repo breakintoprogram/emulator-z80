@@ -127,14 +127,14 @@ bool Tape::openTAP(ifstream& file, uintmax_t filesize) {
 	uint8_t   mark;	
     do {
     	file.read((char *)&blockSize, 2);	    // Read in the data block size from the TAP file
-		mark = file.peek();                     // The next byte is the type of block (0 = full lead-in, 1 = shorter data block lead-in)
+		mark = file.peek();                     // The next byte is the type of block (0x00 = full lead-in, 0xFF = shorter data block lead-in)
         //
         // Push onto the tape array the correspoding objects for a single data block
         //
         tape.push_back(make_unique<PulseSegment>(ulaPort, 2168, 2168, mark == 0 ? 8063 : 3223));	// The long or short lead-in tone
-        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));                       		// The start of data pulse
-        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));      		// The data itself
-        tape.push_back(make_unique<TapeSegment>(ulaPort, 1000));                           		    // A pause
+        tape.push_back(make_unique<PulseSegment>(ulaPort, 667, 735));								// The start of data pulse
+        tape.push_back(make_unique<DataSegment>(ulaPort, file, blockSize, 855, 1710));				// The data itself
+        tape.push_back(make_unique<TapeSegment>(ulaPort, mark == 0 ? 1000 : 32767));				// A pause
 
     	bytesRemaining -= (blockSize + 2);      // Decrease number of bytes remaining
     }
