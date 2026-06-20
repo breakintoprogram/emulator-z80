@@ -14,8 +14,12 @@ Keyboard::Keyboard(Ports* ports) : ports(ports)
 }
 
 void Keyboard::press(SDL_Keycode sym, bool pressed) {
+	auto it = keys.find(sym);			// Does the key exist in the table?
+	if (it == keys.end()) {				// No, so don't do anything
+		return;
+	}
+	Key*     k = &it->second;			// Pointer to the currently pressed PC key
 	uint8_t* i = ports->getPortsIn();	// Pointer to array of IN ports
-	Key*     k = &keys[sym];			// Pointer to the currently pressed PC key
 	uint8_t  d = i[k->port];			// The current data for that keys port
 	//
 	// If the key is pressed, then we need to AND (zero) out the bit
