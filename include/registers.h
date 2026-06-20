@@ -70,6 +70,10 @@ public:
 	void rla();
 	void rra();
 
+	void add(uint16_t* rp, uint16_t d);
+	void adc(uint16_t* rp, uint16_t d);
+	void sbc(uint16_t* rp, uint16_t d);
+
 	void incR(uint8_t d);
 
 	void setFlagsSZ(uint8_t d);				// Set flags SZ based upon d

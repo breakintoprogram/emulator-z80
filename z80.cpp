@@ -365,31 +365,14 @@ void Z80::execute_ED() {
 					setT(12);
 				} break;
 				case 2: { // ADC/SBC
-					uint8_t c = reg.AF.C;
 					uint16_t* rp1 = t_rp1[0][2]; // HL
 					uint16_t* rp2 = t_rp1[0][p]; // The other register pair
-					uint32_t  l;
-					uint16_t  w;
 					if (q == 0) {
-						l = ((*rp1) - (*rp2) - c);
-						w = l & 0xFFFF;
-						reg.AF.B = (((*rp1 & 0xFFF) - (*rp2 & 0xFFF) - c) & 0x1000) != 0;
-						reg.AF.P = ((*rp1 ^ *rp2) & (*rp1 ^ w) & 0x8000) != 0;
-						reg.AF.N = 1;
-
+						reg.sbc(rp1, *rp2);
 					}
 					else {
-						l = ((*rp1) + (*rp2) + c);
-						w = l & 0xFFFF;
-						reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF) + c) & 0x1000) != 0;
-						reg.AF.P = ((*rp1 ^ ~*rp2) & (*rp1 ^ w) & 0x8000) != 0;
-						reg.AF.N = 0;
+						reg.adc(rp1, *rp2);
 					}
-					reg.AF.Z = (w == 0);
-					reg.AF.C = (l > 0xFFFF);
-					reg.AF.S = (w > 0x7FFF);
-					reg.setFlagsXY(w >> 8);
-					*rp1 = w;
 					setT(15);
 				} break;
 				case 3: { // Load register pair from/to immediate address
@@ -581,13 +564,7 @@ void Z80::execute_x0z1() {
 	else {			// ADD HL,rr
 		uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL/IX/IY
 		uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
-		uint32_t  l = (*rp1) + (*rp2);
-		uint16_t  w = (l & 0xFFFF);
-		reg.AF.C = (l > 0xFFFF);
-		reg.AF.B = (((*rp1 & 0xFFF) + (*rp2 & 0xFFF)) & 0x1000) != 0;
-		reg.AF.N = 0;
-		reg.setFlagsXY(w >> 8);
-		*rp1 = w;
+		reg.add(rp1, *rp2);
 		setT(shift_IXY ? 15 : 11);
 	}
 }

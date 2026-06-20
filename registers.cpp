@@ -308,6 +308,44 @@ void Registers::srl(uint8_t * r) {
 	*r = d;						// Store the result back
 }
 
+void Registers::add(uint16_t* rp, uint16_t d) {
+	uint32_t  l = *rp + d;
+	uint16_t  w = (l & 0xFFFF);
+	AF.C = (l > 0xFFFF);
+	AF.B = (((*rp & 0xFFF) + (d & 0xFFF)) & 0x1000) != 0;
+	AF.N = 0;
+	setFlagsXY(w >> 8);
+	*rp = w;
+}
+
+void Registers::sbc(uint16_t *rp, uint16_t d) {
+	uint8_t c = AF.C;
+	uint32_t  l = *rp - d - c;
+	uint16_t  w = l & 0xFFFF;
+	AF.B = (((*rp & 0xFFF) - (d & 0xFFF) - c) & 0x1000) != 0;
+	AF.P = ((*rp ^ d) & (*rp ^ w) & 0x8000) != 0;
+	AF.N = 1;	
+	AF.Z = (w == 0);
+	AF.C = (l > 0xFFFF);
+	AF.S = (w > 0x7FFF);
+	setFlagsXY(w >> 8);
+	*rp = w;	
+}
+
+void Registers::adc(uint16_t *rp, uint16_t d) {
+	uint8_t c = AF.C;
+	uint32_t  l = *rp + d + c;
+	uint16_t  w = l & 0xFFFF;
+	AF.B = (((*rp & 0xFFF) + (d & 0xFFF) + c) & 0x1000) != 0;
+	AF.P = ((*rp ^ ~d) & (*rp ^ w) & 0x8000) != 0;
+	AF.N = 0;
+	AF.Z = (w == 0);
+	AF.C = (l > 0xFFFF);
+	AF.S = (w > 0x7FFF);
+	setFlagsXY(w >> 8);
+	*rp = w;	
+}
+
 void Registers::incR(uint8_t d) {
 	R = ((R + d) & 0x7F | (R & 0x80));
 }
