@@ -30,7 +30,7 @@ using namespace std;
 //
 struct Key {
 	uint8_t port;	// The Z80 port the key is on
-	uint8_t column;	// The column (bit) in that port
+	uint8_t bit;	// The bit (column) in that port
 };
 
 class Keyboard {
@@ -40,7 +40,6 @@ public:
     void   press(SDL_Keycode sym, bool pressed);
 private:
     Ports* ports;
-    void   port(uint8_t p, uint8_t bit, bool pressed);
 
 	// Map of SDL2 keypresses to Spectrum port and columns
 	//
