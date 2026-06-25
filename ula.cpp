@@ -99,7 +99,7 @@ void Ula::renderTexture() {
 // Parameters: 
 // - tStates: Number of T-states to deduct from the tally
 //
-void Ula::render(uint16_t tStates) {
+void Ula::render(uint32_t tStates) {
 	const uint16_t td = 224 * 1024 / 44;	// The number of T-states for 8 pixels
 	tcount += (tStates * 1024);				// Add last T-states executed to the running tally, multiplied by 1024
 	while(tcount >= td && ! getvBlank()) {	// Whilst we've got T-states to run, and there's not been a vblank then

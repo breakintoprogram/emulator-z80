@@ -23,7 +23,7 @@ public:
     Ula(Mem* mem, Ports* ports, int scale);
     ~Ula();
 
-	void render(uint16_t tStates);
+	void render(uint32_t tStates);
     bool getvBlank();
     void setvBlank(bool b);
     bool isReadingRAM();

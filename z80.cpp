@@ -52,7 +52,7 @@ void Z80::setTrace(bool value) {
 	trace = value;
 }
 
-uint16_t Z80::getT() {
+uint32_t Z80::getT() {
 	return t;
 }
 

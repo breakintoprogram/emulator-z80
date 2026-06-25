@@ -47,7 +47,7 @@ Tape::Tape(Ports* ports) :
 // Parameters:
 // - tStates: Number of T-states to deduct from the pulse counters
 //
-void Tape::play(uint16_t tStates) {
+void Tape::play(uint32_t tStates) {
     if (!paused) {						// If not paused and while there are segments to play
         if (tape[0]->play(tStates)) {	// Play the segment, if it flags it has finished then
 	        tape.erase(tape.begin());	// Erase that segment; rinse, lather and repeat
@@ -382,7 +382,7 @@ void TapeSegment::writeBit(uint8_t bit) {
 // Returns:
 // - false if still playing, true if finished
 //
-bool TapeSegment::play(uint16_t tStates) { 
+bool TapeSegment::play(uint32_t tStates) { 
     writeBit(0);                            // Just keep writing 0's out to the EAR port
     count -= tStates;                       // Adjust the delay
     return count <= 0;						// Flag when we're finished
@@ -439,7 +439,7 @@ PulseSegment::PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses, int16_t pul
 // Returns:
 // - false if still playing, true if finished
 //
-bool PulseSegment::play(uint16_t tStates) {
+bool PulseSegment::play(uint32_t tStates) {
 	count -= tStates;
 	if (count <= 0) {
         if (pulseCount-- < 0) {
@@ -480,7 +480,7 @@ DataSegment::DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, i
 // Returns:
 // - false if still playing, true if finished
 //
-bool DataSegment::play(uint16_t tStates) {    
+bool DataSegment::play(uint32_t tStates) {    
     count -= tStates;
     if(count <= 0) {                   		// If the pulse has ended (or not started) then
         if(bit) {                           // If we've finished (or not started) playing the square wave

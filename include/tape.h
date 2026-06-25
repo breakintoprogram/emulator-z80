@@ -25,10 +25,10 @@ using namespace std;
 class TapeSegment{
 public:
     TapeSegment(uint8_t* ulaPort, int16_t count);
-    virtual bool play(uint16_t tStates);
+    virtual bool play(uint32_t tStates);
 protected:
     uint8_t* ulaPort;
-	int16_t  count;
+	int32_t  count;
     void     writeBit(uint8_t bit);
 private:
 };
@@ -41,7 +41,7 @@ public:
     PulseSegment(uint8_t* ulaPort, int16_t pulseWidth0, int16_t pulseWidth1, int16_t pulseCount);
     PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses);
     PulseSegment(uint8_t* ulaPort, vector<int16_t> pulses, int16_t pulseCount);
-    bool play(uint16_t tStates) override;
+    bool play(uint32_t tStates) override;
 protected:
 private:
     vector<int16_t> pulses;     // Array of pulse widths
@@ -55,7 +55,7 @@ private:
 class DataSegment : public TapeSegment {
 public:
     DataSegment(uint8_t* ulaPort, ifstream& file, uint16_t blockSize, int16_t pulseWidth0, int16_t pulseWidth1);
-    bool play(uint16_t tStates) override;
+    bool play(uint32_t tStates) override;
 protected:
 private:
     ifstream&       file;
@@ -77,7 +77,7 @@ public:
     void start();
     void stop();
     bool isPaused(void);
-    void play(uint16_t tStates);
+    void play(uint32_t tStates);
 private:
     uint8_t*  ulaPort = NULL;
     vector<unique_ptr<TapeSegment>> tape;

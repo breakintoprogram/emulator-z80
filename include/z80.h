@@ -32,7 +32,7 @@ public:
 	void     setSingleStep(bool value);
 	bool     getTrace();
 	void     setTrace(bool value);
-	uint16_t getT();
+	uint32_t getT();
 
 	void     dump(ostream& stream);
 	void     dump(ostream& stream, bool newline);
@@ -53,7 +53,7 @@ private:
 	uint8_t	  z;
 	uint8_t	  p;
 	uint8_t	  q;
-	uint16_t  t;				// T-state counter
+	uint32_t  t;				// T-state counter
 	uint8_t	  shift_IXY;		// Use registers 0=HL, 1=IX, 2=IY - includes undocumented IXL,IXY, IYL and IYH registers
 	bool	  interrupt;		// Set when an interrupt has been requested
 	bool      halted;			// Is the CPU in a halt state?
