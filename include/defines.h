@@ -13,7 +13,8 @@
 
 #define EMULATOR_NAME "Speculation"
 #define RAM_SIZE 0x10000
-#define LOG(s) (*logger)() << s
+#define LOG(s) logger->getStream() << s
+#define LOGIF(b, s) if (b) LOG(s)
 
 union REG {
 	uint16_t W;
