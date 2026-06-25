@@ -20,6 +20,10 @@ class Logger {
 public:
 	Logger(ostream& stream);
 
+	virtual ostream& operator()() {
+		return stream;
+	}
+
 	ostream& getStream();
 private:
 	ostream&  stream;		// The traceStream (defaults to cout)

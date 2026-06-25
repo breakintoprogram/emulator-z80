@@ -104,7 +104,7 @@ void Z80::run() {
 		// Tail the debug output with the T-state value
 		//
 		if (trace) {
-			logger->getStream() << "(" << dec << (uint16_t)getT() << "T)" << endl;
+			LOG("(" << dec << (uint16_t)getT() << "T)" << endl);
 		}
 		//
 		// Throw an error if the T-state value is 0, indicates an emulator issue
@@ -119,41 +119,38 @@ void Z80::run() {
 //
 void Z80::debug() {
 	if (trace) {
-		dump(logger->getStream());
+		dump(false);
 	}
 	if (find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 		setSingleStep(true);
 	}
 }
 
-void Z80::dump(ostream& stream) {
-	dump(stream, false);
-}
-void Z80::dump(ostream& stream, bool newline) {
-	stream << setfill('0') << hex;
-	stream << "F=[";
-	stream << (reg.AF.S ? 'S' : '-');
-	stream << (reg.AF.Z ? 'Z' : '-');
-	stream << (reg.AF.Y ? 'Y' : '-');
-	stream << (reg.AF.B ? 'H' : '-');
-	stream << (reg.AF.X ? 'X' : '-');
-	stream << (reg.AF.P ? 'P' : '-');
-	stream << (reg.AF.N ? 'N' : '-');
-	stream << (reg.AF.C ? 'C' : '-');
-	stream << "] ";
-	stream << "A="  << setw(2) << (uint16_t)reg.AF.A << " ";
-	stream << "BC=" << setw(4) << reg.BC.W << " ";
-	stream << "DE=" << setw(4) << reg.DE.W << " ";
-	stream << "HL=" << setw(4) << reg.HL.W << " ";
-	stream << "IX=" << setw(4) << reg.IX.W << " ";
-	stream << "IY=" << setw(4) << reg.IY.W << " ";
-	stream << "PC=" << setw(4) << reg.PC   << " ";
-	stream << "SP=" << setw(4) << reg.SP;
+void Z80::dump(bool newline) {
+	LOG(setfill('0') << hex);
+	LOG("F=[");
+	LOG((reg.AF.S ? 'S' : '-'));
+	LOG((reg.AF.Z ? 'Z' : '-'));
+	LOG((reg.AF.Y ? 'Y' : '-'));
+	LOG((reg.AF.B ? 'H' : '-'));
+	LOG((reg.AF.X ? 'X' : '-'));
+	LOG((reg.AF.P ? 'P' : '-'));
+	LOG((reg.AF.N ? 'N' : '-'));
+	LOG((reg.AF.C ? 'C' : '-'));
+	LOG("] ");
+	LOG("A="  << setw(2) << (uint16_t)reg.AF.A << " ");
+	LOG("BC=" << setw(4) << reg.BC.W << " ");
+	LOG("DE=" << setw(4) << reg.DE.W << " ");
+	LOG("HL=" << setw(4) << reg.HL.W << " ");
+	LOG("IX=" << setw(4) << reg.IX.W << " ");
+	LOG("IY=" << setw(4) << reg.IY.W << " ");
+	LOG("PC=" << setw(4) << reg.PC   << " ");
+	LOG("SP=" << setw(4) << reg.SP);
 	if(newline) {
-		stream << endl;
+		LOG(endl);
 	}
 	else {
-		stream << " : ";
+		LOG(" : ");
 	}
 }
 
@@ -163,7 +160,7 @@ void Z80::fetch()
 {
 	data = mem->readByte(reg.PC++);
 	if (!blockop && trace) {
-		logger->getStream() << setw(2) << (uint16_t)data << " ";
+		LOG(setw(2) << (uint16_t)data << " ");
 	}
 }
 

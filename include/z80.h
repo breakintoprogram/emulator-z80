@@ -35,8 +35,7 @@ public:
 	void     setTrace(bool value);
 	uint32_t getT();
 
-	void     dump(ostream& stream);
-	void     dump(ostream& stream, bool newline);
+	void     dump(bool newline);
 
 	void     interruptRequest();
 

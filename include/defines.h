@@ -13,6 +13,7 @@
 
 #define EMULATOR_NAME "Speculation"
 #define RAM_SIZE 0x10000
+#define LOG(s) (*logger)() << s
 
 union REG {
 	uint16_t W;

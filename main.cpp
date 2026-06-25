@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(!z80->getTrace()); break;
 							case SDLK_g: z80->setSingleStep(false); break;
-							case SDLK_o: z80->dump(logger->getStream(), true); break;
+							case SDLK_o: z80->dump(true); break;
 							case SDLK_r: z80->reset(); break;
 						}
 					}
