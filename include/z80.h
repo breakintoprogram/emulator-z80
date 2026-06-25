@@ -20,12 +20,13 @@
 #include "registers.h"
 #include "mem.h"
 #include "ports.h"
+#include "logger.h"
 
 using namespace std;
 
 class Z80 {
 public:
-	Z80(Mem* mem, Ports* ports);
+	Z80(Mem* mem, Ports* ports, Logger* logger);
 
 	void     addBreakpoint(uint16_t a);
 	bool     getSingleStep();
@@ -45,6 +46,7 @@ public:
 private:
 	Mem*      mem;				// Pointer to the memory class
 	Ports*    ports;			// Pointer to the ports class
+	Logger*   logger;			// Pointer to the logger class
 	Registers reg;				// The registers
 
 	uint8_t	  data;				// Last fetched byte
@@ -60,7 +62,6 @@ private:
 	bool      blockop;			// Is the CPU executing a block operation?
 	bool	  singleStep;		// Set when single-stepping
 	bool	  trace;			// Set to enable tracing to traceStream
-	ostream&  traceStream;		// The traceStream (defaults to cout)
 
 	vector<uint16_t> breakpoints;	// The breakpoint list
 

@@ -16,6 +16,7 @@
 #include <thread>
 
 #include "defines.h"
+#include "logger.h"
 #include "ula.h"
 #include "keyboard.h"
 #include "memory.h"
@@ -28,8 +29,7 @@
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 
-// typedef duration<uint64_t, ratio<1, 50>> frame_duration;
-
+Logger*   logger;
 Keyboard* keyboard;
 Ula*      ula;
 Z80*      z80;
@@ -38,6 +38,7 @@ Ports*    ports;
 Tape*     tape;
 
 void cleanup() {
+	delete logger;
 	delete mem;
 	delete ports;
 	delete keyboard;
@@ -55,6 +56,8 @@ int main(int argc, char* argv[])
 	int        scale = 1;
 	SDL_Event  e;
 	auto       nextTick = steady_clock::now() + speed;
+
+	logger = new Logger(cout);			// Logging class
 
 	mem = new Mem(						// Memory interface with lambda for 'is RAM' check
 		[](uint16_t address)->bool {
@@ -102,7 +105,7 @@ int main(int argc, char* argv[])
 	try  {
 		ula = new Ula(mem, ports, scale);	// ULA (video)
 		keyboard = new Keyboard(ports);		// Keyboard interface
-		z80 = new Z80(mem, ports);			// The Z80 CPU itself
+		z80 = new Z80(mem, ports, logger);	// The Z80 CPU itself
 	}
 	catch(const exception& e) {
 		cout << "Error: " << e.what() << endl;
@@ -143,7 +146,7 @@ int main(int argc, char* argv[])
 							case SDLK_e: interrupts = true; break;
 							case SDLK_t: z80->setTrace(!z80->getTrace()); break;
 							case SDLK_g: z80->setSingleStep(false); break;
-							case SDLK_o: z80->dump(cout, true); break;
+							case SDLK_o: z80->dump(logger->getStream(), true); break;
 							case SDLK_r: z80->reset(); break;
 						}
 					}

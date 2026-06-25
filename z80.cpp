@@ -9,9 +9,10 @@
 
 #include "z80.h"
 
-Z80::Z80(Mem* mem, Ports* ports) :
+Z80::Z80(Mem* mem, Ports* ports, Logger* logger) :
 	mem(mem),
 	ports(ports),
+	logger(logger),
 	p(0),
 	q(0),
 	x(0),
@@ -25,8 +26,7 @@ Z80::Z80(Mem* mem, Ports* ports) :
 	halted(false),
 	blockop(false),
 	singleStep(false),
-	trace(false),
-	traceStream(cout)
+	trace(false)
 {
 }
 
@@ -104,7 +104,7 @@ void Z80::run() {
 		// Tail the debug output with the T-state value
 		//
 		if (trace) {
-			traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
+			logger->getStream() << "(" << dec << (uint16_t)getT() << "T)" << endl;
 		}
 		//
 		// Throw an error if the T-state value is 0, indicates an emulator issue
@@ -119,7 +119,7 @@ void Z80::run() {
 //
 void Z80::debug() {
 	if (trace) {
-		dump(traceStream);
+		dump(logger->getStream());
 	}
 	if (find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 		setSingleStep(true);
@@ -163,7 +163,7 @@ void Z80::fetch()
 {
 	data = mem->readByte(reg.PC++);
 	if (!blockop && trace) {
-		traceStream << setfill('0') << setw(2) << hex << (uint16_t)data << " ";
+		logger->getStream() << setw(2) << (uint16_t)data << " ";
 	}
 }
 
