@@ -88,20 +88,29 @@ void Z80::run() {
 		debug();
 		interrupts();		// Handle any interrupts
 		do {				// Go into a loop running a single cycle
-			fetch();
+			fetch();		// Fetch the next value from the PC
+			//
+			// The code could have multiple DD or FD values before an opcode, we're only
+			// interested in the last one before the opcode
+			//
 			while (data == 0xDD || data == 0xFD) {
 				shift_IXY = ((data & 0b00100000) >> 5) + 1;
 				fetch();
 			}
-			decode();
-			execute();
-			if (getT() == 0) {
-				throw runtime_error("No T-states registered for this instruction");
-			}
-		} while (blockop);
-		
+			decode();		// Decode the opcode
+			execute();		// Execute it
+		} while (blockop);	// Loop if doing a block operation (LDIR, etc)
+		//
+		// Tail the debug output with the T-state value
+		//
 		if (trace) {
 			traceStream << "(" << dec << (uint16_t)getT() << "T)" << endl;
+		}
+		//
+		// Throw an error if the T-state value is 0, indicates an emulator issue
+		//
+		if (getT() == 0) {
+			throw runtime_error("No T-states registered for this instruction");
 		}
 	}
 }
