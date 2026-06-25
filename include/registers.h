@@ -16,6 +16,30 @@
 
 using namespace std;
 
+// Structure representing a single 16-bit register pair
+//
+union REG {
+	uint16_t W;
+	struct {
+		uint8_t L;
+		uint8_t H;
+	};
+	struct {
+		uint8_t C : 1;	// 1 if carry, otherwise 0
+		uint8_t N : 1;	// 1 if last operation was a subtract, otherwise 0
+		uint8_t P : 1;	// 1 if the result has an even number of 1 bits set, or a signed operation overflows
+		uint8_t X : 1;	// ? undocumented flag
+		uint8_t B : 1;	// 1 if a carry/borrow occurred between bits 3 and 4 (for BCD operations)
+		uint8_t Y : 1;	// ? undocumented flag
+		uint8_t Z : 1;	// 1 if the result is zero
+		uint8_t S : 1;	// 1 if the result is negative
+		uint8_t A;		// The accumulator
+	};
+	REG() { W = 0; };
+};
+
+// The Registers class representing all the Z80 registers
+//
 class Registers {
 public:
 	Registers();
