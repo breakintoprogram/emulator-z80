@@ -245,7 +245,7 @@ void Z80::execute_CB() {
 		uint16_t a = getIXY(shift_IXY, data);	// The next byte is the index
 		fetch();								// Fetch the instruction
 		decode();								// And decode
-		uint8_t* r = t_r[0][z];	
+		uint8_t* r = lut_r[0][z];	
 		uint8_t  s = 1<<y;	
 		uint8_t  b;
 		switch(x) {
@@ -288,7 +288,7 @@ void Z80::execute_CB() {
 	else {
 		fetch();								// Fetch the instruction
 		decode();								// And decode
-	 	uint8_t*  r = t_r[0][z];				// Look up the register; NULL if (HL)
+	 	uint8_t*  r = lut_r[0][z];				// Look up the register; NULL if (HL)
 		uint8_t   s = 1<<y;
 		uint8_t   b;
 		switch(x) {
@@ -354,7 +354,7 @@ void Z80::execute_ED() {
 		case 1: {
 			switch(z) {
 				case 0: { // IN (C)
-					uint8_t* r = t_r[0][y];
+					uint8_t* r = lut_r[0][y];
 					uint8_t b = ports->in(reg.BC.W);
 					if (r) {
 						*r = b;
@@ -366,13 +366,13 @@ void Z80::execute_ED() {
 					setT(12);
 				} break;	
 				case 1: { // OUT (C)
-					uint8_t* r = t_r[0][y];
+					uint8_t* r = lut_r[0][y];
 					ports->out(reg.BC.W, r ? *r : 0);
 					setT(12);
 				} break;
 				case 2: { // ADC/SBC
-					uint16_t* rp1 = t_rp1[0][2]; // HL
-					uint16_t* rp2 = t_rp1[0][p]; // The other register pair
+					uint16_t* rp1 = lut_rp1[0][2]; // HL
+					uint16_t* rp2 = lut_rp1[0][p]; // The other register pair
 					if (q == 0) {
 						reg.sbc(rp1, *rp2);
 					}
@@ -382,7 +382,7 @@ void Z80::execute_ED() {
 					setT(15);
 				} break;
 				case 3: { // Load register pair from/to immediate address
-					uint16_t* rp = t_rp1[0][p];
+					uint16_t* rp = lut_rp1[0][p];
 					uint16_t  dd = fetchWord();
 					if (q ==0) {
 						mem->write(dd, *rp);	
@@ -562,14 +562,14 @@ void Z80::execute_x0z0()
 //
 void Z80::execute_x0z1() {
 	if (q == 0) {	// LD rr,n
-		uint16_t* rp = t_rp1[shift_IXY][p];
+		uint16_t* rp = lut_rp1[shift_IXY][p];
 		uint16_t  dd = fetchWord();				
 		*rp = dd;
 		setT(shift_IXY ? 14 : 10);
 	}
 	else {			// ADD HL,rr
-		uint16_t* rp1 = t_rp1[shift_IXY][2]; // HL/IX/IY
-		uint16_t* rp2 = t_rp1[shift_IXY][p]; // The other register pair
+		uint16_t* rp1 = lut_rp1[shift_IXY][2]; // HL/IX/IY
+		uint16_t* rp2 = lut_rp1[shift_IXY][p]; // The other register pair
 		reg.add(rp1, *rp2);
 		setT(shift_IXY ? 15 : 11);
 	}
@@ -590,7 +590,7 @@ void Z80::execute_x0z2() {
 				setT(7);
 			} break;
 			case 2: { // LD (nn),HL/IX/IY 
-				uint16_t* rp = t_rp1[shift_IXY][2];
+				uint16_t* rp = lut_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();
 				mem->write(dd, *rp);
 				setT(20);
@@ -613,7 +613,7 @@ void Z80::execute_x0z2() {
 				setT(7);
 			} break;
 			case 2: { // LD HL/IX/IY,(nn)
-				uint16_t* rp = t_rp1[shift_IXY][2];
+				uint16_t* rp = lut_rp1[shift_IXY][2];
 				uint16_t  dd = fetchWord();				
 				*rp = mem->readWord(dd);
 				setT(20);
@@ -631,7 +631,7 @@ void Z80::execute_x0z2() {
 // X=0, Z=3: 16-bit increment/decrement
 //
 void Z80::execute_x0z3() {
-	uint16_t* rp = t_rp1[shift_IXY][p];
+	uint16_t* rp = lut_rp1[shift_IXY][p];
 	if (q == 0) {	// INC
 		(*rp)++;
 	}
@@ -645,7 +645,7 @@ void Z80::execute_x0z3() {
 // X=0, Z=4: 8-bit increment
 //
 void Z80::execute_x0z4() {
-	uint8_t* r = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t* r = lut_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
 	uint8_t  c;
 	uint8_t  b;
 	if (r) {
@@ -670,7 +670,7 @@ void Z80::execute_x0z4() {
 // X=0, Z=5: 8-bit decrement
 //
 void Z80::execute_x0z5() {
-	uint8_t* r = t_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
+	uint8_t* r = lut_r[shift_IXY][y];	// Pointer to the register memory or NULL if RAM
 	uint8_t  c;
 	uint8_t  b;
 	if (r) {
@@ -695,7 +695,7 @@ void Z80::execute_x0z5() {
 // X=0, Z=6: 8-bit load immediate
 //
 void Z80::execute_x0z6() {
-	uint8_t* r = t_r[shift_IXY][y];
+	uint8_t* r = lut_r[shift_IXY][y];
 	if (r) {							// If it is a register
 		fetch();						// Fetch the immediate value
 		*r = data;						// And store
@@ -730,8 +730,8 @@ void Z80::execute_x1__()
 		uint8_t  ss = (z != 6 && y == 6 ? 0 : shift_IXY);
 		uint8_t  sd = (y != 6 && z == 6 ? 0 : shift_IXY);
 
-		uint8_t* rs = t_r[ss][z];					// The source
-		uint8_t* rd = t_r[sd][y];					// The destination (cannot be IXL/H)
+		uint8_t* rs = lut_r[ss][z];					// The source
+		uint8_t* rd = lut_r[sd][y];					// The destination (cannot be IXL/H)
 		
 		if (rd) {									// Destination is a register
 			if (rs) {								// Source is a register
@@ -759,7 +759,7 @@ void Z80::execute_x1__()
 //
 void Z80::execute_x2__()
 {
-	uint8_t* r = t_r[shift_IXY][z];				// Pointer to the register or HL
+	uint8_t* r = lut_r[shift_IXY][z];				// Pointer to the register or HL
 	auto f = lut_alu1[y];						// Look up the ALU function
 	if (r) {									// If it's a register then
 		(reg.*f)(*r);							// Use the registry contents
@@ -792,7 +792,7 @@ void Z80::execute_x3z0() {
 void Z80::execute_x3z1()
 {
 	if (q == 0) {	// POP
-		uint16_t* rp = t_rp2[shift_IXY][p];
+		uint16_t* rp = lut_rp2[shift_IXY][p];
 		*rp = pop();
 		setT(shift_IXY ? 14 : 10);
 	}
@@ -807,12 +807,12 @@ void Z80::execute_x3z1()
 				setT(4);
 			} break;
 			case 2: { // JP (HL/IX/IY)
-				uint16_t* rp = t_rp1[shift_IXY][2];
+				uint16_t* rp = lut_rp1[shift_IXY][2];
 				reg.PC = *rp;
 				setT(shift_IXY ? 8 : 4);
 			} break;
 			case 3: { // LD SP,HL/IX/IY
-				uint16_t* rp = t_rp1[shift_IXY][2];
+				uint16_t* rp = lut_rp1[shift_IXY][2];
 				reg.SP = *rp;
 				setT(shift_IXY ? 10: 6);
 			} break;
@@ -856,7 +856,7 @@ void Z80::execute_x3z3() {
 			setT(11);
 		} break;
 		case 4: { // EX (SP),rp
-			uint16_t* rp = t_rp1[shift_IXY][2];
+			uint16_t* rp = lut_rp1[shift_IXY][2];
 			uint16_t  dd = mem->readWord(reg.SP); 	// Read the value from the stack
 			mem->write(reg.SP, *rp);				// Write the register to the stack
 			*rp = dd;								// Set the register to the new value
@@ -900,7 +900,7 @@ void Z80::execute_x3z4() {
 void Z80::execute_x3z5()
 {
 	if (q == 0) {		// PUSH
-		uint16_t* rp = t_rp2[shift_IXY][p];
+		uint16_t* rp = lut_rp2[shift_IXY][p];
 		push(*rp);
 		setT(shift_IXY ? 15 : 11);
 	}

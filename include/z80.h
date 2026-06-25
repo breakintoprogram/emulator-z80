@@ -134,7 +134,7 @@ private:
 
 	// 8-bit register lookup
 	//
-	uint8_t* t_r[3][8] = {
+	uint8_t* lut_r[3][8] = {
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.HL.H, &reg.HL.L, NULL, &reg.AF.A },	// NULL is (HL)
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IX.H, &reg.IX.L, NULL, &reg.AF.A },	// NULL is (IX)
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IY.H, &reg.IY.L, NULL, &reg.AF.A }	// NULL is (IY)
@@ -142,13 +142,13 @@ private:
 
 	// 16-bit register lookups
 	//
-	uint16_t * t_rp1[3][4] = {
+	uint16_t * lut_rp1[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   }
 	};
 	
-	uint16_t * t_rp2[3][4] = {
+	uint16_t * lut_rp2[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
