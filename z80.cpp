@@ -216,7 +216,8 @@ void Z80::execute_CB() {
 	//
 	if (shift_IXY != 0) {		
 		fetch();								// If it is a DDCB or FDCB opcode shift then
-		uint16_t a = getIXY(shift_IXY, data);	// The next byte is the index
+		uint8_t i = data;						// The next byte is the index							
+		uint16_t a = getIXY(shift_IXY, i);		// Calculate the address offset by index
 		fetch();								// Fetch the instruction
 		decode();								// And decode
 		uint8_t* r = lut_r[0][z];	
@@ -232,6 +233,7 @@ void Z80::execute_CB() {
 				reg.AF.B = 0;
 				reg.AF.N = 0;
 				setT(23);
+				LOG_OPCODE(txt_rot[y] << " (" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
 			case 1: { // BIT
 				b = mem->readByte(a) & s;
@@ -241,18 +243,21 @@ void Z80::execute_CB() {
 				reg.AF.B = 1;
 				reg.AF.N = 0;		
 				setT(20);			
+				LOG_OPCODE("BIT " << (uint16_t)y << ",(" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
 			case 2: { // RES
 				b = mem->readByte(a) & ~s;
 				mem->write(a, b);
 				if (r) *r = b;
 				setT(23);
+				LOG_OPCODE("RES " << (uint16_t)y << ",(" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
 			case 3: { // SET
 				b = mem->readByte(a) | s;
 				mem->write(a, b);
 				if (r) *r = b;	
 				setT(23);	 
+				LOG_OPCODE("SET " << (uint16_t)y << ",(" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
 		}
 	}
@@ -292,7 +297,7 @@ void Z80::execute_CB() {
 				reg.AF.X = (y == 3 && b != 0);	
 				reg.AF.Y = (y == 5 && b != 0);	
 				setT(r ? 8 : 12);		
-				LOG_OPCODE("BIT " << y << "," << txt_r[0][z]);
+				LOG_OPCODE("BIT " << (uint16_t)y << "," << txt_r[0][z]);
 			} break;
 			case 2: { // RES y,r[z]
 				if (r) {
@@ -305,7 +310,7 @@ void Z80::execute_CB() {
 					mem->write(a, b);		
 					setT(15);		
 				}
-				LOG_OPCODE("RES " << y << "," << txt_r[0][z]);
+				LOG_OPCODE("RES " << (uint16_t)y << "," << txt_r[0][z]);
 			} break;
 			case 3: { // SET y,r[z]
 				if (r) {
@@ -318,7 +323,7 @@ void Z80::execute_CB() {
 					mem->write(a, b);		
 					setT(15);			
 				}		
-				LOG_OPCODE("SET " << y << "," << txt_r[0][z]);
+				LOG_OPCODE("SET " << (uint16_t)y << "," << txt_r[0][z]);
 			} break;
 		}
 	}
@@ -831,6 +836,7 @@ void Z80::execute_x3z1()
 				uint16_t* rp = lut_rp1[shift_IXY][2];
 				reg.PC = *rp;
 				setT(shift_IXY ? 8 : 4);
+				LOG_OPCODE("JP (" << txt_rp1[shift_IXY][2] << ")");
 			} break;
 			case 3: { // LD SP,HL/IX/IY
 				uint16_t* rp = lut_rp1[shift_IXY][2];
@@ -887,6 +893,7 @@ void Z80::execute_x3z3() {
 			mem->write(reg.SP, *rp);				// Write the register to the stack
 			*rp = dd;								// Set the register to the new value
 			setT(shift_IXY ? 23 : 19);
+			LOG_OPCODE("EX (SP)," << txt_rp1[shift_IXY][2]);
 		} break;
 		case 5: { // EX DE,HL
 			reg.exdehl();
@@ -960,6 +967,7 @@ void Z80::execute_x3z6() {
 		(reg.*f)(data);			// And execute it
 		setT(7);
 	}
+	LOG_OPCODE(txt_alu1[y] << "," << setw(2) << (uint16_t)data);
 }
 
 //
