@@ -34,9 +34,7 @@ public:
 	bool     getTrace();
 	void     setTrace(bool value);
 	uint32_t getT();
-
-	void     dump(bool newline);
-
+	
 	void     interruptRequest();
 
 	void     reset();

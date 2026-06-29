@@ -11,6 +11,8 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
+#include <vector>
 
 #include "defines.h"
 
@@ -20,7 +22,19 @@ class Logger {
 public:
 	Logger(ostream& stream);
 
-	ostream& getStream();
+	ostream&      getStream();
+	stringstream& getOpcode();
+	void          clear(void);
+	void          setPC(uint16_t value);
+	void          addData(uint8_t value);
+	void          setT(uint32_t value);
+	void          output();
+
 private:
-	ostream&  stream;		// The traceStream (defaults to cout)
+	ostream&        stream;		// The traceStream (defaults to cout)
+	uint16_t        pc;			// For the dump
+	stringstream    opcode;
+	vector<uint8_t> data;
+	uint32_t        t;
+
 };

@@ -13,6 +13,38 @@ Logger::Logger(ostream& stream) : stream(stream)
 {
 }
 
+void Logger::clear() {
+	opcode.str("");
+	data.clear();
+}
+
+void Logger::setPC(uint16_t value) {
+	pc = value;
+}
+
+void Logger::addData(uint8_t value) {
+	data.emplace_back(value);
+}
+
+void Logger::setT(uint32_t value) {
+	t = value;
+}
+
+void Logger::output() {
+	stream << "PC: " << hex << setfill('0') << setw(4) << pc << " >";
+	for (uint8_t b : data) {
+		stream << " " << setw(2) << (uint16_t)b;
+	}
+	for (int i = data.size(); i < 4; i++) {
+		stream << " ..";
+	}
+	stream << " " << setfill(' ') << setw(12) << opcode.str() << " = T" << dec << t << endl;
+}
+
+stringstream& Logger::getOpcode() {
+	return opcode;
+}
+
 ostream& Logger::getStream() {
 	return stream;
 }

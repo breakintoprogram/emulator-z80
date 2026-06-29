@@ -104,7 +104,8 @@ void Z80::run() {
 		// Tail the debug output with the T-state value
 		//
 		if (trace) {
-			LOG("(" << dec << (uint16_t)getT() << "T)" << endl);
+			logger->setT(getT());
+			logger->output();
 		}
 		//
 		// Throw an error if the T-state value is 0, indicates an emulator issue
@@ -119,38 +120,11 @@ void Z80::run() {
 //
 void Z80::debug() {
 	if (trace) {
-		dump(false);
+		logger->clear();
+		logger->setPC(reg.PC);
 	}
 	if (find(breakpoints.begin(), breakpoints.end(), reg.PC) != breakpoints.end()) {
 		setSingleStep(true);
-	}
-}
-
-void Z80::dump(bool newline) {
-	LOG(setfill('0') << hex);
-	LOG("F=[");
-	LOG((reg.AF.S ? 'S' : '-'));
-	LOG((reg.AF.Z ? 'Z' : '-'));
-	LOG((reg.AF.Y ? 'Y' : '-'));
-	LOG((reg.AF.B ? 'H' : '-'));
-	LOG((reg.AF.X ? 'X' : '-'));
-	LOG((reg.AF.P ? 'P' : '-'));
-	LOG((reg.AF.N ? 'N' : '-'));
-	LOG((reg.AF.C ? 'C' : '-'));
-	LOG("] ");
-	LOG("A="  << setw(2) << (uint16_t)reg.AF.A << " ");
-	LOG("BC=" << setw(4) << reg.BC.W << " ");
-	LOG("DE=" << setw(4) << reg.DE.W << " ");
-	LOG("HL=" << setw(4) << reg.HL.W << " ");
-	LOG("IX=" << setw(4) << reg.IX.W << " ");
-	LOG("IY=" << setw(4) << reg.IY.W << " ");
-	LOG("PC=" << setw(4) << reg.PC   << " ");
-	LOG("SP=" << setw(4) << reg.SP);
-	if(newline) {
-		LOG(endl);
-	}
-	else {
-		LOG(" : ");
 	}
 }
 
@@ -160,7 +134,7 @@ void Z80::fetch()
 {
 	data = mem->readByte(reg.PC++);
 	if (!blockop && trace) {
-		LOG(setw(2) << (uint16_t)data << " ");
+		logger->addData(data);
 	}
 }
 
