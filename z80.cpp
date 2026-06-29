@@ -501,7 +501,7 @@ void Z80::execute_x0z0()
 			fetch();
 			reg.BC.H--;
 			if (reg.BC.H != 0) {
-				reg.PC += int8_t(data);
+				reg.PC += (int8_t)data;
 			}
 			setT(13);
 		} break;
@@ -510,7 +510,7 @@ void Z80::execute_x0z0()
 		//
 		case 3: {
 			fetch();
-			reg.PC += int8_t(data);
+			reg.PC += (int8_t)data;
 			setT(12);
 		} break;
 		//
@@ -521,7 +521,7 @@ void Z80::execute_x0z0()
 			bool c = (reg.*f)();		// Get the condition
 			fetch();					// Fetch the relative jump value
 			if(c) {						// If the condition true then
-				reg.PC += int8_t(data);	// JR to the location
+				reg.PC += (int8_t)data;	// JR to the location
 				setT(12);
 			}
 			else {
@@ -943,7 +943,7 @@ uint16_t Z80::getInd(uint8_t s) {
 // Get an indirect pointer from IX+d or IY+d
 //
 uint16_t Z80::getIXY(uint8_t s, uint8_t d) {
-	int8_t disp = int8_t(d);
+	int8_t disp = (int8_t)d;
 	switch(s) {
 		case 1: return reg.IX.W + disp;	// (IX + d)
 		case 2: return reg.IY.W + disp;	// (IY + d);
