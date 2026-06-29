@@ -279,6 +279,7 @@ void Z80::execute_CB() {
 					mem->write(a, b);
 					setT(15);
 				}
+				LOG_OPCODE(txt_rot[y] << " " << txt_r[0][z]);
 			} break;
 			case 1: { // BIT y,r[z]				// This is a read only operation so no need for ROM check
 				b = r ? *r : mem->readByte(getInd(0));
@@ -291,6 +292,7 @@ void Z80::execute_CB() {
 				reg.AF.X = (y == 3 && b != 0);	
 				reg.AF.Y = (y == 5 && b != 0);	
 				setT(r ? 8 : 12);		
+				LOG_OPCODE("BIT " << y << "," << txt_r[0][z]);
 			} break;
 			case 2: { // RES y,r[z]
 				if (r) {
@@ -303,6 +305,7 @@ void Z80::execute_CB() {
 					mem->write(a, b);		
 					setT(15);		
 				}
+				LOG_OPCODE("RES " << y << "," << txt_r[0][z]);
 			} break;
 			case 3: { // SET y,r[z]
 				if (r) {
@@ -315,6 +318,7 @@ void Z80::execute_CB() {
 					mem->write(a, b);		
 					setT(15);			
 				}		
+				LOG_OPCODE("SET " << y << "," << txt_r[0][z]);
 			} break;
 		}
 	}
@@ -351,9 +355,11 @@ void Z80::execute_ED() {
 					uint16_t* rp2 = lut_rp1[0][p]; // The other register pair
 					if (q == 0) {
 						reg.sbc(rp1, *rp2);
+						LOG_OPCODE("SBC HL," << txt_rp1[0][p]);
 					}
 					else {
 						reg.adc(rp1, *rp2);
+						LOG_OPCODE("ADC HL," << txt_rp1[0][p]);
 					}
 					setT(15);
 				} break;
@@ -362,9 +368,11 @@ void Z80::execute_ED() {
 					uint16_t  dd = fetchWord();
 					if (q ==0) {
 						mem->write(dd, *rp);	
+						LOG_OPCODE("LD (" << setw(4) << dd << ")," << txt_rp1[0][p]);
 					}
 					else {
 						*rp = mem->readWord(dd);	
+						LOG_OPCODE("LD " << txt_rp1[0][p] << ",(" << setw(4) << dd << ")");
 					}
 					setT(p == 2 ? 16 : 20);
 				} break;
@@ -388,6 +396,7 @@ void Z80::execute_ED() {
 						case 3: reg.IM = 2; break;
 					}
 					setT(8);
+					LOG_OPCODE("IM " << reg.IM);
 				} break;
 				case 7: { // Assorted ops
 					switch(y) {
@@ -465,6 +474,7 @@ void Z80::execute_ED() {
 					else {
 						setT(16);		// Otherwise initialise the T-states and
 						blockop = true;	// flag that we're in a block operation
+						LOG_OPCODE(txt_bli[i][z]);
 					}
 				}
 				auto f = lut_bli[i][z];	// Lookup the function pointer for the block instruction
@@ -586,6 +596,7 @@ void Z80::execute_x0z2() {
 				uint16_t  dd = fetchWord();
 				mem->write(dd, *rp);
 				setT(20);
+				LOG_OPCODE("LD (" << setw(4) << dd  << ")," << txt_rp1[shift_IXY][2]);
 			} break;
 			case 3: { // LD (nn),A
 				uint16_t  dd = fetchWord();				
@@ -612,6 +623,7 @@ void Z80::execute_x0z2() {
 				uint16_t  dd = fetchWord();				
 				*rp = mem->readWord(dd);
 				setT(20);
+				LOG_OPCODE("LD " << txt_rp1[shift_IXY][2] << ",(" << setw(4) << dd  << ")");
 			} break;
 			case 3: { // LD A,(nn)
 				uint16_t  dd = fetchWord();				
@@ -657,6 +669,7 @@ void Z80::execute_x0z4() {
 		mem->write(a, ++b);
 		setT(shift_IXY ? 23 : 11);
 	}
+	LOG_OPCODE("INC " << txt_r[shift_IXY][y]);
 	reg.setFlagsSZ(b);
 	reg.setFlagsXY(b);
 	reg.AF.B = (((c & 0x0F) + 1) & 0x10) != 0;
@@ -682,6 +695,7 @@ void Z80::execute_x0z5() {
 		mem->write(a, --b);
 		setT(shift_IXY ? 23 : 11);
 	}
+	LOG_OPCODE("DEC " << txt_r[shift_IXY][y]);
 	reg.setFlagsSZ(b);
 	reg.setFlagsXY(b);
 	reg.AF.B = (((c & 0x0F) - 1) & 0x10) != 0;
@@ -705,6 +719,7 @@ void Z80::execute_x0z6() {
 		mem->write(a, data);			// And store
 		setT(shift_IXY ? 19 : 7);
 	}
+	LOG_OPCODE("LD " << txt_r[shift_IXY][y] << "," << setw(2) << (uint16_t)data);
 }
 
 //
@@ -752,6 +767,7 @@ void Z80::execute_x1__()
 				throw runtime_error("execute_x1: source and data are both memory locations");
 			}
 		}
+		LOG_OPCODE("LD " << txt_r[sd][y] << "," << txt_r[ss][z]);
 	}
 }
 
@@ -759,7 +775,7 @@ void Z80::execute_x1__()
 //
 void Z80::execute_x2__()
 {
-	uint8_t* r = lut_r[shift_IXY][z];				// Pointer to the register or HL
+	uint8_t* r = lut_r[shift_IXY][z];			// Pointer to the register or HL
 	auto f = lut_alu1[y];						// Look up the ALU function
 	if (r) {									// If it's a register then
 		(reg.*f)(*r);							// Use the registry contents
@@ -769,6 +785,7 @@ void Z80::execute_x2__()
 		(reg.*f)(mem->readByte(getInd(shift_IXY)));
 		setT(shift_IXY ? 19 : 7);
 	}
+	LOG_OPCODE(txt_alu1[y] << " " << txt_r[shift_IXY][z]);
 }
 
 //
