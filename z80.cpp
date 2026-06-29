@@ -1009,7 +1009,7 @@ void Z80::execute_x3z6() {
 		(reg.*f)(data);			// And execute it
 		setT(7);
 	}
-	LOG_OPCODE(txt_alu1[y] << "," << setw(2) << (uint16_t)data);
+	LOG_OPCODE(txt_alu1[y] << " " << setw(2) << (uint16_t)data);
 }
 
 //
