@@ -15,6 +15,7 @@ Logger::Logger(ostream& stream) : stream(stream)
 
 void Logger::clear() {
 	opcode.str("");
+	opcode << hex;
 	data.clear();
 }
 
@@ -38,7 +39,7 @@ void Logger::output() {
 	for (int i = data.size(); i < 4; i++) {
 		stream << " ..";
 	}
-	stream << " " << setfill(' ') << setw(12) << opcode.str() << " = T" << dec << t << endl;
+	stream << " " << setfill(' ') << setw(12) << left << opcode.str() << " = T" << dec << t << endl;
 }
 
 stringstream& Logger::getOpcode() {

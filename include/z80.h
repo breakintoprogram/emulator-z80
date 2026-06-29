@@ -24,6 +24,8 @@
 
 using namespace std;
 
+#define LOG_OPCODE(s) if (trace) logger->getOpcode() << s
+
 class Z80 {
 public:
 	Z80(Mem* mem, Ports* ports, Logger* logger);

@@ -338,11 +338,13 @@ void Z80::execute_ED() {
 					reg.AF.B = 0;
 					reg.AF.N = 0;
 					setT(12);
+					LOG_OPCODE("IN (C)");
 				} break;	
 				case 1: { // OUT (C)
 					uint8_t* r = lut_r[0][y];
 					ports->out(reg.BC.W, r ? *r : 0);
 					setT(12);
+					LOG_OPCODE("OUT (C)");
 				} break;
 				case 2: { // ADC/SBC
 					uint16_t* rp1 = lut_rp1[0][2]; // HL
@@ -369,6 +371,7 @@ void Z80::execute_ED() {
 				case 4: { // NEG
 					reg.neg();
 					setT(4);
+					LOG_OPCODE("NEG");
 				} break;
 				case 5: { // RETI/RETN
 					reg.PC = pop();
@@ -391,10 +394,12 @@ void Z80::execute_ED() {
 						case 0: { // LD I,A
 							reg.I = reg.AF.A;
 							setT(9);
+							LOG_OPCODE("LD I,A");
 						} break;
 						case 1: { // LD R,A
 							reg.R = reg.AF.A;
 							setT(9);
+							LOG_OPCODE("LD R,A");
 						} break;
 						case 2: { // LD A,I
 							reg.AF.A = reg.I;
@@ -404,6 +409,7 @@ void Z80::execute_ED() {
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(9);
+							LOG_OPCODE("LD A,I");
 						} break;
 						case 3: { // LD A,R
 							reg.AF.A = reg.R;
@@ -413,6 +419,7 @@ void Z80::execute_ED() {
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(9);
+							LOG_OPCODE("LD A,R");
 						} break;
 						case 4: { // RRD
 							uint8_t d = mem->readByte(reg.HL.W);
@@ -425,6 +432,7 @@ void Z80::execute_ED() {
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(18);
+							LOG_OPCODE("RRD");
 						} break;
 						case 5: { // RLD
 							uint8_t d = mem->readByte(reg.HL.W);
@@ -437,6 +445,7 @@ void Z80::execute_ED() {
 							reg.AF.B = 0;
 							reg.AF.N = 0;
 							setT(18);
+							LOG_OPCODE("RLD");
 						} break;
 					}
 				} break;
@@ -485,6 +494,7 @@ void Z80::execute_x0z0()
 		//
 		case 0:	{
 			setT(4);
+			LOG_OPCODE("NOP");
 		} break;
 		//
 		// EX AF,AF'
@@ -492,8 +502,8 @@ void Z80::execute_x0z0()
 		case 1: {
 			reg.exaf();
 			setT(4);
-			break;
-		}
+			LOG_OPCODE("EX AF,AF'");
+		} break;
 		//
 		// DJNZ n
 		//
@@ -504,6 +514,7 @@ void Z80::execute_x0z0()
 				reg.PC += (int8_t)data;
 			}
 			setT(13);
+			LOG_OPCODE("DJNZ " << setw(4) << reg.PC);
 		} break;
 		//
 		// JR n
@@ -512,16 +523,18 @@ void Z80::execute_x0z0()
 			fetch();
 			reg.PC += (int8_t)data;
 			setT(12);
+			LOG_OPCODE("JR " << setw(4) << reg.PC);
 		} break;
 		//
 		// JR c,n
 		//
 		default: {
-			auto f = lut_cc[y-4];		// Look up the cc function
-			bool c = (reg.*f)();		// Get the condition
-			fetch();					// Fetch the relative jump value
-			if(c) {						// If the condition true then
-				reg.PC += (int8_t)data;	// JR to the location
+			fetch();							// Fetch the relative jump value
+			auto     f = lut_cc[y-4];			// Look up the cc function
+			bool     c = (reg.*f)();			// Get the condition
+			uint16_t a = reg.PC + (int8_t)data; // Get the address
+			if(c) {								// If the condition true then
+				reg.PC = a;						// JR to the location
 				setT(12);
 			}
 			else {
@@ -558,10 +571,12 @@ void Z80::execute_x0z2() {
 			case 0: { // LD (BC),A
 				mem->write(reg.BC.W, reg.AF.A);
 				setT(7);
+				LOG_OPCODE("LD (BC),A");
 			} break;
 			case 1: { // LD (DE),A
 				mem->write(reg.DE.W, reg.AF.A);
 				setT(7);
+				LOG_OPCODE("LD (DE),A");
 			} break;
 			case 2: { // LD (nn),HL/IX/IY 
 				uint16_t* rp = lut_rp1[shift_IXY][2];
@@ -573,6 +588,7 @@ void Z80::execute_x0z2() {
 				uint16_t  dd = fetchWord();				
 				mem->write(dd, reg.AF.A);				// Write the accumulator to memory
 				setT(13);
+				LOG_OPCODE("LD (" << setw(4) << dd << "),A");
 			} break;
 		}
 	}
@@ -581,10 +597,12 @@ void Z80::execute_x0z2() {
 			case 0: { // LD A,(BC)
 				reg.AF.A = mem->readByte(reg.BC.W);
 				setT(7);
+				LOG_OPCODE("LD A,(BC)");
 			} break;
 			case 1: { // LD A,(DE)
 				reg.AF.A = mem->readByte(reg.DE.W);
 				setT(7);
+				LOG_OPCODE("LD A,(DE)");
 			} break;
 			case 2: { // LD HL/IX/IY,(nn)
 				uint16_t* rp = lut_rp1[shift_IXY][2];
@@ -596,6 +614,7 @@ void Z80::execute_x0z2() {
 				uint16_t  dd = fetchWord();				
 				reg.AF.A = mem->readByte(dd);				// Read the accumulator from memory
 				setT(13);
+				LOG_OPCODE("LD A,(" << setw(4) << dd << ")");
 			} break;
 		}
 	}
@@ -699,6 +718,7 @@ void Z80::execute_x1__()
 	if (y == 6 && z == 6) {	// HALT
 		halted = true;
 		setT(4);
+		LOG_OPCODE("HALT");
 	}
 	else {					// LD ry,rz
 		uint8_t  ss = (z != 6 && y == 6 ? 0 : shift_IXY);
@@ -775,10 +795,12 @@ void Z80::execute_x3z1()
 			case 0: { // RET
 				reg.PC = pop();
 				setT(10);
+				LOG_OPCODE("RET");
 			} break;
 			case 1: { // EXX
 				reg.exx();
 				setT(4);
+				LOG_OPCODE("EXX");
 			} break;
 			case 2: { // JP (HL/IX/IY)
 				uint16_t* rp = lut_rp1[shift_IXY][2];
@@ -815,6 +837,7 @@ void Z80::execute_x3z3() {
 		case 0: { // JP
 			reg.PC = fetchWord();
 			setT(10);
+			LOG_OPCODE("JP " << setw(4) << reg.PC);
 		} break;
 		case 1: { // CB prefix
 			throw runtime_error("execute_x3z3: invalid operation");
@@ -823,11 +846,13 @@ void Z80::execute_x3z3() {
 			fetch();
 			ports->out((reg.AF.A << 8) | data, reg.AF.A);
 			setT(11);
+			LOG_OPCODE("OUT (" << setw(2) << (uint16_t)data << "),A");
 		} break;
 		case 3: { // IN A,(n)
 			fetch();
 			reg.AF.A = ports->in((reg.AF.A << 8) | data);
 			setT(11);
+			LOG_OPCODE("IN A,(" << setw(2) << (uint16_t)data << ")");
 		} break;
 		case 4: { // EX (SP),rp
 			uint16_t* rp = lut_rp1[shift_IXY][2];
@@ -839,14 +864,17 @@ void Z80::execute_x3z3() {
 		case 5: { // EX DE,HL
 			reg.exdehl();
 			setT(4);
+			LOG_OPCODE("EX DE,HL");
 		} break;
 		case 6: { // DI
 			reg.IFF1 = reg.IFF2 = false;
 			setT(4);
+			LOG_OPCODE("DI");
 		} break;
 		case 7: { // EI
 			reg.IFF1 = reg.IFF2 = true;
 			setT(4);
+			LOG_OPCODE("EI");
 		} break;
 	}
 }
@@ -884,6 +912,7 @@ void Z80::execute_x3z5()
 			push(reg.PC);
 			reg.PC = dd;
 			setT(17);
+			LOG_OPCODE("CALL " << setw(4) << dd);
 		}
 		else {
 			throw runtime_error("execute_x3z5: invalid operation");
@@ -909,8 +938,10 @@ void Z80::execute_x3z6() {
 //
 void Z80::execute_x3z7() {
 	push(reg.PC);
-	reg.PC = y * 8;
+	uint16_t a = y * 8;
+	reg.PC = a; 
 	setT(11);
+	LOG_OPCODE("RST " << setw(2) << a);
 }
 
 // Push v on the stack
