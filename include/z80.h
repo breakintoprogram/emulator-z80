@@ -67,7 +67,8 @@ private:
 
 	// Look-up tables for the x and z decode stage
 	//
-	vector<vector<void (Z80::*)()>> lut_xz = {
+	typedef void (Z80::* xz_t)();
+	const xz_t lut_xz[4][8] = {
 		{ &Z80::execute_x0z0, &Z80::execute_x0z1, &Z80::execute_x0z2, &Z80::execute_x0z3, &Z80::execute_x0z4, &Z80::execute_x0z5, &Z80::execute_x0z6, &Z80::execute_x0z7 },
 		{ &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__, &Z80::execute_x1__ },
 		{ &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__, &Z80::execute_x2__ },
@@ -76,7 +77,8 @@ private:
 
 	// Look-up tables for ALU operations
 	//
-	vector<void (Registers::*)(uint8_t)> lut_alu1 = {
+	typedef void (Registers::* alu1_t)(uint8_t);
+	const alu1_t lut_alu1[8] = {
 		&Registers::adda,
 		&Registers::adca,
 		&Registers::suba,
@@ -88,7 +90,8 @@ private:
 	};
 	const char * txt_alu1[8] = { "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP" };
 
-	vector<void (Registers::*)()> lut_alu2 = {
+	typedef void (Registers::* alu2_t)();
+	const alu2_t lut_alu2[8] = {
 		&Registers::rlca,
 		&Registers::rrca,
 		&Registers::rla,
@@ -102,7 +105,8 @@ private:
 
 	// Look-up table for ROT operations
 	//
-	vector<void (Registers::*)(uint8_t *)> lut_rot = {
+	typedef void (Registers::* rot_t)(uint8_t *);
+	const rot_t lut_rot[8] = {
 		&Registers::rlc,
 		&Registers::rrc,
 		&Registers::rl,
@@ -116,7 +120,8 @@ private:
 
 	// Look-up table for block operations
 	//
-	vector<vector<void (Z80::*)()>> lut_bli = {
+	typedef void (Z80::* bli_t)();
+	const bli_t lut_bli[4][4] = {
 		{ &Z80::ldi,  &Z80::cpi,  &Z80::ini,  &Z80::outi },
 		{ &Z80::ldd,  &Z80::cpd,  &Z80::ind,  &Z80::outd },
 		{ &Z80::ldir, &Z80::cpir, &Z80::inir, &Z80::otir },
@@ -131,7 +136,8 @@ private:
 
 	// Look-up table for conditions
 	//
-	vector<bool (Registers::*)()> lut_cc = {
+	typedef bool (Registers::* cc_t)();
+	const cc_t lut_cc[8] = {
 		&Registers::F_NZ,
 		&Registers::F_Z,
 		&Registers::F_NC,

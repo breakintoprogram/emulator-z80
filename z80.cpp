@@ -209,7 +209,7 @@ void Z80::execute()
 		reg.incR(2);
 	}
 	else {
-		auto f = lut_xz[x][z];
+		xz_t f = lut_xz[x][z];
 		(this->*f)();
 		reg.incR(1);
 	}
@@ -263,7 +263,7 @@ void Z80::execute_CB() {
 		uint8_t  b;
 		switch(x) {
 			case 0: { // ROT
-				auto f = lut_rot[y];
+				rot_t f = lut_rot[y];
 				b = mem->readByte(a);
 				(reg.*f)(&b);
 				mem->write(a, b);
@@ -310,7 +310,7 @@ void Z80::execute_CB() {
 		uint8_t   b;
 		switch(x) {
 			case 0: { // ROT
-				auto f = lut_rot[y];			// Look up the ROT operation
+				rot_t f = lut_rot[y];			// Look up the ROT operation
 				if (r) {						// If it is a register then
 					(reg.*f)(r);				// Execute the function on the register
 					setT(8);
@@ -524,7 +524,7 @@ void Z80::execute_ED() {
 						LOG_OPCODE(txt_bli[i][z]);
 					}
 				}
-				auto f = lut_bli[i][z];	// Lookup the function pointer for the block instruction
+				bli_t f = lut_bli[i][z];	// Lookup the function pointer for the block instruction
 				(this->*f)();			// And run it
 			}	
 			else {
@@ -587,7 +587,7 @@ void Z80::execute_x0z0()
 		//
 		default: {
 			fetch();							// Fetch the relative jump value
-			auto     f = lut_cc[y-4];			// Look up the cc function
+			cc_t     f = lut_cc[y-4];			// Look up the cc function
 			bool     c = (reg.*f)();			// Get the condition
 			uint16_t a = reg.PC + (int8_t)data; // Get the address
 			if(c) {								// If the condition true then
@@ -773,7 +773,7 @@ void Z80::execute_x0z6() {
 // X=0, Z=7: Assorted operations on accumulator flags
 //
 void Z80::execute_x0z7() {
-	auto f = lut_alu2[y];				// Look up the ALU function
+	alu2_t f = lut_alu2[y];				// Look up the ALU function
 	(reg.*f)();							// And run
 	setT(y == 4 ? 8 : 4);				// DAA is 8 T-states, all other opcodes are 4
 	LOG_OPCODE(txt_alu2[y]);
@@ -823,7 +823,7 @@ void Z80::execute_x1__()
 void Z80::execute_x2__()
 {
 	uint8_t* r = lut_r[shift_IXY][z];			// Pointer to the register or HL
-	auto f = lut_alu1[y];						// Look up the ALU function
+	alu1_t f = lut_alu1[y];						// Look up the ALU function
 	if (r) {									// If it's a register then
 		(reg.*f)(*r);							// Use the registry contents
 		setT(4);
@@ -839,7 +839,7 @@ void Z80::execute_x2__()
 // X=3, Z=0: Conditional return
 //
 void Z80::execute_x3z0() {
-	auto f = lut_cc[y];		// Look up the cc function
+	cc_t f = lut_cc[y];		// Look up the cc function
 	bool c = (reg.*f)();	// Get the condition
 	if(c) {
 		reg.PC = pop();
@@ -894,7 +894,7 @@ void Z80::execute_x3z1()
 // X=3, Z=2: Conditional jump
 //
 void Z80::execute_x3z2() {
-	auto f = lut_cc[y];			// Look up the cc function
+	cc_t f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
 	uint16_t dd = fetchWord();	// And the address
 	if(c) {
@@ -959,7 +959,7 @@ void Z80::execute_x3z3() {
 // X=3, Z=4: Conditional call
 //
 void Z80::execute_x3z4() {
-	auto f = lut_cc[y];			// Look up the cc function
+	cc_t f = lut_cc[y];			// Look up the cc function
 	bool c = (reg.*f)();		// Get the condition
 	uint16_t dd = fetchWord();	// And the address
 	if(c) {
@@ -1004,7 +1004,7 @@ void Z80::execute_x3z5()
 void Z80::execute_x3z6() {
 	uint8_t* r = &reg.AF.A;		// Pointer to the accumulator
 	fetch();					// Fetch the immediate operand
-	auto f = lut_alu1[y];		// Look up the ALU function
+	alu1_t f = lut_alu1[y];		// Look up the ALU function
 	if (f) {
 		(reg.*f)(data);			// And execute it
 		setT(7);
