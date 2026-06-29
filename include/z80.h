@@ -85,7 +85,7 @@ private:
 		&Registers::ora,
 		&Registers::cpa
 	};
-	vector<string> txt_alu1 = { "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP" };
+	const char * txt_alu1[8] = { "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP" };
 
 	vector<void (Registers::*)()> lut_alu2 = {
 		&Registers::rlca,
@@ -97,7 +97,7 @@ private:
 		&Registers::scf,
 		&Registers::ccf
 	};
-	vector<string> txt_alu2 = { "RLCA", "RRCA", "RLA", "RRA", "DAA", "CPL", "SCF", "CCF" };
+	const char * txt_alu2[8] = { "RLCA", "RRCA", "RLA", "RRA", "DAA", "CPL", "SCF", "CCF" };
 
 	// Look-up table for ROT operations
 	//
@@ -111,7 +111,7 @@ private:
 		&Registers::sll,
 		&Registers::srl
 	};
-	vector<string> txt_rot = { "RLC", "RRC", "RL", "RR", "SLA", "SRA", "SLL", "SRL" };
+	const char * txt_rot[8] = { "RLC", "RRC", "RL", "RR", "SLA", "SRA", "SLL", "SRL" };
 
 	// Look-up table for block operations
 	//
@@ -120,6 +120,12 @@ private:
 		{ &Z80::ldd,  &Z80::cpd,  &Z80::ind,  &Z80::outd },
 		{ &Z80::ldir, &Z80::cpir, &Z80::inir, &Z80::otir },
 		{ &Z80::lddr, &Z80::cpdr, &Z80::indr, &Z80::otdr }
+	};
+	const char * txt_bli[4][4] = {
+		{ "LDI", "CPI", "INI", "OUTI" },
+		{ "LDD", "CPD", "IND", "OUTD" },
+		{ "LDIR", "CPIR", "INIR", "OTIR" },
+		{ "LDDR", "CPDR", "INDR", "OTDR" },
 	};
 
 	// Look-up table for conditions
@@ -134,14 +140,19 @@ private:
 		&Registers::F_P,
 		&Registers::F_M,
 	};
-	vector<string> txt_cc = { "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
+	const char * txt_cc[8] = { "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
 
 	// 8-bit register lookup
 	//
-	uint8_t* lut_r[3][8] = {
+	uint8_t * lut_r[3][8] = {
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.HL.H, &reg.HL.L, NULL, &reg.AF.A },	// NULL is (HL)
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IX.H, &reg.IX.L, NULL, &reg.AF.A },	// NULL is (IX)
 		{ &reg.BC.H, &reg.BC.L, &reg.DE.H, &reg.DE.L, &reg.IY.H, &reg.IY.L, NULL, &reg.AF.A }	// NULL is (IY)
+	};
+	const char * txt_r[3][8] = {
+		{ "B", "C", "D", "E", "H", "L", "(HL)", "A" },
+		{ "B", "C", "D", "E", "H", "L", "(IX)", "A" },
+		{ "B", "C", "D", "E", "H", "L", "(IY)", "A" },
 	};
 
 	// 16-bit register lookups
@@ -151,7 +162,7 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   }
 	};
-	string txt_rp1[3][4] = {
+	const char * txt_rp1[3][4] = {
 		{ "BC", "DE", "HL", "SP" },
 		{ "BC", "DE", "IX", "SP" },
 		{ "BC", "DE", "IY", "SP" },
@@ -162,7 +173,7 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
 	};
-	string txt_rp2[3][4] = {
+	const char * txt_rp2[3][4] = {
 		{ "BC", "DE", "HL", "AF" },
 		{ "BC", "DE", "IX", "AF" },
 		{ "BC", "DE", "IY", "AF" },
