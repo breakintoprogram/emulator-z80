@@ -390,6 +390,10 @@ void Z80::execute_ED() {
 					reg.PC = pop();
 					if (y != 1) { // Check for RETN
 						reg.IFF1 = reg.IFF2;
+						LOG_OPCODE("RETN");
+					}
+					else {
+						LOG_OPCODE("RETI");
 					}
 					setT(14);
 				} break;
