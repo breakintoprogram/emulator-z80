@@ -15,7 +15,7 @@ Logger::Logger(ostream& stream) : stream(stream)
 
 void Logger::clear() {
 	opcode.str("");
-	opcode << hex;
+	opcode << hex << setfill('0');
 	data.clear();
 }
 

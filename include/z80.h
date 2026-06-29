@@ -85,6 +85,7 @@ private:
 		&Registers::ora,
 		&Registers::cpa
 	};
+	vector<string> txt_alu1 = { "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP" };
 
 	vector<void (Registers::*)()> lut_alu2 = {
 		&Registers::rlca,
@@ -96,6 +97,7 @@ private:
 		&Registers::scf,
 		&Registers::ccf
 	};
+	vector<string> txt_alu2 = { "RLCA", "RRCA", "RLA", "RRA", "DAA", "CPL", "SCF", "CCF" };
 
 	// Look-up table for ROT operations
 	//
@@ -109,6 +111,7 @@ private:
 		&Registers::sll,
 		&Registers::srl
 	};
+	vector<string> txt_rot = { "RLC", "RRC", "RL", "RR", "SLA", "SRA", "SLL", "SRL" };
 
 	// Look-up table for block operations
 	//
@@ -131,6 +134,7 @@ private:
 		&Registers::F_P,
 		&Registers::F_M,
 	};
+	vector<string> txt_cc = { "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
 
 	// 8-bit register lookup
 	//
@@ -147,11 +151,21 @@ private:
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.SP   },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.SP   }
 	};
+	string txt_rp1[3][4] = {
+		{ "BC", "DE", "HL", "SP" },
+		{ "BC", "DE", "IX", "SP" },
+		{ "BC", "DE", "IY", "SP" },
+	};
 	
 	uint16_t * lut_rp2[3][4] = {
 		{ &reg.BC.W, &reg.DE.W, &reg.HL.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IX.W, &reg.AF.W },
 		{ &reg.BC.W, &reg.DE.W, &reg.IY.W, &reg.AF.W }
+	};
+	string txt_rp2[3][4] = {
+		{ "BC", "DE", "HL", "AF" },
+		{ "BC", "DE", "IX", "AF" },
+		{ "BC", "DE", "IY", "AF" },
 	};
 
 	void        debug();

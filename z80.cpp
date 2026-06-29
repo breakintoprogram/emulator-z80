@@ -540,6 +540,7 @@ void Z80::execute_x0z0()
 			else {
 				setT(7);
 			}
+			LOG_OPCODE("JR " << txt_cc[y-4] << "," << setw(4) << a);
 		} break;
 	}
 }
@@ -553,12 +554,14 @@ void Z80::execute_x0z1() {
 		uint16_t  dd = fetchWord();				
 		*rp = dd;
 		setT(shift_IXY ? 14 : 10);
+		LOG_OPCODE("LD " << txt_rp1[shift_IXY][p] << "," << setw(4) << dd);
 	}
 	else {			// ADD HL,rr
 		uint16_t* rp1 = lut_rp1[shift_IXY][2]; // HL/IX/IY
 		uint16_t* rp2 = lut_rp1[shift_IXY][p]; // The other register pair
 		reg.add(rp1, *rp2);
 		setT(shift_IXY ? 15 : 11);
+		LOG_OPCODE("ADD " << txt_rp1[shift_IXY][2] << "," << txt_rp1[shift_IXY][p]);
 	}
 }
 
@@ -627,9 +630,11 @@ void Z80::execute_x0z3() {
 	uint16_t* rp = lut_rp1[shift_IXY][p];
 	if (q == 0) {	// INC
 		(*rp)++;
+		LOG_OPCODE("INC " << txt_rp1[shift_IXY][p]);
 	}
 	else {			// DEC
 		(*rp)--;
+		LOG_OPCODE("DEC " << txt_rp1[shift_IXY][p]);
 	}
 	setT(shift_IXY ? 10 : 6);
 }
@@ -709,6 +714,7 @@ void Z80::execute_x0z7() {
 	auto f = lut_alu2[y];				// Look up the ALU function
 	(reg.*f)();							// And run
 	setT(y == 4 ? 8 : 4);				// DAA is 8 T-states, all other opcodes are 4
+	LOG_OPCODE(txt_alu2[y]);
 }
 
 // 8 bit loading
@@ -778,6 +784,7 @@ void Z80::execute_x3z0() {
 	else {
 		setT(5);
 	}
+	LOG_OPCODE("RET " << txt_cc[y]);
 }
 
 //
@@ -789,6 +796,7 @@ void Z80::execute_x3z1()
 		uint16_t* rp = lut_rp2[shift_IXY][p];
 		*rp = pop();
 		setT(shift_IXY ? 14 : 10);
+		LOG_OPCODE("POP " << txt_rp2[shift_IXY][p]);
 	}
 	else {
 		switch (p) {
@@ -811,6 +819,7 @@ void Z80::execute_x3z1()
 				uint16_t* rp = lut_rp1[shift_IXY][2];
 				reg.SP = *rp;
 				setT(shift_IXY ? 10: 6);
+				LOG_OPCODE("LD SP," << txt_rp1[shift_IXY][2]);
 			} break;
 		}
 	}
@@ -827,6 +836,7 @@ void Z80::execute_x3z2() {
 		reg.PC = dd;
 	}
 	setT(10);
+	LOG_OPCODE("JP " << txt_cc[y] << "," << setw(4) << dd);
 }
 
 //
@@ -894,6 +904,7 @@ void Z80::execute_x3z4() {
 	else {
 		setT(10);
 	}
+	LOG_OPCODE("CALL " << txt_cc[y] << "," << setw(4) << dd);
 }
 
 //
@@ -905,6 +916,7 @@ void Z80::execute_x3z5()
 		uint16_t* rp = lut_rp2[shift_IXY][p];
 		push(*rp);
 		setT(shift_IXY ? 15 : 11);
+		LOG_OPCODE("PUSH " << txt_rp2[shift_IXY][p]);
 	}
 	else {
 		if(p == 0) {	// CALL nn
