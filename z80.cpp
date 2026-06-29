@@ -77,6 +77,44 @@ void Z80::reset()
 	reg.PC = 0;
 }
 
+// Debug dump
+//
+void Z80::dump() {
+	logger->getStream() << setfill('0') << hex
+	<< "PC: " << setw(4) << reg.PC << endl
+	<< "SP: " << setw(4) << reg.SP << endl
+	<< "BC: " << setw(4) << reg.BC.W << " "
+	<< "DE: " << setw(4) << reg.DE.W << " "
+	<< "HL: " << setw(4) << reg.HL.W << " "
+	<< "A: "  << setw(2) << (uint16_t)reg.AF.A << " "
+	<< "F: ["
+	<< (reg.AF.S ? 'S' : '-')
+	<< (reg.AF.Z ? 'Z' : '-')
+	<< (reg.AF.Y ? 'Y' : '-')
+	<< (reg.AF.B ? 'H' : '-')
+	<< (reg.AF.X ? 'X' : '-')
+	<< (reg.AF.P ? 'P' : '-')
+	<< (reg.AF.N ? 'N' : '-')
+	<< (reg.AF.C ? 'C' : '-')
+	<< "]" << endl
+	<< "BC: " << setw(4) << reg.BC_.W << " "
+	<< "DE: " << setw(4) << reg.DE_.W << " "
+	<< "HL: " << setw(4) << reg.HL_.W << " "
+	<< "A: "  << setw(2) << (uint16_t)reg.AF_.A << " "
+	<< "F: ["
+	<< (reg.AF_.S ? 'S' : '-')
+	<< (reg.AF_.Z ? 'Z' : '-')
+	<< (reg.AF_.Y ? 'Y' : '-')
+	<< (reg.AF_.B ? 'H' : '-')
+	<< (reg.AF_.X ? 'X' : '-')
+	<< (reg.AF_.P ? 'P' : '-')
+	<< (reg.AF_.N ? 'N' : '-')
+	<< (reg.AF_.C ? 'C' : '-')
+	<< "] (alt)" << endl
+	<< "IX: " << setw(4) << reg.IX.W << endl
+	<< "IY: " << setw(4) << reg.IY.W << endl;
+}
+
 // Run one CPU cycle
 //
 void Z80::run() {

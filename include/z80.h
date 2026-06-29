@@ -36,6 +36,7 @@ public:
 	bool     getTrace();
 	void     setTrace(bool value);
 	uint32_t getT();
+	void     dump();
 	
 	void     interruptRequest();
 
