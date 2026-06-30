@@ -267,7 +267,10 @@ void Z80::execute_CB() {
 				b = mem->readByte(a);
 				(reg.*f)(&b);
 				mem->write(a, b);
-				if (r) *r = b;
+				if (r) {
+					*r = b;
+					LOG_OPCODE("LD " << txt_r[0][z] << ",");
+				}
 				reg.AF.B = 0;
 				reg.AF.N = 0;
 				setT(23);
@@ -286,14 +289,20 @@ void Z80::execute_CB() {
 			case 2: { // RES
 				b = mem->readByte(a) & ~s;
 				mem->write(a, b);
-				if (r) *r = b;
+				if (r) {
+					*r = b;
+					LOG_OPCODE("LD " << txt_r[0][z] << ",");
+				}
 				setT(23);
 				LOG_OPCODE("RES " << (uint16_t)y << ",(" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
 			case 3: { // SET
 				b = mem->readByte(a) | s;
 				mem->write(a, b);
-				if (r) *r = b;	
+				if (r) {
+					*r = b;
+					LOG_OPCODE("LD " << txt_r[0][z] << ",");
+				}	
 				setT(23);	 
 				LOG_OPCODE("SET " << (uint16_t)y << ",(" << txt_rp1[shift_IXY][2] << "+" << (uint16_t)i << ")");
 			} break;
