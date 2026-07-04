@@ -522,14 +522,15 @@ void Z80::execute_ED() {
 				uint8_t i = y - 4;
 				if (i < 2) {			// Is it a one-shot block instruction like LDI, IND?
 					setT(16);			// Yes, so just set the T-states
+					LOG_OPCODE(txt_bli[i][z]);
 				}
 				else {					// Otherwise it's a block operation like LDIR, INDR
 					if (blockop) {		// If we're already processing it then
 						incT(21);		// Just increment the T-states
 					}
 					else {
-						setT(16);		// Otherwise initialise the T-states and
 						blockop = true;	// flag that we're in a block operation
+						setT(16);		// Otherwise initialise the T-states and
 						LOG_OPCODE(txt_bli[i][z]);
 					}
 				}
