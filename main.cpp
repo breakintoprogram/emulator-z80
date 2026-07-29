@@ -20,15 +20,54 @@
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 
+// Global variables
+//
+static bool quit = false;
+static auto speed = 20000us;
+
+// The loop
+// Parameters:
+// - arg: void pointer to an Emulator object
+//
+void loop(void* arg) {
+	SDL_Event e;
+
+	Emulator* emulator = (Emulator*)arg;
+
+	while (SDL_PollEvent(&e) != 0) {
+		switch (e.type) {
+			case SDL_QUIT: {
+				quit = true;
+			} break;	
+			case SDL_KEYDOWN: {
+				switch (e.key.keysym.sym) {
+					case SDLK_F1: speed = 20000us; break;
+					case SDLK_F2: speed = 10000us; break;
+					case SDLK_F3: speed =  5000us; break;
+					case SDLK_F4: speed =  2500us; break;					
+				}
+			} break;
+		}
+		emulator->handleEvents(e);
+	}
+	try {
+		emulator->run();
+	}
+	catch(const runtime_error& e) {
+		cout << "Error: " << e.what() << endl;
+	}
+}
+
+// The main function
+// Parameters:
+// - argc: argument count
+// - argv: argument array
+//
 int main(int argc, char* argv[])
 {
 	Emulator* emulator;
 	string    filename;
 	int       scale; 
-	auto      speed = 20000us;
-	bool      quit = false;
-	SDL_Event e;
-
 
 	// Handle any command-line parameters
 	//
@@ -62,29 +101,8 @@ int main(int argc, char* argv[])
 	// The main loop
 	//
 	while (!quit) {
-		while (SDL_PollEvent(&e) != 0) {
-			switch (e.type) {
-				case SDL_QUIT: {
-					quit = true;
-				} break;	
-				case SDL_KEYDOWN: {
-					switch (e.key.keysym.sym) {
-						case SDLK_F1: speed = 20000us; break;
-						case SDLK_F2: speed = 10000us; break;
-						case SDLK_F3: speed =  5000us; break;
-						case SDLK_F4: speed =  2500us; break;					
-					}
-				} break;
-			}
-			emulator->handleEvents(e);
-		}
-		auto nextTick = steady_clock::now() + speed;		
-		try {
-			emulator->run();
-		}
-		catch(const runtime_error& e) {
-			cout << "Error: " << e.what() << endl;
-		}
+		auto nextTick = steady_clock::now() + speed;	
+		loop((void *)emulator);	
 		this_thread::sleep_until(nextTick);			// Wait until the next 1/50th of a second
 		nextTick = steady_clock::now() + speed;		// Set the next tick to be from now		
 	}
