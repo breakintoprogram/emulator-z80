@@ -29,14 +29,9 @@ Emulator::Emulator(int scale, string filename) : step(false), interrupts(true)
 
 	// Initialise the rest of the system
 	//
-	try  {
-		ula = new Ula(mem, ports, scale);	// ULA (video)
-		keyboard = new Keyboard(ports);		// Keyboard interface
-		z80 = new Z80(mem, ports, logger);	// The Z80 CPU itself
-	}
-	catch(const runtime_error& e) {
-		throw e;
-	}
+	ula = new Ula(mem, ports, scale);	// ULA (video)
+	keyboard = new Keyboard(ports);		// Keyboard interface
+	z80 = new Z80(mem, ports, logger);	// The Z80 CPU itself
 
 	// Setup the tape if a filename as been passed
 	//
@@ -95,36 +90,32 @@ void Emulator::handleEvents(SDL_Event &e) {
 }
 
 void Emulator::run() {
+	uint16_t t;
 	//
 	// Process CPU cycle(s)
 	//
-	while(!ula->getvBlank()) {							// Loop until we get a vblank
-		uint32_t tcnt = 0;
-		uint16_t t;
-		if (z80->getSingleStep()) {						// Single-step mode
-			if (step) {
-				step = false;							// Flag the step as being done
-				z80->run();								// Run the CPU
-				t = z80->getT();
-				tape->play(t);							// Play any inserted cassette
-				ula->render(t);							// Render a number of pixels
-			}
+	if (z80->getSingleStep()) {					// If in single-step mode
+		if (step) {								// If a step has been requested by the user
+			step = false;						// Flag the step as being done
+			z80->run();							// Run the CPU
+			t = z80->getT();
+			tape->play(t);						// Play any inserted cassette
+			ula->render(t);						// Render a number of pixels
 		}
-		else {											// Normal running mode
-			while (tcnt < 448 && !ula->getvBlank()) {	// Loop for around 2 scanlines (224 x 2)
-				z80->run();								// Run the CPU
-				t = z80->getT();						// Get the T-states
-				tcnt += t;								// Add to the running total
-				tape->play(t);							// Play any inserted cassette
-				ula->render(t);							// Render a number of pixels
-			}
-		}		
+	}
+	else {										// Otherwise if we're in free-running mode
+		do {
+			z80->run();							// Run the CPU
+			t = z80->getT();					// Get the T-states
+			tape->play(t);						// Play any inserted cassette
+			ula->render(t);						// Render a number of pixels
+		} while (!ula->getvBlank());			// Loop until we've got a vblank
 	}
 	//
 	// Service interrupts
 	//
-	ula->setvBlank(false);								// Clear the vblank
-	if (!z80->getSingleStep() || interrupts) {			// Provided we're not single-stepping and they're enabled
+	ula->setvBlank(false);						// Clear the vblank
+	if (!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
 		z80->interruptRequest();
 	}
 }
