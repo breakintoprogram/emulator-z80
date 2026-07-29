@@ -114,8 +114,13 @@ void Emulator::run() {
 	//
 	// Service interrupts
 	//
-	ula->setvBlank(false);						// Clear the vblank
-	if (!z80->getSingleStep() || interrupts) {	// Provided we're not single-stepping and they're enabled
-		z80->interruptRequest();
+	if (ula->getvBlank()) {						// If we've hit a vblank then
+		ula->setvBlank(false);					// Clear the vblank
+		//
+		// Only service the interrupt if we're not single-stepping or interrupts are enabled in single-step mode
+		//
+		if (!z80->getSingleStep() || interrupts) {
+			z80->interruptRequest();
+		}		
 	}
 }
