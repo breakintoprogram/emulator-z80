@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Speculation Emulator</title>
+    <style>
+		body {
+			margin: 0;
+  			padding: none;
+		}
+	</style>
+  </head>
+  <body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    <script type='text/javascript'>
+      var canvasElement = document.getElementById('canvas');
+
+	  canvasElement.addEventListener('webglcontextlost', (e) => {
+        alert('WebGL context lost. You will need to reload the page.');
+        e.preventDefault();
+      }, false);
+
+      var Module = {
+        print(...args) {
+          console.log(...args);
+        },
+        canvas: canvasElement,
+		arguments: [
+			"scale=2",
+			"load=games/stop_the_express.tzx",
+		],
+      };
+    </script>
+    <script async type="text/javascript" src="emulator-z80.js"></script>
+  </body>
+</html>
