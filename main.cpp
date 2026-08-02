@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 {
 	Emulator* emulator;
 	string    filename;
-	int       scale; 
+	int       scale = 1; 
 
 	// Handle any command-line parameters
 	//
