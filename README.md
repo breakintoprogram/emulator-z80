@@ -40,7 +40,7 @@ I use the VSCode IDE with the following extensions installed:
 - CMake Tools by Microsoft
 - CodeLLDB by Vadim Chugunov
 
-## Running
+## Running on desktop
 
 The emulator takes the following command line parameters:
 
@@ -54,6 +54,21 @@ bin/emulator-z80 s=2
 ```
 
 Warnings and errors are piped to the console via cout.
+
+## Running in browser
+
+The emulator can be compiled using Emscripten to run in a browser.
+
+[Click here](https://emscripten.org/docs/getting_started/downloads.html) for installation instructions.
+
+After compilation:
+
+- In a terminal, run python3 -m http.server to launch a local web server
+- In a browser, navigate to http://0.0.0.0:8000/web/main.html to launch the app in a test page
+
+The arguments passed to the emulator are in the arguments property in var Module.
+
+For convenience, I've set the scale to 2 and set Stop the Express to load.
 
 ### Keys
 

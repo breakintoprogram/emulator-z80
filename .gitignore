@@ -1,1 +1,4 @@
-/bin
+/bin/**
+/web/**
+
+!/web/main.html
