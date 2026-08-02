@@ -2,7 +2,7 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "debug",
+            "label": "debug (desktop)",
             "command": "/usr/bin/g++",
             "args": [
 				"-std=c++23",
@@ -23,7 +23,7 @@
         },
         {
             "type": "cppbuild",
-            "label": "release",
+            "label": "release (desktop)",
             "command": "/usr/bin/g++",
             "args": [
 				"-std=c++23",
@@ -42,13 +42,37 @@
             }
         },		
         {
+            "type": "cppbuild",
+            "label": "release (web)",
+            "command": "emcc",
+            "args": [
+				"-std=c++23",
+				"-O3",
+				"--use-port=sdl2",
+				"--preload-file", "${workspaceFolder}/roms@/roms",
+				"--preload-file", "${workspaceFolder}/games@/games",
+				"-sNO_DISABLE_EXCEPTION_CATCHING",
+                "-I${workspaceFolder}/include",
+                "${workspaceFolder}/*.cpp",
+                "-o${workspaceFolder}/web/${workspaceFolderBasename}.js"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },				
+        {
             "label": "clean",
             "type": "shell",
             "linux": {
                 "command": "rm",
                 "args": [
                     "-rfv",
-                    "bin/*"
+                    "bin/*",
+					"web/emulator-z80.*",
                 ]
             },
             "problemMatcher": []
