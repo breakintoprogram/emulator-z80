@@ -54,7 +54,7 @@
 				"-sNO_DISABLE_EXCEPTION_CATCHING",
                 "-I${workspaceFolder}/include",
                 "${workspaceFolder}/*.cpp",
-                "-o${workspaceFolder}/web/${workspaceFolderBasename}.js"
+                "-o${workspaceFolder}/docs/${workspaceFolderBasename}.js"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -72,7 +72,7 @@
                 "args": [
                     "-rfv",
                     "bin/*",
-					"web/emulator-z80.*",
+					"docs/emulator-z80.*",
                 ]
             },
             "problemMatcher": []

@@ -27,6 +27,8 @@ This software is a personal side project with many known flaws and omissions. Pl
 
 ## Building
 
+### For desktop
+
 The project currently builds unmodified on Ubuntu with the developer tools installed and the following dependencies:
 
 - SDL development libraries: `sudo apt-get install libsdl2-dev`
@@ -40,7 +42,15 @@ I use the VSCode IDE with the following extensions installed:
 - CMake Tools by Microsoft
 - CodeLLDB by Vadim Chugunov
 
-## Running on desktop
+### For browser
+
+The emulator can be compiled using Emscripten to run in a browser.
+
+[Click here](https://emscripten.org/docs/getting_started/downloads.html) for Emscripten installation instructions.
+
+## Starting the app
+
+### On desktop
 
 The emulator takes the following command line parameters:
 
@@ -55,20 +65,21 @@ bin/emulator-z80 s=2
 
 Warnings and errors are piped to the console via cout.
 
-## Running in browser
+### In browser
 
-The emulator can be compiled using Emscripten to run in a browser.
+The arguments passed to the emulator are in the arguments property in var Module:
 
-[Click here](https://emscripten.org/docs/getting_started/downloads.html) for installation instructions.
+- scale=2
+- load=games/stop_the_express.tzx
 
-After compilation:
+Modern browsers won't let you run the code directly, but you can run it from a local web server:
 
 - In a terminal, run python3 -m http.server to launch a local web server
-- In a browser, navigate to http://0.0.0.0:8000/web/main.html to launch the app in a test page
+- In a browser, navigate to http://0.0.0.0:8000/docs/index.html to launch the app in a test page
 
-The arguments passed to the emulator are in the arguments property in var Module.
+You can also run the latest version by [clicking here](https://breakintoprogram.github.io/emulator-z80).
 
-For convenience, I've set the scale to 2 and set Stop the Express to load.
+## Using the app
 
 ### Keys
 
