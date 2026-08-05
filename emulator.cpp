@@ -124,3 +124,15 @@ void Emulator::run() {
 		}		
 	}
 }
+
+// Open a tape file
+//
+bool Emulator::open(string filename) {
+	tape->stop();
+	tape->close();
+	if (!tape->open(filename)) {
+		return false;
+	}
+	tape->start();
+	return true;
+}

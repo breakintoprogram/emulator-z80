@@ -32,6 +32,7 @@ public:
 
 	void	handleEvents(SDL_Event &e);
 	void	run();
+	bool    open(string filename);	
 	
 private:
 	Logger*      logger;
