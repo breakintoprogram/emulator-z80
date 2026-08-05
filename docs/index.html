@@ -14,6 +14,7 @@
         padding: none;
         background-color: #000;
         border-width: 0px;
+		color: #fff;
       }
       .container {
         display: flex;
@@ -34,7 +35,39 @@
 		line-height: 0.5em;
 		font-family: "zx";
 		font-size: 2em;
+		overflow-x: hidden;
+		word-break: normal;
 	  }
+	  .interface {
+		width: 100%;
+		border-width: 0px;
+		background-color: #000;
+		color: #fff;
+		font-family: "zx";
+		font-size: 2em;
+		overflow: hidden;
+		word-break: normal;
+		padding-bottom: 8px;
+	  }
+	  .files {
+		font-family: "zx" !important;
+		font-size: 1em !important;
+		padding-top: 0px;
+		padding-bottom: 0px;	
+        background-color: #666;
+		color: #fff;
+        border: 1px outset #222;
+		border-radius: 6px;			
+	  }
+	  .button {
+		font-family: "zx";
+		font-size: 1em;
+        background-color: #444;
+		color: #fff;
+        border: 1px outset #222;
+		border-radius: 6px;
+        cursor: pointer;
+	  }	  
 	</style>
   </head>
   <body>
@@ -43,10 +76,38 @@
     		<canvas class="canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1/>
 		</div>
 		<div style="width: 100%;">
-			<textarea class="output" id="output" rows="8" wrap="off"></textarea>
+		  <textarea class="output" id="output" rows="8" wrap="off"></textarea>
+          <div class="interface">
+      	    <label for="files">Select tape:</label>
+      	    <select name="files" id="files" class="files">
+              <optgroup label="Games">
+                <option value="/games/stop_the_express.tap">Stop the Express (TAP)</option>
+                <option value="/games/stop_the_express.tzx">Stop the Express (TZX)</option>
+                <option value="/games/vectron.tzx" selected>Vectron (TZX)</option>
+              </optgroup>
+              <optgroup label="Tests">
+                <option value="/tests/z80ccf.tap">z80ccf</option>
+                <option value="/tests/z80ccfscr.tap">z80ccfscr</option>
+                <option value="/tests/z80doc.tap">z80doc</option>
+                <option value="/tests/z80docflags.tap">z80docflags</option>
+                <option value="/tests/z80flags.tap">z80flags</option>
+                <option value="/tests/z80full.tap">z80full</option>
+                <option value="/tests/z80memptr.tap">z80memptr</option>
+              </optgroup>
+      	    </select>
+      	    <button class="button" onclick="buttonOpen()">Play</button>
+          </div>	
 		</div>
 	</div>
     <script type='text/javascript'>
+
+      function buttonOpen() {
+		let el = document.getElementById("files");
+		if (el) {
+          Module.open(el.value);
+		}
+      }	
+
       var canvasElement = document.getElementById('canvas');
 	  var outputElement = document.getElementById('output');
 
@@ -68,8 +129,7 @@
         },
         canvas: canvasElement,
 		arguments: [
-			"scale=2",
-			"load=games/stop_the_express.tzx",
+			"scale=2"
 		],
       };
 	  window.onerror = window.onunhandledrejection = () => {
@@ -81,6 +141,10 @@
 	  Module.print("F10:    Start tape");
 	  Module.print("F11:    Stop tape");
 	  Module.print("F12:    Debugging mode");
+	  Module.print("");
+	  Module.print("To load, type LOAD \"\" then ENTER in the emulator");
+	  Module.print("Select the tape from the drop-down");
+	  Module.print("Then press [Play]");
 	  Module.print("");
     </script>
     <script async type="text/javascript" src="emulator-z80.js"></script>
