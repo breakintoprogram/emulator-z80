@@ -4,102 +4,54 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Speculation Emulator</title>
-    <style>
-      @font-face {
-        font-family: 'zx';
-         src: url('fonts/zx_spectrum-7.ttf')  format('truetype'),
-      }
-	  body {
-        margin: 8px;
-        padding: none;
-        background-color: #000;
-        border-width: 0px;
-		color: #fff;
-      }
-      .container {
-        display: flex;
-        gap: 8px;
-      }
-      .container > div {
-        color: #fff;
-      }
-	  .canvas {
-		border-width: 0px;;
-	  }
-	  .output {
-		width: 100%;
-		height: 100%;
-		border-width: 0px;
-		background-color: #000;
-		color: #fff;
-		line-height: 0.5em;
-		font-family: "zx";
-		font-size: 2em;
-		overflow-x: hidden;
-		word-break: normal;
-	  }
-	  .interface {
-		width: 100%;
-		border-width: 0px;
-		background-color: #000;
-		color: #fff;
-		font-family: "zx";
-		font-size: 2em;
-		overflow: hidden;
-		word-break: normal;
-		padding-bottom: 8px;
-	  }
-	  .files {
-		font-family: "zx" !important;
-		font-size: 1em !important;
-		padding-top: 0px;
-		padding-bottom: 0px;	
-        background-color: #666;
-		color: #fff;
-        border: 1px outset #222;
-		border-radius: 6px;			
-	  }
-	  .button {
-		font-family: "zx";
-		font-size: 1em;
-        background-color: #444;
-		color: #fff;
-        border: 1px outset #222;
-		border-radius: 6px;
-        cursor: pointer;
-	  }	  
-	</style>
+	<link rel="stylesheet" href="css/main.css"> 
   </head>
   <body>
-	<div class="container">
-		<div style="width: fit-content;">
-    		<canvas class="canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1/>
-		</div>
-		<div style="width: 100%;">
-		  <textarea class="output" id="output" rows="8" wrap="off"></textarea>
-          <div class="interface">
-      	    <label for="files">Select tape:</label>
-      	    <select name="files" id="files" class="files">
-              <optgroup label="Games">
-                <option value="/games/stop_the_express.tap">Stop the Express (TAP)</option>
-                <option value="/games/stop_the_express.tzx">Stop the Express (TZX)</option>
-                <option value="/games/vectron.tzx" selected>Vectron (TZX)</option>
-              </optgroup>
-              <optgroup label="Tests">
-                <option value="/tests/z80ccf.tap">z80ccf</option>
-                <option value="/tests/z80ccfscr.tap">z80ccfscr</option>
-                <option value="/tests/z80doc.tap">z80doc</option>
-                <option value="/tests/z80docflags.tap">z80docflags</option>
-                <option value="/tests/z80flags.tap">z80flags</option>
-                <option value="/tests/z80full.tap">z80full</option>
-                <option value="/tests/z80memptr.tap">z80memptr</option>
-              </optgroup>
-      	    </select>
-      	    <button class="button" onclick="buttonOpen()">Play</button>
-          </div>	
-		</div>
-	</div>
+    <div class="grid-container">
+      <div class="header">
+		<h1>Speculation Emulator</h1>
+	  </div>
+      <div class="emulator">
+    	<canvas class="canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1/>
+	  </div>
+      <div class="output">
+		<textarea id="output" wrap="off"></textarea>
+	  </div>  
+      <div class="controls">
+		<label for="files">Select tape:</label>
+		<select name="files" id="files" class="files">
+		  <optgroup label="Games">
+			<option value="/games/stop_the_express.tap">Stop the Express (TAP)</option>
+			<option value="/games/stop_the_express.tzx">Stop the Express (TZX)</option>
+			<option value="/games/vectron.tzx" selected>Vectron (TZX)</option>
+			</optgroup>
+		  <optgroup label="Tests">
+			<option value="/tests/z80ccf.tap">z80ccf</option>
+			<option value="/tests/z80ccfscr.tap">z80ccfscr</option>
+			<option value="/tests/z80doc.tap">z80doc</option>
+			<option value="/tests/z80docflags.tap">z80docflags</option>
+			<option value="/tests/z80flags.tap">z80flags</option>
+			<option value="/tests/z80full.tap">z80full</option>
+			<option value="/tests/z80memptr.tap">z80memptr</option>
+		  </optgroup>
+		</select>
+		<button class="button" onclick="buttonOpen()">PLAY</button>
+	  </div>
+      <div class="footer">
+	    <div>F1->F4: Set Emulator Speed</div>
+	    <div>F10:    Start tape</div>
+	    <div>F11:    Stop tape</div>
+	    <div>F12:    Debugging mode</div>
+	    <div>&nbsp;</div>
+	    <div>To load, type LOAD "" then ENTER in the emulator</div>
+	    <div>Select the tape from the drop-down</div>
+	    <div>Then press [Play]</div>
+	  </div>
+    </div>
     <script type='text/javascript'>
+
+	  var canvasElement = document.getElementById('canvas');
+	  var outputElement = document.getElementById('output');
 
       function buttonOpen() {
 		let el = document.getElementById("files");
@@ -107,9 +59,6 @@
           Module.open(el.value);
 		}
       }	
-
-      var canvasElement = document.getElementById('canvas');
-	  var outputElement = document.getElementById('output');
 
 	  if (outputElement) outputElement.value = '';
 
@@ -135,17 +84,6 @@
 	  window.onerror = window.onunhandledrejection = () => {
 		Module.print("Exception thrown: See JavaScript Console");
 	  };
-	  Module.print("Speculation");
-	  Module.print("-----------");
-	  Module.print("F1->F4: Set Emulator Speed");
-	  Module.print("F10:    Start tape");
-	  Module.print("F11:    Stop tape");
-	  Module.print("F12:    Debugging mode");
-	  Module.print("");
-	  Module.print("To load, type LOAD \"\" then ENTER in the emulator");
-	  Module.print("Select the tape from the drop-down");
-	  Module.print("Then press [Play]");
-	  Module.print("");
     </script>
     <script async type="text/javascript" src="emulator-z80.js"></script>
   </body>

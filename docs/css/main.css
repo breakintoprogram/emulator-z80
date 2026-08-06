@@ -1,0 +1,93 @@
+@font-face {
+	font-family: 'zx';
+    src: url('../fonts/zx_spectrum-7.ttf')  format('truetype'),
+}
+
+body {
+	margin: 8px;
+	padding: none;
+	background-color: #000;
+	border-width: 0px;
+	color: #fff;
+}
+
+.header { grid-area: header; }
+.emulator { grid-area: emulator; }
+.output { grid-area: output; }
+.controls { grid-area: controls; }
+.footer { grid-area: footer; }
+
+.grid-container {
+	display: grid;
+	grid-template-areas:
+		'header header'
+		'emulator output'
+		'emulator controls'
+		'footer footer';
+	grid-template-columns: fit-content(100%) auto;
+	grid-template-rows:
+		auto	/* header */
+		auto	/* output */
+		32px	/* controls */
+		auto;	/* footer */
+	grid-gap: 8px;
+	background-color: #000;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+.grid-container > div {
+	background-color: #000;
+	text-align: left;
+	padding: 0px;
+}
+
+.header > h1 {
+	font-family: "zx";
+	font-size: 64px;	
+	text-decoration: underline;
+	line-height: 0em;	
+}
+
+.canvas {
+	outline: none;
+	border: none;
+}
+
+.output > textarea {
+	outline: none;
+	border: none;
+  	caret-color: transparent;
+	width: 100%;
+	height: 100%;
+	background-color: #008;
+	color: #ff0;
+	line-height: 0.5em;
+	overflow-x: hidden;
+	word-break: normal;
+	font-family: "zx";
+	font-size: 32px;
+}
+
+.controls > div {
+	width: 100%;
+	background-color: #000;
+	color: #fff;
+	overflow: hidden;
+	word-break: normal;
+}
+
+.controls > label {
+	font-family: "zx";
+	font-size: 32px;	
+}
+
+.footer {
+	width: 100%;
+	color: #ff0;
+	line-height: 0.5em;
+	overflow-x: hidden;
+	word-break: normal;
+	font-family: "zx";
+	font-size: 32px;		
+}
