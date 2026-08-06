@@ -1,6 +1,9 @@
 @font-face {
 	font-family: 'zx';
-    src: url('../fonts/zx_spectrum-7.ttf')  format('truetype'),
+    src: url('../fonts/zx-spectrum.woff2')  format('woff2');
+	font-style: normal;
+	font-weight: normal;
+	font-display: swap;
 }
 
 body {
@@ -14,7 +17,7 @@ body {
 .header { grid-area: header; }
 .emulator { grid-area: emulator; }
 .output { grid-area: output; }
-.controls { grid-area: controls; }
+.controls { grid-area: controls; align-self: center; }
 .footer { grid-area: footer; }
 
 .grid-container {
@@ -44,9 +47,8 @@ body {
 
 .header > h1 {
 	font-family: "zx";
-	font-size: 64px;	
+	font-size: 24px;	
 	text-decoration: underline;
-	line-height: 0em;	
 }
 
 .canvas {
@@ -58,15 +60,15 @@ body {
 	outline: none;
 	border: none;
   	caret-color: transparent;
+	resize: none;
 	width: 100%;
 	height: 100%;
 	background-color: #008;
 	color: #ff0;
-	line-height: 0.5em;
 	overflow-x: hidden;
 	word-break: normal;
 	font-family: "zx";
-	font-size: 32px;
+	font-size: 16px;
 }
 
 .controls > div {
@@ -79,15 +81,14 @@ body {
 
 .controls > label {
 	font-family: "zx";
-	font-size: 32px;	
+	font-size: 16px;	
 }
 
 .footer {
 	width: 100%;
 	color: #ff0;
-	line-height: 0.5em;
 	overflow-x: hidden;
 	word-break: normal;
 	font-family: "zx";
-	font-size: 32px;		
+	font-size: 16px;		
 }
