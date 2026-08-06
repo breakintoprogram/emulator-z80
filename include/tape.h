@@ -74,6 +74,7 @@ public:
     Tape(Ports* ports);
 
     bool open(string filename);
+	void close();
     void start();
     void stop();
     bool isPaused(void);

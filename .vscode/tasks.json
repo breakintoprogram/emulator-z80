@@ -48,9 +48,11 @@
             "args": [
 				"-std=c++23",
 				"-O3",
+				"-lembind",
 				"--use-port=sdl2",
 				"--preload-file", "${workspaceFolder}/roms@/roms",
 				"--preload-file", "${workspaceFolder}/games@/games",
+				"--preload-file", "${workspaceFolder}/tests@/tests",
 				"-sNO_DISABLE_EXCEPTION_CATCHING",
                 "-I${workspaceFolder}/include",
                 "${workspaceFolder}/*.cpp",

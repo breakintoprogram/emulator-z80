@@ -18,6 +18,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/bind.h>
 #endif
 
 #include "emulator.h"
@@ -27,18 +28,39 @@ using namespace std::literals::chrono_literals;
 
 // Global variables
 //
+static Emulator* emulator = nullptr;
 static bool quit = false;
 
 // Function prototypes
 //
-void loop(void * arg);
+void loop();
+
+// Functions callable from JavaScript
+//
+#ifdef __EMSCRIPTEN__
+
+// Load a file into the emulator
+//
+void open(string filename) {
+	cout << "Opening emulator file " << filename << endl;
+	if (!emulator->open(filename)) {
+		cout << "Error opening file" << endl;
+	}
+}
+
+// The function bindings
+//
+EMSCRIPTEN_BINDINGS(web) {
+    emscripten::function("open", &open);
+}
+#endif
 
 // Set the emulation speed
 //
 #ifdef __EMSCRIPTEN__
-void setSpeed(Emulator* emulator, int speed) {
+void setSpeed(int speed) {
 	emscripten_cancel_main_loop();
-	emscripten_set_main_loop_arg(loop, emulator, speed, 1);
+	emscripten_set_main_loop(loop, speed, 1);
 }
 #else
 static auto speed = 20000us;
@@ -48,10 +70,8 @@ static auto speed = 20000us;
 // Parameters:
 // - arg: void pointer to an Emulator object
 //
-void loop(void* arg) {
+void loop() {
 	SDL_Event e;
-
-	Emulator* emulator = (Emulator*)arg;
 
 	while (SDL_PollEvent(&e) != 0) {
 		switch (e.type) {
@@ -61,10 +81,10 @@ void loop(void* arg) {
 			case SDL_KEYDOWN: {
 				switch (e.key.keysym.sym) {
 					#ifdef __EMSCRIPTEN__
-					case SDLK_F1: setSpeed(emulator, 50); break;
-					case SDLK_F2: setSpeed(emulator, 100); break;
-					case SDLK_F3: setSpeed(emulator, 200); break;
-					case SDLK_F4: setSpeed(emulator, 400); break;
+					case SDLK_F1: setSpeed(50); break;
+					case SDLK_F2: setSpeed(100); break;
+					case SDLK_F3: setSpeed(200); break;
+					case SDLK_F4: setSpeed(400); break;
 					#else 
 					case SDLK_F1: speed = 20000us; break;
 					case SDLK_F2: speed = 10000us; break;
@@ -91,7 +111,6 @@ void loop(void* arg) {
 //
 int main(int argc, char* argv[])
 {
-	Emulator* emulator;
 	string    filename;
 	int       scale = 1; 
 
@@ -127,11 +146,11 @@ int main(int argc, char* argv[])
 	// The main loop
 	//
 	#ifdef __EMSCRIPTEN__
-		emscripten_set_main_loop_arg(loop, emulator, 50, 1);
+		emscripten_set_main_loop(loop, 50, 1);
 	#else 
 	while (!quit) {
 		auto nextTick = steady_clock::now() + speed;	
-		loop((void *)emulator);	
+		loop();	
 		this_thread::sleep_until(nextTick);			// Wait until the next 1/50th of a second
 		nextTick = steady_clock::now() + speed;		// Set the next tick to be from now		
 	}

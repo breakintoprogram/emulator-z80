@@ -80,6 +80,12 @@ bool Tape::isPaused(void) {
     return paused;
 }
 
+// Close an emulator file
+//
+void Tape::close() {
+	tape.clear();
+}
+
 // Open an emulator file and process it
 // Parameters:
 // - filename: path and filename of the tap file
@@ -109,7 +115,7 @@ bool Tape::open(string filename) {
         success = openTZX(file, filesize);
     }
     if(!success) {      // Clear the tape if there was an error loading it in
-        tape.clear();
+        close();
     }
     return success;
 }
