@@ -48,43 +48,7 @@
 	    <div>Then press [Play]</div>
 	  </div>
     </div>
-    <script type='text/javascript'>
-
-	  var canvasElement = document.getElementById('canvas');
-	  var outputElement = document.getElementById('output');
-
-      function buttonOpen() {
-		let el = document.getElementById("files");
-		if (el) {
-          Module.open(el.value);
-		}
-      }	
-
-	  if (outputElement) outputElement.value = '';
-
-      canvasElement.addEventListener('webglcontextlost', (e) => {
-        alert('WebGL context lost. You will need to reload the page.');
-        e.preventDefault();
-      }, false);
-
-      var Module = {
-        print(...args) {
-          console.log(...args);
-		  if (outputElement) {
-			var text = args.join(' ');
-			outputElement.value += text + '\n';
-			outputElement.scrollTop = outputElement.scrollHeight;
-		  }
-        },
-        canvas: canvasElement,
-		arguments: [
-			"scale=2"
-		],
-      };
-	  window.onerror = window.onunhandledrejection = () => {
-		Module.print("Exception thrown: See JavaScript Console");
-	  };
-    </script>
+    <script type="text/javascript" src="js/main.js"></script>
     <script async type="text/javascript" src="emulator-z80.js"></script>
   </body>
 </html>
