@@ -83,17 +83,22 @@ You can also run the latest version by [clicking here](https://breakintoprogram.
 
 ### Keys
 
-The emulator maps the left shift to CAPS SHIFT and right shift to SYMBOL SHIFT. There are a handful of emulator specific key combinations I'm using whilst testing the code:
+Spectrum specific key combinations:
 
-- `F1` Turbu speed x 1
-- `F2` Turbu speed x 2
-- `F3` Turbu speed x 4
-- `F4` Turbu speed x 8
+- `SHIFT` Caps Shift
+- `ALT`, `CTRL` or `OPTION` Symbol Shift
+
+Emulator specific key combinations:
+
+- `F1` Turbo speed x 1
+- `F2` Turbo speed x 2
+- `F3` Turbo speed x 4
+- `F4` Turbo speed x 8
 - `F10` Start the tape
 - `F11` Stop the tape
 - `F12` Enter the debugger
 
-When in the debugger:
+Debugger specific key combinations:
 
 - `ENTER` single-step the CPU after a breakpoint
 - `g` Exit debugger, continue normal CPU exection

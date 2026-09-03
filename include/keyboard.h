@@ -3,9 +3,10 @@
 // Description:		Spectrum 48K keyboard scanning routines
 // Author:	        Dean Belfield
 // Created:	        25/05/2026
-// Last Updated:	28/05/2026
+// Last Updated:	03/09/2026
 //
 // Modinfo:
+// 03/09/2026:		Modified key mappings for Windows PCs
 
 #pragma once
 
@@ -45,6 +46,7 @@ private:
 	//
 	map<SDL_Keycode, Key> keys = {
         { SDLK_LSHIFT,	{ 0xFE, COL0 } },
+        { SDLK_RSHIFT,	{ 0xFE, COL0 } },
         { SDLK_z,		{ 0xFE, COL1 } },
         { SDLK_x,		{ 0xFE, COL2 } },
         { SDLK_c,		{ 0xFE, COL3 } },
@@ -80,7 +82,10 @@ private:
         { SDLK_j,		{ 0xBF, COL3 } },
         { SDLK_h,		{ 0xBF, COL4 } },
         { SDLK_SPACE,	{ 0x7F, COL0 } },
-        { SDLK_RSHIFT,	{ 0x7F, COL1 } },
+        { SDLK_LALT,	{ 0x7F, COL1 } },
+        { SDLK_RALT,	{ 0x7F, COL1 } },
+        { SDLK_LCTRL,	{ 0x7F, COL1 } },
+        { SDLK_RCTRL,	{ 0x7F, COL1 } },
         { SDLK_m,		{ 0x7F, COL2 } },
         { SDLK_n,		{ 0x7F, COL3 } },
         { SDLK_b,		{ 0x7F, COL4 } },
