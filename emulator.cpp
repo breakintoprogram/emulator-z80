@@ -77,14 +77,14 @@ void Emulator::handleEvents(SDL_Event &e) {
 				}
 			}
 			else {
-				keyboard->press(e.key.keysym.sym, true);
+				keyboard->keyDown(e.key);
 			}
 		} break;
 		//
 		// Keypress up events
 		//
 		case SDL_KEYUP: {
-			keyboard->press(e.key.keysym.sym, false);
+			keyboard->keyUp(e.key);
 		} break;
 	}
 }

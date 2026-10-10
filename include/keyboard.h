@@ -50,13 +50,78 @@ class Keyboard {
 public:
     Keyboard(Ports* ports);
 
-    void   press(SDL_Keycode sym, bool pressed);
+	void   keyDown(SDL_KeyboardEvent &key);
+	void   keyUp(SDL_KeyboardEvent &key);
 private:
     Ports* ports;
+
+	map<SDL_Keycode, SDL_Keysym> pressed;	// Map of pressed keys
 	
 	// Map an SDL keycode to one or more ZX keycodes
 	//
-	map<SDL_Keycode, vector<ZX_Keycode>> keycodes = {
+	// This table is for when a PC shift modifier is used
+	//
+	map<SDL_Keycode, vector<ZX_Keycode>> keycodes_shifted = {
+		//
+		// First the enhanced keys
+		//		
+		{ SDLK_SEMICOLON, 	{ ZXK_SYMS, ZXK_z } },	// SDLK_COLON
+		{ SDLK_COMMA,		{ ZXK_SYMS, ZXK_r } },	// SDLK_LESS
+		{ SDLK_PERIOD,		{ ZXK_SYMS, ZXK_t } },	// SDLK_GREATER
+		{ SDLK_SLASH,	 	{ ZXK_SYMS, ZXK_c } },	// SDLK_QUESTION
+		{ SDLK_EQUALS, 		{ ZXK_SYMS, ZXK_k } },	// SDLK_PLUS
+		{ SDLK_MINUS, 		{ ZXK_SYMS, ZXK_0 } }, 	// SDLK_UNDERSCORE
+		{ SDLK_QUOTE,		{ ZXK_SYMS, ZXK_2 } },	// SDLK_AT
+		//
+		// Then the standard keys
+		//
+		{ SDLK_z,			{ ZXK_CAPS, ZXK_z } },
+		{ SDLK_x,			{ ZXK_CAPS, ZXK_x } },
+		{ SDLK_c,			{ ZXK_CAPS, ZXK_c } },
+		{ SDLK_v,			{ ZXK_CAPS, ZXK_v } },
+		{ SDLK_a,			{ ZXK_CAPS, ZXK_a } },
+		{ SDLK_s,			{ ZXK_CAPS, ZXK_s } },
+		{ SDLK_d,			{ ZXK_CAPS, ZXK_d } },
+		{ SDLK_f,			{ ZXK_CAPS, ZXK_f } },
+		{ SDLK_g,			{ ZXK_CAPS, ZXK_g } },
+		{ SDLK_q,			{ ZXK_CAPS, ZXK_q } },
+		{ SDLK_w,			{ ZXK_CAPS, ZXK_w } },
+		{ SDLK_e,			{ ZXK_CAPS, ZXK_e } },
+		{ SDLK_r,			{ ZXK_CAPS, ZXK_r } },
+		{ SDLK_t,			{ ZXK_CAPS, ZXK_t } },
+		{ SDLK_1,			{ ZXK_CAPS, ZXK_1 } },
+		{ SDLK_2,			{ ZXK_CAPS, ZXK_2 } },
+		{ SDLK_3,			{ ZXK_CAPS, ZXK_3 } },
+		{ SDLK_4,			{ ZXK_CAPS, ZXK_4 } },
+		{ SDLK_5,			{ ZXK_CAPS, ZXK_5 } },
+		{ SDLK_0,			{ ZXK_CAPS, ZXK_0 } },
+		{ SDLK_9,			{ ZXK_CAPS, ZXK_9 } },
+		{ SDLK_8,			{ ZXK_CAPS, ZXK_8 } },
+		{ SDLK_7,			{ ZXK_CAPS, ZXK_7 } },
+		{ SDLK_6,			{ ZXK_CAPS, ZXK_6 } },
+		{ SDLK_p,			{ ZXK_CAPS, ZXK_p } },
+		{ SDLK_o,			{ ZXK_CAPS, ZXK_o } },
+		{ SDLK_i,			{ ZXK_CAPS, ZXK_i } },
+		{ SDLK_u,			{ ZXK_CAPS, ZXK_u } },
+		{ SDLK_y,			{ ZXK_CAPS, ZXK_y } },
+		{ SDLK_RETURN,		{ ZXK_CAPS, ZXK_ENTER } },
+		{ SDLK_l,			{ ZXK_CAPS, ZXK_l } },
+		{ SDLK_k,			{ ZXK_CAPS, ZXK_k } },
+		{ SDLK_j,			{ ZXK_CAPS, ZXK_j } },
+		{ SDLK_h,			{ ZXK_CAPS, ZXK_h } },
+		{ SDLK_SPACE,		{ ZXK_CAPS, ZXK_SPACE } },
+		{ SDLK_LALT,		{ ZXK_CAPS, ZXK_SYMS } },
+		{ SDLK_RALT,		{ ZXK_CAPS, ZXK_SYMS } },
+		{ SDLK_LCTRL,		{ ZXK_CAPS, ZXK_SYMS } },
+		{ SDLK_RCTRL,		{ ZXK_CAPS, ZXK_SYMS } },
+		{ SDLK_m,			{ ZXK_CAPS, ZXK_m } },
+		{ SDLK_n,			{ ZXK_CAPS, ZXK_n } },
+		{ SDLK_b,			{ ZXK_CAPS, ZXK_b } },		
+	};
+	//
+	// And this table is for unshifted keys
+	//
+	map<SDL_Keycode, vector<ZX_Keycode>> keycodes_unshifted = {
 		//
 		// First the enhanced keys
 		//
@@ -68,6 +133,7 @@ private:
 		{ SDLK_COMMA,		{ ZXK_SYMS, ZXK_n } },
 		{ SDLK_PERIOD, 		{ ZXK_SYMS, ZXK_m } },
 		{ SDLK_SEMICOLON, 	{ ZXK_SYMS, ZXK_o } },
+		{ SDLK_HASH, 		{ ZXK_SYMS, ZXK_3 } },
 		{ SDLK_QUOTE,		{ ZXK_SYMS, ZXK_7 } },
 		{ SDLK_SLASH,		{ ZXK_SYMS, ZXK_v } },
 		{ SDLK_MINUS,		{ ZXK_SYMS, ZXK_j } },
@@ -76,8 +142,6 @@ private:
 		//
 		// Then the standard keys
 		//
-		{ SDLK_LSHIFT,		{ ZXK_CAPS } },
-		{ SDLK_RSHIFT,		{ ZXK_CAPS } },
 		{ SDLK_z,			{ ZXK_z } },
 		{ SDLK_x,			{ ZXK_x } },
 		{ SDLK_c,			{ ZXK_c } },
